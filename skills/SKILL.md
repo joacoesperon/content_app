@@ -28,7 +28,7 @@ No Higgsfield needed. No copy-pasting prompts. One command, 40+ ads.
 
 ## Folder Structure
 
-~/brands/{brand-name}/
+brand/
 ├── product-images/          # Drop product PNGs/JPGs here before running
 │   ├── product-front.png
 │   ├── product-angle.png
@@ -100,7 +100,7 @@ Typical formats / Text overlay style / Photo vs illustration / UGC usage / Offer
 IMAGE GENERATION PROMPT MODIFIER
 Write a single 50-75 word paragraph to prepend to any image prompt to match this brand's visual identity. Include exact colors, font descriptions, photography direction, and mood.
 
-Save output as: ~/brands/{brand-name}/brand-dna.md
+Save output as: brand/brand-dna.md
 
 ---
 
@@ -116,9 +116,7 @@ For each template:
 1. Replace all [BRACKETED PLACEHOLDERS] with brand-specific details
 2. Prepend the Image Generation Prompt Modifier from the Brand DNA
 3. Set the correct aspect_ratio based on the template (most are 1:1 or 4:5 or 9:16)
-4. Determine if the template needs product reference images (needs_product_images: true/false)
-   - Templates describing the actual product packaging = true
-   - Templates that are pure lifestyle/UGC/editorial with no product shown = false
+4. Set needs_product_images to false for all templates (digital product, no physical product images)
 5. Include the product name and any specific product details provided
 
 Output as a JSON file with this structure:
@@ -132,7 +130,7 @@ Output as a JSON file with this structure:
       "template_name": "headline",
       "prompt": "Full completed prompt text ready for Nano Banana 2...",
       "aspect_ratio": "4:5",
-      "needs_product_images": true,
+      "needs_product_images": false,
       "notes": "Any generation notes or copy that should be refined"
     }
   ]
@@ -140,7 +138,7 @@ Output as a JSON file with this structure:
 
 Reference file for templates: See references/template-prompts.md
 
-Save output as: ~/brands/{brand-name}/prompts.json
+Save output as: brand/prompts.json
 
 ---
 
@@ -150,7 +148,7 @@ Run the Python generation script to fire all prompts to Nano Banana 2.
 
 ### How to Execute
 
-cd ~/brands/{brand-name}
+cd brand
 python generate_ads.py
 
 Or generate specific templates only:
@@ -162,13 +160,10 @@ python generate_ads.py --templates 1,7,13,15
 The generate_ads.py script (see references/generate_ads.py):
 
 1. Reads prompts.json from the brand folder
-2. Scans product-images/ for available reference images
-3. For each prompt:
-   - If needs_product_images: true → uploads product images to FAL storage, calls fal-ai/nano-banana-2/edit with image_urls
-   - If needs_product_images: false → calls fal-ai/nano-banana-2 (text-to-image)
-4. Downloads generated images to outputs/{template-number}-{template-name}/
-5. Saves the prompt text alongside each image as prompt.txt
-6. Generates an index.html gallery showing all generated ads
+2. For each prompt: calls fal-ai/nano-banana-2 (text-to-image) — all templates use text-to-image since the product is digital (no physical product images)
+3. Downloads generated images to outputs/{template-number}-{template-name}/
+4. Saves the prompt text alongside each image as prompt.txt
+5. Generates an index.html gallery showing all generated ads
 
 ### FAL API Details
 
@@ -185,19 +180,18 @@ Edit/Image-Reference endpoint: fal-ai/nano-banana-2/edit
 
 ## User Interaction Flow
 
-### Quick Start (user says "generate ads for [brand]")
+### Full Run (user says "generate ads")
 
-1. Ask for: brand name, URL, specific product name
-2. Confirm they have product images ready (or ask them to drop images in the folder)
-3. Run Phase 1 → Phase 2 → Phase 3 sequentially
-4. Present the output gallery
+1. Check that brand/brand-dna.md exists (run Phase 1 first if not)
+2. Run Phase 1 (if needed) → Phase 2 → Phase 3 sequentially
+3. Present the output gallery
 
 ### Selective Generation (user says "just generate templates 1, 7, 13")
 
-1. Confirm brand folder and prompts.json exist
+1. Confirm brand/prompts.json exists
 2. Run Phase 3 with --templates filter
 
-### Re-run with New Product (user says "now do it for [different SKU]")
+### Re-run with New Product (user says "now do it for [different product]")
 
 1. Skip Phase 1 (Brand DNA already exists)
 2. Re-run Phase 2 with new product details
@@ -207,8 +201,7 @@ Edit/Image-Reference endpoint: fal-ai/nano-banana-2/edit
 
 ## Key Technical Notes
 
-- Product images are critical for quality. The more reference images you provide (front, back, angled, lifestyle), the better Nano Banana 2 matches the real product in the output. 1-3 images is the sweet spot.
-- The edit endpoint is for product-reference generation. When the prompt describes the actual product packaging, we use /edit with image_urls so the model sees the real product. For UGC, lifestyle, or editorial templates where no product is shown, we use standard text-to-image.
+- This is a digital product (trading bot EA for MetaTrader 5) — there are no physical product images. All templates use text-to-image generation exclusively.
 - Aspect ratios matter for ad placement. 1:1 for feed, 4:5 for feed (more real estate), 9:16 for stories/reels. The templates specify the correct ratio.
 - Resolution: Default is 2K for production-quality output. Use 1K for faster test runs, 4K for hero assets.
 - Images per prompt: 4 images generated per prompt by default, giving you options to pick the best output. A full 40-template run = 160 images.

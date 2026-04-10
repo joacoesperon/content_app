@@ -6,7 +6,7 @@ Generates production-ready static ad images from prompts.json
 using Nano Banana 2 via the FAL API.
 
 Usage:
-    cd ~/brands/{brand-name}
+    cd brand
     python generate_ads.py                        # All templates
     python generate_ads.py --templates 1,7,13,15  # Specific templates
     python generate_ads.py --dry-run              # Preview without generating
