@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchTemplates, startGeneration, getImageUrl } from '../lib/api';
-import { useWebSocket, WsMessage } from '../hooks/useWebSocket';
+import { useWebSocket } from '../hooks/useWebSocket';
 import ImageGrid from '../components/ImageGrid';
 import { Play, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -206,36 +206,40 @@ export default function StaticAds() {
         </div>
       )}
 
-      {/* Progress */}
-      {generating && totalTemplates > 0 && (
+      {/* Progress / Log */}
+      {progressMessages.length > 0 && (
         <div className="bg-carbon-light rounded-xl p-6 mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-white">Progress</h2>
+            <h2 className="text-lg font-semibold text-white">
+              {generating ? 'Generating...' : 'Run log'}
+            </h2>
             <span className="text-sm text-gray-mid">
-              {completedCount + errorCount} / {totalTemplates}
+              {completedCount + errorCount} / {totalTemplates || progressMessages.length}
             </span>
           </div>
 
-          {/* Progress bar */}
-          <div className="w-full h-2 bg-carbon rounded-full mb-4 overflow-hidden">
-            <div
-              className="h-full bg-neon rounded-full transition-all duration-500"
-              style={{ width: `${((completedCount + errorCount) / totalTemplates) * 100}%` }}
-            />
-          </div>
+          {/* Progress bar — only while running */}
+          {generating && totalTemplates > 0 && (
+            <div className="w-full h-2 bg-carbon rounded-full mb-4 overflow-hidden">
+              <div
+                className="h-full bg-neon rounded-full transition-all duration-500"
+                style={{ width: `${((completedCount + errorCount) / totalTemplates) * 100}%` }}
+              />
+            </div>
+          )}
 
           {/* Log */}
-          <div className="space-y-1 max-h-48 overflow-y-auto">
+          <div className="space-y-1 max-h-64 overflow-y-auto font-mono text-xs">
             {progressMessages.map((msg, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm">
+              <div key={i} className="flex items-start gap-2">
                 {msg.type === 'template_done' ? (
-                  <CheckCircle size={14} className="text-neon shrink-0" />
+                  <CheckCircle size={13} className="text-neon shrink-0 mt-0.5" />
                 ) : msg.type === 'template_error' ? (
-                  <AlertCircle size={14} className="text-red-400 shrink-0" />
+                  <AlertCircle size={13} className="text-red-400 shrink-0 mt-0.5" />
                 ) : (
-                  <Loader2 size={14} className="text-electric animate-spin shrink-0" />
+                  <Loader2 size={13} className={`shrink-0 mt-0.5 ${generating ? 'text-electric animate-spin' : 'text-gray-mid'}`} />
                 )}
-                <span className="text-gray-mid">
+                <span className={msg.type === 'template_error' ? 'text-red-400' : 'text-gray-mid'}>
                   {msg.message as string || `#${msg.template_number} ${msg.template_name}`}
                   {msg.type === 'template_done' && ` — ${(msg.time as number)?.toFixed(1)}s`}
                   {msg.type === 'template_error' && ` — ${msg.error}`}

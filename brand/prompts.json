@@ -1,0 +1,327 @@
+{
+  "brand": "Jess Trading",
+  "product": "Jess Trading Bot — Algorithmic Gold (XAUUSD) Trading Bot for MetaTrader 5",
+  "generated_at": "2026-04-10T12:00:00Z",
+  "prompts": [
+    {
+      "template_number": 1,
+      "template_name": "headline",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad with a Carbon Black radial gradient background (#101010 center to #010101 edges). Top third: large bold white sans-serif headline reading \"Your Bot Trades Gold While You Sleep\". Below in smaller Light Gray #D7D7D7 text: \"Automated XAUUSD trading — 24/7 execution, zero emotions, proven strategy.\". Bottom half: a sleek laptop screen angled slightly, displaying a candlestick chart with green (#A5F28C) candles trending upward and a visible profit line. Soft moody lighting from the screen glow. Jess Trading logo bottom right in white. Clean, authoritative, premium fintech. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Core headline test. Tests text rendering quality."
+    },
+    {
+      "template_number": 2,
+      "template_name": "offer-promotion",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a promotional ad with a split background. Top 60% is Carbon Black (#101010) and bottom 40% is dark charcoal (#1A1A1A) with a subtle Neon Green (#A5F28C) gradient line dividing them. Center where colors meet: a minimalist illustration of a trading bot icon — a small robot head merged with a candlestick chart, glowing in Neon Green. Upper area: large white bold sans-serif reading \"LIFETIME ACCESS — $147\". Below: \"One-time payment. No hidden fees. Runs 24/7.\" in Light Gray #D7D7D7. Lower section: small Light Gray text with \"Step-by-step tutorial + Video guide + Lifetime updates\". Electric Blue #2979FF CTA button reading \"GET STARTED NOW\" bottom center. Jess Trading logo bottom right in white. 9:16 aspect ratio.",
+      "aspect_ratio": "9:16",
+      "needs_product_images": false,
+      "notes": "Core offer ad. Emphasizes one-time payment value prop."
+    },
+    {
+      "template_number": 3,
+      "template_name": "testimonial",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a testimonial ad with a dark moody background. Upper portion: a blurred candlestick chart on a dark screen with green profit candles, slightly out of focus creating ambient glow. Overlaid: large bold white sans-serif \"This bot changed my trading forever\". Below: \"I was losing money every month trying to trade manually. Set up the Jess Trading bot in 10 minutes and now it trades gold for me 24/7. I haven't touched a chart in weeks and my account is growing consistently. — Marcus R., Retail Trader / 8 months using Jess Trading.\" Five filled Neon Green (#A5F28C) stars. Jess Trading logo bottom right in white. Cinematic, dark, premium. 9:16 aspect ratio.",
+      "aspect_ratio": "9:16",
+      "needs_product_images": false,
+      "notes": "Testimonial focuses on manual-to-automated transformation."
+    },
+    {
+      "template_number": 4,
+      "template_name": "features-benefits",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: an educational diagram-style ad on Carbon Black (#101010) background. Top: bold Neon Green (#A5F28C) text \"What Makes Jess Trading Different\". Center: a minimalist glowing wireframe illustration of connected nodes representing an algorithm — lines and dots in Neon Green on dark background, like a neural network or decision tree. Four callout boxes with thin connecting lines in Light Gray, each containing white text: \"Runs 24/7 — never misses a trade\", \"100% disciplined execution — zero emotions\", \"Proven gold (XAUUSD) strategy — backtested\", \"No coding required — plug and play\". Each callout has a small Neon Green circle icon. Jess Trading logo bottom right in white. Premium fintech diagram aesthetic. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Educational layout highlighting 4 core differentiators."
+    },
+    {
+      "template_number": 5,
+      "template_name": "bullet-points",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a benefit-list ad, split composition on Carbon Black (#101010) background. Left 40%: a sleek dark laptop showing a trading chart with green profit candles, moody screen glow lighting, shot from a slight angle. Right 60%: vertical stack of five benefit lines with filled Neon Green (#A5F28C) circles: \"Trades gold (XAUUSD) 24/7\", \"No coding knowledge needed\", \"Proven backtested strategy\", \"One-time payment, lifetime access\", \"Eliminates emotional trading\". Clean white sans-serif text, generous spacing. Jess Trading logo bottom right in white. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Split layout — visual left, benefits right."
+    },
+    {
+      "template_number": 6,
+      "template_name": "social-proof",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a social proof ad on Carbon Black (#101010) radial gradient background. Top: \"Join Traders Already Automating Their Profits\" in bold white sans-serif. Five filled Neon Green (#A5F28C) stars with \"Rated 4.9 out of 5\" in Light Gray. Center: a subtle abstract visualization of algorithmic trading — thin Neon Green lines forming a rising chart pattern. Below: a dark frosted card (#1A1A1A) with rounded corners, five gold stars, \"Game Changer for My Portfolio\", \"I was skeptical about trading bots but Jess Trading blew me away. The setup was dead simple, the strategy is transparent, and I've seen consistent results trading gold. Best $147 I ever spent.\" in Light Gray, \"— David T., Software Engineer\" in italic Light Gray. Below card: trust badges in Light Gray — \"Lifetime Access\" | \"Proven Strategy\" | \"24/7 Automation\". Jess Trading logo bottom right in white. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Trust stack — stars, review, trust badges."
+    },
+    {
+      "template_number": 7,
+      "template_name": "us-vs-them",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a side-by-side ad divided vertically. Left half: muted dark gray-blue (#1a1a2e) background. Right half: Carbon Black (#101010) with subtle Neon Green (#A5F28C) border glow. Center top: white circle with \"VS\". Left header: \"Manual Trading\" in gray text + icon of a stressed person at a screen + list with red X marks: \"Emotional decisions\", \"Can't watch markets 24/7\", \"Inconsistent discipline\", \"Slow reaction time\", \"Burnout and stress\". Right header: \"Jess Trading Bot\" in Neon Green + icon of a robot/algorithm + list with green checkmarks: \"100% rule-based execution\", \"Runs 24/7 nonstop\", \"Zero emotional interference\", \"Millisecond execution speed\", \"Set it and forget it\". Jess Trading logo bottom right in white. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Manual vs automated comparison. Core positioning ad."
+    },
+    {
+      "template_number": 8,
+      "template_name": "before-after-ugc",
+      "prompt": "This should look like a real person's post, NOT an ad. Create: TikTok-style before-and-after split screen. LEFT: grainy iPhone screenshot of a person looking stressed at their phone in dim lighting, red trading losses visible on screen, messy desk with coffee cups, harsh lighting. White handwritten text: \"March 2024\". RIGHT: same person, relaxed on a couch or at a cafe, smiling at their phone showing a green profit chart, bright natural light, clean setting. White text: \"March 2025\". Top center: \"6 months with Jess Trading 📈\" in white. Should look stitched in CapCut. 9:16 aspect ratio.",
+      "aspect_ratio": "9:16",
+      "needs_product_images": false,
+      "notes": "UGC native feel. No brand modifier prepended — must look organic."
+    },
+    {
+      "template_number": 9,
+      "template_name": "negative-marketing",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: Background is a dark moody close-up of a candlestick chart with green candles, slightly blurred. Center: white rounded-rectangle review card. Gray user icon, \"Sarah K.\", one gold star + four gray, orange \"Verified Purchase\" badge, bold text: \"Ruined my trading career — I don't even need to trade manually anymore. The bot does everything and I just check my phone once a day. Worst decision for my screen time, best decision for my portfolio.\". Below the review text: \"Was this review helpful? 👍 284\". Bottom: bold white sans-serif \"THE REVIEWS ARE IN.\". Jess Trading logo bottom right in white. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Bait-and-switch review. Sounds negative, is actually positive."
+    },
+    {
+      "template_number": 10,
+      "template_name": "press-editorial",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a press ad on Carbon Black (#101010) background with subtle texture. Top: \"As Featured In\" in small Neon Green (#A5F28C) uppercase wide-tracked text. Below: five grayscale financial publication logos (generic finance publication wordmarks styled like Bloomberg, Forbes, TechCrunch, Business Insider, CNBC — do NOT use real logos). Center: italic serif pull-quote in white: \"'Jess Trading is bringing institutional-grade algorithms to everyday traders — and it's working.'\" with Light Gray attribution \"— Finance & Tech Weekly\". Lower third: a minimalist dark illustration of a rising chart with Neon Green accent. Jess Trading logo bottom left in white. Generous negative space. Premium finance editorial energy. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Authority/press ad. Uses generic publication logos — not real ones."
+    },
+    {
+      "template_number": 11,
+      "template_name": "pull-quote-review",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a review-driven ad with a solid dark background — Carbon Black (#101010) with a very subtle Neon Green (#45B14F) tint. Top half: large bold italic serif text in white with curly quotation marks reading \"I finally have consistent profits\". Directly below the quote: five large filled Neon Green (#A5F28C) star icons in a horizontal row. Bottom left, overlapping the background: a dark (#1A1A1A) rounded-corner review card with subtle shadow, containing: a small gray circular default avatar icon, beside it \"James P.\" in bold white sans-serif with a small 🇺🇸, below the name a blue checkmark icon with \"Verified Buyer\" in small Electric Blue #2979FF text. Below the reviewer info: the review body text in medium-weight Light Gray sans-serif: \"Was losing money every month trying to day trade manually. A friend told me about Jess Trading and I figured $147 was worth the shot. Set up the bot in under 10 minutes, connected to my MT5 account, and it started trading gold automatically. Three months in and my account is growing steadily. The discipline this bot has is something I could never...Read more\" in bold Neon Green text. Below the review text: \"Was this review helpful?\" in small gray text with a thumbs-up icon and \"312\" beside it. Bottom right corner: Jess Trading logo in white. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Open loop with '...Read more' truncation. Curiosity driver."
+    },
+    {
+      "template_number": 12,
+      "template_name": "lifestyle-stats",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad with a lifestyle photo of a young man working from a laptop at a beachside cafe with ocean view, warm natural daylight, relaxed and confident posture, occupying the left two-thirds of the frame. The laptop screen shows a subtle green trading chart. Jess Trading logo top center in bold white. Below logo: large bold white sans-serif text reading \"TRADE WHILE YOU SLEEP\". Bottom right foreground: three dark semi-transparent stat cards with rounded corners, slightly overlapping, each showing a key metric in Neon Green (#A5F28C): \"24/7 Uptime\", \"Gold (XAUUSD)\", \"$147 One-Time\". Shot on 50mm f/2.0, lifestyle background slightly softer than foreground text. Aspirational but accessible. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Aspirational lifestyle + stats combo."
+    },
+    {
+      "template_number": 13,
+      "template_name": "stat-surround-radial",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad on Carbon Black (#101010) to dark charcoal gradient background. Top: large bold white sans-serif headline reading \"Your trading bot, working while you rest.\". Center: a glowing minimalist icon of a trading bot — abstract robot head merged with a candlestick chart, rendered in Neon Green (#A5F28C) wireframe style on dark background. Flanking the icon on both sides: four stat callouts with subtle curved arrows or lines pointing toward the center. Left side top: \"24/7\" in oversized bold Neon Green text with \"UPTIME\" in small white below. Left side bottom: \"0\" with \"EMOTIONS\" below. Right side top: \"<1s\" with \"EXECUTION TIME\" below. Right side bottom: \"$147\" with \"LIFETIME ACCESS\" below and five filled gold stars beneath. Arrows are subtle thin lines in Light Gray. Clean, informational, premium fintech. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Central icon with orbiting stats. Highly scannable."
+    },
+    {
+      "template_number": 14,
+      "template_name": "bundle-showcase",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad on Carbon Black (#101010) background with subtle radial gradient. Top: oversized bold white all-caps sans-serif headline reading \"EVERYTHING YOU NEED TO START TRADING\". Below headline: a horizontal Neon Green (#A5F28C) banner bar divided into four equal segments separated by thin vertical lines, each containing a white text label: \"Trading Bot\", \"Video Tutorial\", \"Step-by-Step Guide\", \"Lifetime Updates\". Center-to-bottom: a clean arrangement of four dark (#1A1A1A) rounded cards with subtle glow, each representing one deliverable — a bot file icon, a play button icon, a document icon, and a refresh icon — all in Neon Green wireframe style. Bottom: Electric Blue #2979FF CTA button reading \"GET LIFETIME ACCESS — $147\". Jess Trading logo bottom left. Bright, energetic, premium. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Shows the full package — bot + tutorial + guide + updates."
+    },
+    {
+      "template_number": 15,
+      "template_name": "social-comment",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad on a clean Carbon Black (#101010) background. Top: oversized bold white sans-serif headline reading \"I STOPPED MANUAL TRADING AND..\" with 📈 at the end. Center: a social media comment card with dark (#1A1A1A) rounded-rectangle background containing: a small circular profile avatar (top left), bold white name \"Ryan Mitchell\", and a multi-sentence review in Light Gray sans-serif: \"Honestly I was so skeptical. Another trading bot? But my buddy kept showing me his results so I finally tried it. $147 for lifetime access seemed too good to be true. Set it up on MT5 in like 10 minutes and it's been trading gold for me nonstop. I literally don't even open my charts anymore.\". Small gray timestamp \"3d\" below the comment. Bottom center: Jess Trading logo in white with \"The future of trading is automated.\" tagline in Light Gray below. No stars. The rawness is the point — this should look like someone screenshotted a real comment. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Screenshotted comment feel. Raw and organic."
+    },
+    {
+      "template_number": 16,
+      "template_name": "curiosity-hook-quote",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad on Carbon Black (#101010) background. Top center: large Neon Green (#A5F28C) opening quotation marks. Below: mixed-weight headline in white — the first line in italic serif reading \"I've been\", the next two lines in enormous heavy-weight bold all-caps sans-serif reading \"LOSING MONEY / EVERY SINGLE DAY\", followed by a smaller sentence-case line in Light Gray reading \"...on sleep, because my bot trades while I rest — thanks to Jess Trading\". Closing quotation marks and \"- Mike R.\" in Light Gray. Bottom left: a subtle dark card showing a small green profit chart icon. Bottom right: Neon Green stars and bold text reading \"500+ 5-Star Reviews\". Bottom edge: small Light Gray disclaimer text \"Results may vary. Past performance does not guarantee future results.\" 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Bait-and-switch testimonial. Double-take scroll stopper."
+    },
+    {
+      "template_number": 17,
+      "template_name": "verified-review-card",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad on Carbon Black (#101010) background with subtle Neon Green tint. Top: large bold white serif pull-quote reading \"I finally stopped losing money to emotions\" in quotation marks. Below the quote: five filled Neon Green (#A5F28C) stars, large. Center-left: a dark (#1A1A1A) rounded-rectangle review card with subtle shadow containing: gray circular avatar icon, bold white name \"James K.\" with 🇺🇸, Electric Blue checkmark and \"Verified Buyer\" in Electric Blue #2979FF text, then 3-4 sentences of review body text in Light Gray: \"Was hemorrhaging money trying to scalp forex manually. Emotions kept wrecking my entries. Found Jess Trading through a Reddit thread and figured why not. The bot trades gold on MT5 completely on its own. I just check my phone once a day now. Wish I found this a year ago.\". At the bottom of the card: \"...Read more\" link in Neon Green and \"Was this review helpful? 👍 203\" in gray. Right side: Jess Trading logo in white, small. The review UI is the trust mechanic. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Mimics review platform UI with verified badge."
+    },
+    {
+      "template_number": 18,
+      "template_name": "stat-callout-lifestyle",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad on Carbon Black (#101010) background. Top: bold Neon Green (#A5F28C) filled banner bar spanning full width, white all-caps sans-serif reading \"SET IT UP ONCE. PROFIT 24/7.\". Center: a lifestyle photo of a person's hands holding a phone showing a green trading chart, sitting at a clean modern desk. Slightly warm ambient lighting. Four stat callouts with subtle curved Neon Green lines pointing toward the phone: \"24/7 / AUTOMATED\", \"0 / EMOTIONS\", \"$147 / ONE-TIME\", \"100% / RULE-BASED\" with five small gold stars. Stats in bold white, labels in all-caps Light Gray. Premium, aspirational, information-dense but scannable. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Lifestyle context with stat radial overlay."
+    },
+    {
+      "template_number": 19,
+      "template_name": "highlighted-testimonial",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad on Carbon Black (#101010) background. Top left: circular profile photo of a smiling man, mid-30s, casual shirt, friendly expression. To the right: bold white name \"Carlos M.\" with a Electric Blue checkmark icon. Below: a long-form customer quote in large regular-weight Light Gray (#D7D7D7) sans-serif type spanning most of the frame: \"I spent two years trying to learn technical analysis. Took courses, watched hundreds of YouTube videos, blew two accounts. Then a friend told me about Jess Trading. I set up the bot on MetaTrader 5 in less than 10 minutes. It trades gold automatically, no emotions, no second-guessing. The bot does everything for me. I just check my phone once a day. This is the best $147 I have ever spent on trading.\". Key phrases highlighted with Neon Green (#A5F28C) rectangular background fills: \"blew two accounts\" and \"The bot does everything for me\". Bottom right: Jess Trading logo in white. Bottom left: a small dark badge reading \"Lifetime Access | $147\" in Light Gray with Neon Green border. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Highlighted phrases direct eye to money lines."
+    },
+    {
+      "template_number": 20,
+      "template_name": "advertorial-editorial",
+      "prompt": "Do NOT use polished ad layouts. This should look like organic editorial content. Create: a full-bleed moody photo of a person in a dark room lit only by multiple trading screens showing green charts, cinematic blue-green ambient light, shot on 50mm f/1.8, shallow depth of field, cinematic color grade with cool highlights and warm shadows. Lower 45% of the frame is a text overlay zone: a prominent white rounded-rectangle pill label reading \"TRENDING\" in centered uppercase sans-serif. Below: very large, dominant, bold all-caps condensed sans-serif headline filling the width of the frame in white text with key words in Neon Green (#A5F28C): \"THIS TRADING BOT IS BLOWING UP — HERE'S WHY MANUAL TRADERS ARE SWITCHING TO AUTOMATION\". The headline should be oversized — at least 35% of the total frame height. Bottom center: small white text. No product shot, no CTA button, no stars. This should read like a finance blog or tech account post, not a paid ad. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Editorial/content card. No brand modifier — must look organic."
+    },
+    {
+      "template_number": 21,
+      "template_name": "bold-statement",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a static ad on Carbon Black (#101010) radial gradient background. Center: oversized bold white sans-serif headline reading \"While you sleep, your bot is trading gold.\" — text should feel confident, clean, and powerful, not hype or scammy. Subtle ambient glow from behind the text in Neon Green (#A5F28C), very faint, creating depth. Below the headline: a thin horizontal line in Neon Green. Below the line: Jess Trading logo in white with \"The future of trading is automated.\" tagline in Light Gray #D7D7D7. No stats, no reviews, no badges, no images. The typography and the message do all the work. Dark, premium, Apple keynote energy. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Pure typography ad. Brand energy only."
+    },
+    {
+      "template_number": 22,
+      "template_name": "results-story",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a visualization ad. Full background is a photorealistic overhead shot of a clean modern desk with a laptop showing green trading charts, a coffee, AirPods, and a passport — representing freedom and passive income. Shot at 50mm f/2.8, shallow depth of field, warm morning lighting. Top third: large bold white sans-serif headline reading \"Imagine waking up to profits you didn't have to work for\" with \"profits\" in bold Neon Green (#A5F28C) for emphasis. Bottom: semi-transparent dark bar spanning full width with three stat columns separated by thin vertical lines: \"24/7 TRADING\" | \"GOLD (XAUUSD)\" | \"$147 LIFETIME\" in white text. Very bottom edge: smaller bold sans-serif \"NO CODING REQUIRED\" in Neon Green. Scene is the hero — stats are the payoff. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Aspirational 'imagine if' scene with stat bar."
+    },
+    {
+      "template_number": 23,
+      "template_name": "manifesto",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a copy-dominant manifesto ad on Carbon Black (#101010) background. No background imagery — text is the entire creative. Top: oversized bold white serif or sans-serif headline reading \"Most traders fail. Here's why.\". Below: left-aligned body copy in smaller regular-weight Light Gray (#D7D7D7) text, structured as short punchy sentences and line breaks (NOT paragraphs): \"They trade with emotions. / They revenge-trade after a loss. / They move their stop loss 'just this once.' / They check charts at 3am. / They second-guess every entry. / They know the strategy but can't follow it. / The problem was never the strategy. / It was always the execution. / That's why we built a bot that doesn't feel. / It doesn't panic. It doesn't get greedy. / It follows the rules, every single time. / 24 hours a day. 7 days a week. / Trading gold with zero emotion. / Jess Trading — $147, lifetime access.\". Bottom 15%: Jess Trading logo centered in white with Electric Blue #2979FF CTA text \"Get lifetime access at jesstrading.com\". No icons, no badges, no images. The writing IS the ad. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Copy-only manifesto. The writing does all the work."
+    },
+    {
+      "template_number": 24,
+      "template_name": "social-comment-visual",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a social proof ad. Top 50%: a dark moody shot of a laptop screen displaying a candlestick chart with green profit candles on a clean desk, ambient screen glow, shot at 85mm f/2.8. Bottom 50%: a realistic social media comment card on dark (#1A1A1A) background. Left: small circular profile photo of a man in his 30s, friendly smile. Bold white name \"Alan R.\" above the comment. Comment text in Light Gray: \"Was losing money for 2 years trying to trade forex manually. Switched to the Jess Trading bot for gold and everything changed. It just runs on MT5 and I check it once a day. Honestly the best investment I've made — and it was only $147.\". Below comment: \"4w\" · Like · Reply in dark gray. Bottom right of comment: reaction emojis (thumbs up + fire) with \"47\". Should look like an organic screenshot, not designed. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Trading visual + organic comment card combo."
+    },
+    {
+      "template_number": 25,
+      "template_name": "us-vs-them-color-split",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a side-by-side comparison ad divided vertically into two equal halves. Left half: muted dark red-tinted (#1a1010) background. Header: \"Manual Trading\" in gray text. Below: illustration of a tired person staring at multiple screens, stressed expression, red chart going down. Below: vertical stack of 4 problems, each with a red circle X: \"Emotional decisions\", \"Limited to market hours\", \"Inconsistent results\", \"Constant screen time\" in gray text. Right half: Carbon Black (#101010) background with subtle Neon Green (#A5F28C) edge glow. Header: \"Jess Trading Bot\" in Neon Green. Below: illustration of a calm person on their phone at a cafe, green chart going up on a laptop behind them. Below: vertical stack of 4 benefits, each with a Neon Green circle checkmark: \"100% disciplined execution\", \"Trades 24/7 nonstop\", \"Backtested strategy\", \"Set it and forget it\" in white text. Center divider: a \"VS\" in white circle. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Visual comparison with strong color contrast."
+    },
+    {
+      "template_number": 26,
+      "template_name": "stat-callout-data",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a statistic-led ad. Top 50%: moody dark shot of a person's hands on a laptop keyboard, screen showing trading charts with green candles, warm ambient light from the screen, dark surroundings. Middle: Jess Trading logo centered in white with thin horizontal rules on either side as a visual divider. Bottom 50%: Carbon Black (#101010) to pure black gradient. Large bold uppercase white sans-serif text: \"OUR BOT RUNS 24/7, EXECUTES IN UNDER 1 SECOND, AND NEVER MAKES AN EMOTIONAL TRADE.\" Key phrases \"24/7\", \"UNDER 1 SECOND\", and \"NEVER\" highlighted in Neon Green (#A5F28C). The statistic IS the headline — no separate subhead needed. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Data-driven headline. Stats ARE the copy."
+    },
+    {
+      "template_number": 27,
+      "template_name": "benefit-checklist",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: an information-dense benefit ad on Carbon Black (#101010) background, split composition. Left 45%: a dark stylized illustration of gold bars stacked with a subtle Neon Green (#A5F28C) wireframe candlestick chart rising behind them — representing gold trading. Clean, minimal, dark background. Right 55%: Top: five Neon Green stars with \"500+ Reviews\" in Light Gray. Jess Trading logo in white. Below: white sans-serif headline: \"Built for traders who want results, not stress\". Then 4 checkmark benefit rows, each with a filled Neon Green circle checkmark + bold white text: \"Trades gold (XAUUSD) automatically\", \"No coding or trading experience needed\", \"One-time payment — lifetime access\", \"Step-by-step setup tutorial included\". Bottom right: Electric Blue #2979FF rounded CTA button reading \"START NOW — $147\". 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Information-dense benefit checklist with visual anchor."
+    },
+    {
+      "template_number": 28,
+      "template_name": "feature-arrow-callout",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: an annotation ad on Carbon Black (#101010) background. Top: italic serif headline \"Wall Street algorithms. Now in your hands.\" in white. Below in massive bold Neon Green (#A5F28C) sans-serif: \"FULLY AUTOMATED\". Center: a stylized dark illustration of a laptop displaying a trading dashboard with candlestick charts and a green profit curve. Four curved arrows in Neon Green pointing from the laptop outward to four benefit callout labels arranged around it in bold white text: \"Trades gold 24/7\", \"No coding needed\", \"Proven strategy\", \"One-time $147\". Arrows should feel editorial and clean, not rigid. Bottom: full-width Electric Blue #2979FF banner with \"GET LIFETIME ACCESS + FREE SETUP GUIDE\" in bold white. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Arrow annotation pointing to key features."
+    },
+    {
+      "template_number": 29,
+      "template_name": "ugc-viral-post",
+      "prompt": "Do NOT use ad layouts or polish. This should look completely native and organic. Create: a casual selfie of a man in mid-20s, hoodie, at a desk with monitors behind him, taken with iPhone front camera, slightly grainy, indoor lighting, no professional setup. Overlaid in the center of the frame: a realistic screenshot of a Reddit post. Subreddit name \"r/algotrading\", username, timestamp, upvote count visible. Post title in bold: \"Why are people still manually trading in 2025?\". Post body in regular text: \"Seriously asking. I switched to an automated bot six months ago and my results have been more consistent than two years of manual trading. The bot doesn't sleep, doesn't panic sell, doesn't FOMO into bad entries. Why would anyone still sit there staring at charts?\". The post should feel like the person is reacting to it — NOT selling a product. No product visible. No brand logo. No CTA. The hook is the opinion. 9:16 aspect ratio.",
+      "aspect_ratio": "9:16",
+      "needs_product_images": false,
+      "notes": "UGC + viral Reddit post overlay. No branding at all."
+    },
+    {
+      "template_number": 30,
+      "template_name": "hero-statement-icon-bar",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a bold statement ad. Top 15%: Carbon Black (#101010) banner with massive bold white uppercase sans-serif headline: \"TRADE SMARTER.\" with a period for punch. Middle 55%: a lifestyle photo — person relaxed on a modern couch, phone in hand showing a trading app with green numbers, natural warm light from a window, calm and confident expression. Bottom 25%: dark (#1A1A1A) background. Three evenly spaced icon-and-text benefit columns: a robot icon with \"AUTOMATED\", a chart icon with \"GOLD XAUUSD\", an infinity icon with \"LIFETIME ACCESS\". Icons are simple Neon Green (#A5F28C) line-drawn in dark circles. Very bottom edge: Neon Green ticker bar with repeating text: \"TRUSTED BY TRADERS WORLDWIDE\". 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Statement + lifestyle + benefit icons. Full-funnel."
+    },
+    {
+      "template_number": 31,
+      "template_name": "comparison-grid",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a structured comparison grid ad on Carbon Black (#101010) background. Top row divided 50/50: Left: text \"MANUAL TRADING\" in Light Gray with a red down-arrow icon. Right: \"JESS TRADING BOT\" in Neon Green (#A5F28C) with a green up-arrow icon. Below: four horizontal rows spanning full width, each divided 50/50 by a thin Neon Green vertical line and separated by thin dark gray horizontal lines. Row 1: \"Emotional decisions\" vs \"100% rule-based\". Row 2: \"Limited to your screen time\" vs \"Runs 24/7 nonstop\". Row 3: \"Slow reaction time\" vs \"Executes in milliseconds\". Row 4: \"Requires years of experience\" vs \"No experience needed\". Left column text in muted gray, right column text in bold white. No images — the copy contrast does the work. Clean, premium, data-driven. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Data grid comparison. Meme-format viral potential."
+    },
+    {
+      "template_number": 32,
+      "template_name": "ugc-story-bubbles",
+      "prompt": "Do NOT use ad layouts or polish. This must look like a real person's Instagram Story. Create: a casual iPhone photo of a man's hands typing on a laptop at a clean desk with a second monitor showing trading charts in the background. Natural overhead daylight, slightly warm, iPhone quality. Scattered across the frame: 5 text bubbles using Instagram Story's built-in highlighted text tool. Each bubble has a highlighted background, varied colors between bubbles. Bubble 1: \"algo trading 📈\" large and bold. Bubble 2: \"90% of traders lose money because of emotions — not strategy\". Bubble 3: \"this bot trades gold 24/7 with zero emotion, and you don't need to code anything 🤯\". Bubble 4: \"set it up in 10 min, already seeing consistent results 🔥\". Bubble 5: \"@jesstrading is legit\". Should feel casual and hand-placed, not designed. 9:16 aspect ratio.",
+      "aspect_ratio": "9:16",
+      "needs_product_images": false,
+      "notes": "Instagram Story native feel with text bubbles."
+    },
+    {
+      "template_number": 33,
+      "template_name": "faux-press-article",
+      "prompt": "Create: a static ad designed to look like a real online finance news article screenshot. Top 25%: dark background with a realistic financial publication masthead in bold white serif text \"MARKETS INSIDER\" (do NOT use real publication names — this is a fictional masthead). Below: thin gray horizontal rule. Small gray text \"Latest\" left-aligned. Then: bold white serif headline spanning full width: \"'It changed how I trade': The $147 trading bot with hundreds of five-star reviews\". Bottom 60%: two side-by-side photos — one of a person smiling at their phone showing green trading charts in warm natural light, one of a laptop with a candlestick chart in a home office, both in casual lighting. Photos should look like real submissions, not studio. No brand logo. No CTA. Should look like an organic article screenshot. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Faux news article screenshot. Authority play."
+    },
+    {
+      "template_number": 34,
+      "template_name": "faux-iphone-notes",
+      "prompt": "Create: a static ad disguised as an iPhone Notes app screenshot on a dark background. Top: realistic iOS status bar (time, signal bars, wifi icon, battery icon) in white text on black. Below: iOS Notes navigation — \"< All iCloud\" back arrow, share and menu icons. Below nav: small gray timestamp \"15 March 2025 09:22\". Main content area on dark (#1A1A1A) background (dark mode Notes): bold white headline \"Why I Stopped Manual Trading\". Below: 3 benefit rows, each with a Neon Green (#A5F28C) checkmark + white text: \"Runs 24/7 — I can't watch charts all day\", \"Zero emotions — my biggest weakness eliminated\", \"One-time $147 — cheaper than one bad trade\". Bottom: small white text \"Jess Trading — jesstrading.com\". Clean dark mode Notes aesthetic. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Pattern interrupt — looks like a Notes app screenshot."
+    },
+    {
+      "template_number": 35,
+      "template_name": "hero-visual-stat-bar",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a showcase ad on Carbon Black (#101010) radial gradient background. Top: large bold Neon Green (#A5F28C) uppercase sans-serif headline: \"THE SMARTEST WAY TO TRADE GOLD\". Below headline: Electric Blue #2979FF rounded CTA button with white text \"START NOW\". Center: a stylized dark illustration of gold bars with a glowing Neon Green algorithmic chart line rising above them — representing automated gold trading. Surrounding the visual: subtle particle effects or data points floating, creating depth and tech atmosphere. Bottom: a dark (#1A1A1A) rounded stat bar spanning the width with three metrics separated by thin vertical lines: \"24/7 AUTOMATED\" | \"GOLD (XAUUSD)\" | \"$147 LIFETIME\" in bold white text. Numbers large and dominant. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Hero visual with gold bars + algorithmic chart + stat bar."
+    },
+    {
+      "template_number": 36,
+      "template_name": "whiteboard-before-after",
+      "prompt": "This should look like a real person's photo, NOT an ad. Create: a lifestyle photo set in a modern home office. In the background: a small whiteboard propped up on a desk. On the whiteboard: two simple hand-drawn black marker illustrations side by side — left drawing labeled \"Manual Trading\" showing a stressed stick figure watching a screen with a red downward arrow, an arrow pointing right to a second drawing labeled \"Bot Trading\" showing a relaxed stick figure on a beach with a green upward arrow and a small robot icon. Below the drawings on the whiteboard: handwritten text in black marker \"Why are you still doing it the hard way?\". In the foreground: a person's hand pointing at the whiteboard, with a laptop visible on the desk showing trading charts. Shot on iPhone, natural desk lighting, casual and educational. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "UGC whiteboard educational. No brand modifier — must look organic."
+    },
+    {
+      "template_number": 37,
+      "template_name": "promo-discount",
+      "prompt": "Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography in white for headlines, Light Gray #D7D7D7 for secondary text, Neon Green #A5F28C for profit numbers and key highlights, Electric Blue #2979FF exclusively for CTA buttons. Minimalist composition with generous negative space, Apple keynote-inspired lighting. Candlestick chart and algorithmic trading motifs. Mood: sophisticated, trustworthy, futuristic. No hype, no clutter. Create: a promotional ad on Carbon Black (#101010) background. Top 12%: bold white uppercase sans-serif headline: \"LIMITED TIME OFFER\". Upper-left: a Neon Green (#A5F28C) starburst badge rotated slightly, reading \"LAUNCH PRICE $147 — GOING UP TO $197\" in bold dark text. Center: a stylized dark visualization — abstract neural network / algorithm nodes connected by Neon Green lines, pulsing with data, representing the trading bot's intelligence. Moody, slightly dramatic lighting with Neon Green ambient glow. Bottom 20%: three benefit columns on a dark strip: \"24/7 Automated\" | \"Gold XAUUSD\" | \"Lifetime Access\". Icons in Neon Green circles. Very bottom: full-width Electric Blue #2979FF banner with bold white text: \"GET ACCESS BEFORE PRICE INCREASES\". 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Urgency/promo variant with price increase warning."
+    },
+    {
+      "template_number": 38,
+      "template_name": "ugc-lifestyle-review-split",
+      "prompt": "Premium fintech aesthetic. Create: a vertical split social proof ad. Left 55%: a casual UGC-style photo of a young man in casual clothes, smiling, relaxed at a cafe or modern workspace, phone in hand showing green numbers, natural warm lighting. The person should look genuinely happy, not posed. Right 45%: solid Carbon Black (#101010) background. Top-right: small Neon Green (#A5F28C) sparkle accents. Center-right: Jess Trading logo in white, clean and prominent. Below logo: a dark (#1A1A1A) rounded-rectangle review card with: five filled Neon Green stars at top, then italic text: \"Set it up in 10 minutes. Woke up to profits.\" in white. Below the card: \"Lifetime Access — $147\" in Light Gray. Bottom center: small Neon Green sparkle accents. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "UGC lifestyle + review card split."
+    },
+    {
+      "template_number": 39,
+      "template_name": "curiosity-gap-hook",
+      "prompt": "Do NOT include any product, logo, or branding. Create: a scroll-stopping curiosity ad designed to look like a truncated social media post. Top 35%: Carbon Black (#101010) background with large bold white sans-serif text (heavy weight, tight leading): \"90% of traders lose money. The other 10% stopped trading manually. Here's what they do instead...\". The last few words followed by \"...more\" in lighter gray text, mimicking a truncated Facebook/Instagram caption that requires clicking \"more\" to expand. Bottom 65%: a slightly overhead photo of a person at a desk, laptop open showing red trading charts, head in hands, frustrated expression, dim moody lighting. Photo should feel real and editorial, not stock. Slightly shallow depth of field. No text on the photo. No product. No logo. No CTA. The entire purpose is to provoke curiosity and earn the click. 1:1 aspect ratio.",
+      "aspect_ratio": "1:1",
+      "needs_product_images": false,
+      "notes": "Pure curiosity bait. No branding at all."
+    },
+    {
+      "template_number": 40,
+      "template_name": "postit-note",
+      "prompt": "Create: a lifestyle photo set in a home office or desk setup. Soft natural daylight from a nearby window, slightly warm, naturally blurred background showing a monitor with trading charts. Frame is slightly off-center — feels found rather than composed. Slight natural sensor grain consistent with a phone camera. Center of frame: a laptop or monitor screen displaying a candlestick chart with green candles trending up. Stuck on the screen: a yellow square post-it note, slightly crooked. Realistic paper texture with a horizontal crease. Subtle curl at bottom-right corner. Held with a small piece of clear tape, slightly wrinkled. Handwritten in thick black marker, imperfect lowercase: \"set up the bot\" line break \"went to sleep\" line break \"woke up to profits\" line break \"🤯\". No brand logo anywhere. No attribution. Bottom center on a plain off-white strip: small plain lowercase sans-serif caption: \"jesstrading.com — the future of trading is automated\". Casual, authentic, intriguing. 4:5 aspect ratio.",
+      "aspect_ratio": "4:5",
+      "needs_product_images": false,
+      "notes": "Post-it note on screen. Pattern interrupt — feels found, not designed."
+    }
+  ]
+}

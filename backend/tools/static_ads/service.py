@@ -67,11 +67,13 @@ class StaticAdService:
             f.write(f"Aspect ratio: {prompt_data.get('aspect_ratio', 'auto')}\n")
             f.write(f"Resolution: {resolution}\n")
 
-        # Download images
+        # Download images — continue numbering from existing files to avoid overwriting
         images = result.get("images", [])
         image_files = []
+        existing = list(template_dir.glob(f"{name}_v*.{output_format}"))
+        next_v = len(existing) + 1
         for j, img in enumerate(images):
-            filename = f"{name}_v{j + 1}.{output_format}"
+            filename = f"{name}_v{next_v + j}.{output_format}"
             filepath = template_dir / filename
             self._download_image(img["url"], filepath)
             image_files.append(filename)
