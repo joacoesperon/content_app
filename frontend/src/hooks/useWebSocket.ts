@@ -6,7 +6,7 @@ export interface WsMessage {
   [key: string]: unknown;
 }
 
-export function useWebSocket(jobId: string | null) {
+export function useWebSocket(jobId: string | null, getUrl?: (id: string) => string) {
   const [messages, setMessages] = useState<WsMessage[]>([]);
   const [status, setStatus] = useState<string>('idle');
   const wsRef = useRef<WebSocket | null>(null);
@@ -14,7 +14,8 @@ export function useWebSocket(jobId: string | null) {
   const connect = useCallback(() => {
     if (!jobId) return;
 
-    const ws = new WebSocket(getWebSocketUrl(jobId));
+    const urlFn = getUrl ?? getWebSocketUrl;
+    const ws = new WebSocket(urlFn(jobId));
     wsRef.current = ws;
     setStatus('connecting');
 

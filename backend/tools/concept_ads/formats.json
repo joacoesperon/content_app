@@ -1,0 +1,114 @@
+[
+  {
+    "id": "ugc_testimonial",
+    "name": "UGC Testimonial",
+    "description": "Authentic-feeling user testimony with real results and emotional language. Looks organic, not produced.",
+    "visual_rules": "Casual composition, slightly imperfect framing. Person in natural environment (home office, desk). Smartphone-style portrait or slight tilt. Muted or desaturated background. Text overlay in handwritten or system font. No heavy branding.",
+    "copy_guidance": "First-person voice. Specific numbers (profit amounts, time saved, account growth). Skeptic-to-believer arc. 'I never thought I'd...' or 'This changed everything for me' hooks."
+  },
+  {
+    "id": "bold_billboard",
+    "name": "Bold Billboard",
+    "description": "Maximum-impact single statement. Headline dominates the frame. Zero clutter.",
+    "visual_rules": "90%+ of frame is the headline text. Stark contrast — white or neon on black, or black on white. Minimal or abstract background. Brand color used sparingly as accent. Large weight, tight tracking. CTA small at the bottom.",
+    "copy_guidance": "5 words or fewer for the main hook. Provocative or contrarian. Numbers work well ('$147 once. Runs forever.'). Avoid explaining — state the claim boldly."
+  },
+  {
+    "id": "before_after",
+    "name": "Before / After",
+    "description": "Split visual or sequential contrast showing transformation. The gap between states is the product.",
+    "visual_rules": "Two-panel split (left/right or top/bottom) or single image with before/after overlay text. Left/top = dull, stressed, chaotic. Right/bottom = clean, calm, profitable. Sharp dividing line or dramatic color shift between panels.",
+    "copy_guidance": "'Before: [pain]. After: [outcome].' Keep parallel structure. Time frame adds credibility ('After 30 days'). Trader-specific contrast: manual stress → automated calm."
+  },
+  {
+    "id": "authority_expert",
+    "name": "Authority / Expert",
+    "description": "Positions the product as the professional-grade choice. Sophisticated, institutional feel.",
+    "visual_rules": "Clean, structured layout. Data visualizations, charts, or technical elements in background. Dark background preferred. Monospace or condensed sans-serif type. Subtle grid or data pattern overlay. Zero decorative elements — everything is functional.",
+    "copy_guidance": "Technical language used confidently. Stats and metrics. 'Used by serious traders.' Differentiation from casual/retail approach. Performance-focused, not lifestyle."
+  },
+  {
+    "id": "social_proof_stack",
+    "name": "Social Proof Stack",
+    "description": "Multiple proof points layered together — reviews, numbers, testimonials — creating overwhelming credibility.",
+    "visual_rules": "Stacked cards or tiles, each with a review or stat. Slightly offset arrangement or mosaic. Mix of star ratings, quote snippets, and result numbers. Clean background so the stack is the focus. Brand color as a subtle connective thread.",
+    "copy_guidance": "Real-sounding names and results. Mix specificity ('$2,847 in 3 weeks') with emotional wins ('Finally sleeping through the night'). Include a unifying headline above or below the stack."
+  },
+  {
+    "id": "problem_callout",
+    "name": "Problem Callout",
+    "description": "Calls out the exact pain the target avatar lives with. Creates immediate recognition and emotional resonance.",
+    "visual_rules": "High-contrast, slightly uncomfortable visual energy. Red or amber accent colors. Distressed or high-contrast background. The problem text is the hero element. No aspirational imagery — stay in the pain.",
+    "copy_guidance": "'Still doing X?' or 'Tired of Y?' format. Name the specific pain precisely. The product is the implicit escape — don't mention it until the CTA. The more specific the problem, the stronger the hook."
+  },
+  {
+    "id": "listicle_benefits",
+    "name": "Listicle / Benefits",
+    "description": "Numbered or bulleted list of benefits or features. Scannable, logical, satisfying.",
+    "visual_rules": "Vertical list layout. Clean left-aligned text. Checkmarks, numbers, or custom icons in brand color. White or dark background. Each item on its own line with generous spacing. Small CTA at the bottom.",
+    "copy_guidance": "3-6 items max. Start each with a verb ('Trades 24/7', 'Eliminates emotion', 'Works while you sleep'). Mix functional benefits with emotional ones. Last item should be the most compelling."
+  },
+  {
+    "id": "native_screenshot",
+    "name": "Native Screenshot",
+    "description": "Looks like a real screenshot from a phone, app, or trading platform. Maximum believability.",
+    "visual_rules": "Phone frame or browser chrome around the content. Realistic UI elements (notifications, status bars, platform UI). Slightly messy or candid feel — not too polished. Light mode for contrast. Real-looking data in the screenshot.",
+    "copy_guidance": "The screenshot IS the copy. Minimal or no overlay text. If text is needed, use an arrow pointing to key number or result. The visual tells the story."
+  },
+  {
+    "id": "stat_infographic",
+    "name": "Stat Infographic",
+    "description": "One powerful statistic or data point displayed with maximum visual impact.",
+    "visual_rules": "The number is 60%+ of the frame. Supporting context in small text below or beside it. Clean, data-viz aesthetic. Grid lines, minimal chart elements as background decoration. Dark background with neon or white number.",
+    "copy_guidance": "Single most compelling number (win rate, average pips, accounts running, uptime %). Context below the number: 'Verified backtest — XAUUSD, Jan 2022–Dec 2024.' Don't over-explain."
+  },
+  {
+    "id": "offer_promotion",
+    "name": "Offer / Promotion",
+    "description": "Price, deal, or value proposition front and center. Urgency-driven conversion creative.",
+    "visual_rules": "Price tag, badge, or starburst element. High contrast — often inverted from brand palette. Countdown timer element if applicable. Clear visual hierarchy: offer → price → CTA. Slightly promotional energy without being cheap.",
+    "copy_guidance": "'Lifetime access for $147' is the hook. Anchor with what they'd pay for alternatives. Strike-through pricing or 'normally $X'. 'One-time' and 'no subscription' are powerful modifiers for this audience."
+  },
+  {
+    "id": "editorial",
+    "name": "Editorial / Advertorial",
+    "description": "Looks like a news article, blog post, or magazine feature. Lowers ad resistance.",
+    "visual_rules": "Newspaper or magazine layout. Serif headline font. Column grid. Fake publication logo or 'Sponsored' label (but realistic-looking). Drop cap or pull quote. Photo in article style. Muted, editorial color palette.",
+    "copy_guidance": "'Trading Bot Outperforms Manual Traders by 340% — Here's Why' headline style. Story format. Quote from 'a trader who tested it.' Neutral journalistic tone that gradually reveals the product. CTA is soft: 'Learn more' or 'See the results.'"
+  },
+  {
+    "id": "pas_framework",
+    "name": "Pain → Agitate → Solve",
+    "description": "Classic copywriting framework in visual form. Names the pain, intensifies it, then presents relief.",
+    "visual_rules": "Three clear visual sections or panels. Section 1 (Pain): dark, heavy. Section 2 (Agitate): chaotic or intense. Section 3 (Solve): clean, bright, relief. Color transitions from dark/red → amber → green/neon. Each section has a clear headline.",
+    "copy_guidance": "Pain: 'You're losing trades because of emotion.' Agitate: 'Every manual decision costs you — stress, sleep, and profits.' Solve: 'The bot trades on rules. No emotion. No hesitation.' Keep each section to one punchy sentence."
+  },
+  {
+    "id": "curiosity_gap",
+    "name": "Curiosity Gap",
+    "description": "Opens a loop in the viewer's mind. Something is hidden or revealed partially — they need to click.",
+    "visual_rules": "Partially obscured element (blurred numbers, hidden graph result). Question mark or 'reveal' visual device. Dark or foggy background with one illuminated element. Tension between shown and hidden. Clean, minimal — the gap IS the creative.",
+    "copy_guidance": "'What happened when I ran this bot for 90 days?' or 'The trading result most EAs hide.' Promise something specific but don't deliver it in the ad. The CTA delivers the answer."
+  },
+  {
+    "id": "trust_builder",
+    "name": "Trust Builder",
+    "description": "Addresses objections and skepticism directly. Builds credibility through transparency and proof.",
+    "visual_rules": "Clean, professional, slightly clinical. Logos, badges, certifications if available. Real data presented clearly. No hype colors — neutral or brand-dark palette. Structured layout with clear sections. Professional photography style.",
+    "copy_guidance": "'Here's what I can and can't promise.' Money-back guarantee prominent. Real backtest data. 'No, this isn't a get-rich scheme.' Transparent tone disarms skeptics. CTA is low-pressure: 'See the full results.'"
+  },
+  {
+    "id": "lifestyle_aspiration",
+    "name": "Lifestyle Aspiration",
+    "description": "Sells the outcome lifestyle, not the product features. Freedom, time, income without the grind.",
+    "visual_rules": "Aspirational photography: person at laptop in café or beach, checking phone relaxed, enjoying time with family. Bright, warm, or soft lighting. Wide shot or environmental portrait. Brand overlay minimal — lifestyle IS the creative.",
+    "copy_guidance": "Don't mention the bot until the last line or CTA. Lead with the life: 'Markets open at 3am. You're asleep. The bot trades.' Outcome > feature. 'Freedom to live your life' framing. Perfect for cold traffic."
+  },
+  {
+    "id": "product_demo",
+    "name": "Product Demo",
+    "description": "Shows the product working. For a trading EA: real trades, real MT5 interface, real results.",
+    "visual_rules": "MetaTrader 5 interface or terminal screenshot as hero. Green profits visible. Clean composition with phone or monitor showing the EA running. Data-heavy but organized. Dark terminal background. Numbers are the visual.",
+    "copy_guidance": "'Watch it trade live' or 'Here's a real trade from Tuesday.' Specific currency pair, entry, exit, profit in pips. Removes abstraction — this is real. CTA: 'See more verified results.'"
+  }
+]

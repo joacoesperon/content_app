@@ -5,3 +5,5 @@ __pycache__/
 node_modules/
 frontend/dist/
 brand/outputs/
+brand/concept-outputs/
+brand/reference-images/

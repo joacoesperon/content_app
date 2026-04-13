@@ -1,0 +1,47 @@
+[
+  {
+    "id": "trader_agotado",
+    "name": "Trader Agotado",
+    "description": "Opera manualmente en XAUUSD, pega 8+ horas a la pantalla por día, pierde trades por fatiga y decisiones emocionales.",
+    "pain_points": ["tiempo frente a pantalla", "fatiga mental", "disciplina emocional", "perder trades mientras duerme"],
+    "motivations": ["recuperar tiempo libre", "operar sin emociones", "que el mercado trabaje por él"],
+    "objections": ["¿el bot realmente funciona?", "¿qué pasa si el mercado cambia?", "ya probé otros y perdí"],
+    "language_sample": "Me paso el día mirando el chart y cuando me distraigo dos minutos pierdo el mejor trade del día. Estoy harto de vivir esclavo del mercado."
+  },
+  {
+    "id": "inversor_pasivo",
+    "name": "Inversor Pasivo",
+    "description": "Tiene capital disponible pero no quiere operar activamente. Busca rendimiento en oro/forex sin dedicarle tiempo ni aprender análisis técnico.",
+    "pain_points": ["no tiene tiempo para operar", "no entiende el análisis técnico", "desconfía de las promesas del mercado"],
+    "motivations": ["ingresos pasivos reales", "diversificar fuera de acciones y crypto", "acceso a mercados profesionales"],
+    "objections": ["es demasiado técnico para mí", "¿cómo sé que no es una estafa?", "prefiero algo más simple"],
+    "language_sample": "Tengo plata para invertir pero no quiero aprender a tradear. Solo quiero algo que funcione sin que tenga que mirar pantallas."
+  },
+  {
+    "id": "trader_principiante",
+    "name": "Trader Principiante",
+    "description": "Empezó hace menos de un año en forex o trading de oro. Abrumado por la complejidad, quemó una cuenta demo y busca una forma más fácil de empezar.",
+    "pain_points": ["curva de aprendizaje enorme", "miedo a perder dinero real", "no sabe configurar MT5", "información contradictoria online"],
+    "motivations": ["empezar a generar ingresos del trading", "aprender sin arriesgar demasiado", "ver resultados reales"],
+    "objections": ["no sé si puedo configurarlo", "¿necesito experiencia previa?", "¿qué pasa si lo configuro mal?"],
+    "language_sample": "Llevo meses viendo tutoriales de trading y cada vez entiendo menos. Quiero algo que funcione mientras aprendo, sin tener que ser experto."
+  },
+  {
+    "id": "trader_intermedio",
+    "name": "Trader Intermedio",
+    "description": "Opera desde hace 1-3 años con una estrategia propia, pero los resultados son inconsistentes. Sabe que sus emociones le juegan en contra.",
+    "pain_points": ["inconsistencia de resultados", "saltarse las reglas de su propia estrategia", "no respetar stop loss", "sobre-operar en días malos"],
+    "motivations": ["ejecutar su estrategia sin errores humanos", "consistencia mes a mes", "escalar sin aumentar el tiempo dedicado"],
+    "objections": ["el bot no entiende el contexto del mercado", "prefiero tener control total", "¿puede adaptarse a mi estrategia?"],
+    "language_sample": "Tengo una buena estrategia pero cuando el mercado se mueve rápido me paralizo o entro tarde. El bot ejecutaría mejor que yo mis propias reglas."
+  },
+  {
+    "id": "emprendedor_digital",
+    "name": "Emprendedor Digital",
+    "description": "Emprendedor con ingresos online que busca diversificar en activos reales. Le atrae el oro como refugio de valor y la automatización como concepto.",
+    "pain_points": ["ingresos volátiles del negocio digital", "no sabe dónde invertir los excedentes", "no tiene tiempo para otro proyecto"],
+    "motivations": ["flujo de caja adicional automatizado", "protección contra inflación vía oro", "sistema que corre solo como su negocio"],
+    "objections": ["¿se integra bien con MT5?", "¿cuánto capital mínimo necesito?", "¿cómo retiro las ganancias?"],
+    "language_sample": "Tengo un negocio online que genera bien, pero quiero que ese dinero también trabaje. El oro siempre fue mi idea pero nunca supe cómo entrar de forma inteligente."
+  }
+]

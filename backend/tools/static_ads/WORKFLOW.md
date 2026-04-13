@@ -1,3 +1,129 @@
+# Static Ad Generator — Workflow
+
+Genera 40+ imágenes de static ads listas para producción usando Nano Banana 2 via FAL API. El workflow completo tiene 3 fases: construir el Brand DNA, generar los prompts, y generar las imágenes desde la app.
+
+---
+
+## Requisitos previos
+
+- FAL API key configurada en `.env` → `FAL_KEY=tu-key`
+- Instalar dependencias: `uv pip install -r backend/requirements.txt`
+- Iniciar la app: `./run.sh` → abrir `http://localhost:5173`
+
+---
+
+## Phase 1 — Brand DNA
+
+**Cuándo hacerlo:** Una sola vez, o cuando la identidad de marca cambie significativamente.
+
+**Qué es:** Un documento que describe la identidad visual y verbal completa de la marca. La IA lo usa como contexto para generar prompts on-brand.
+
+**Cómo hacerlo:** Pedirle a Claude Code que construya el `brand/brand-dna.md`. Darle:
+- Nombre de la marca y URL del sitio
+- Cualquier guía de marca existente (colores, tipografía, voz, tono)
+- Descripción del producto y su contexto visual
+
+Claude investigará el sitio, extraerá la identidad visual, y generará el documento con este formato:
+
+```
+BRAND OVERVIEW       → nombre, tagline, voz, posicionamiento
+VISUAL SYSTEM        → fuentes, colores hex, estilo de CTAs
+PHOTOGRAPHY DIRECTION → iluminación, color grading, composición, mood
+PRODUCT DETAILS      → descripción visual del producto
+AD CREATIVE STYLE    → formatos típicos, uso de texto, estilo UGC
+IMAGE GENERATION PROMPT MODIFIER → párrafo de 50-75 palabras que se
+                                   prepende a cada prompt generado
+```
+
+El **Image Generation Prompt Modifier** es lo más importante: es el "ADN visual" comprimido que hace que todos los ads tengan coherencia de marca.
+
+> Para Jess Trading: el `brand/brand-dna.md` ya está creado. Solo necesita re-hacerse si cambia la identidad visual de la marca.
+
+---
+
+## Phase 2 — Generación de prompts
+
+**Cuándo hacerlo:** Antes de cada run de generación, o cuando cambie el producto/oferta.
+
+**Qué es:** Claude lee el `brand-dna.md` y las 40 plantillas de `skills/references/template-prompts.md`, rellena todos los `[PLACEHOLDERS]` con detalles específicos de la marca, y genera el `brand/prompts.json`.
+
+**Cómo hacerlo:** Pedirle a Claude Code:
+
+```
+Lee brand/brand-dna.md y skills/references/template-prompts.md,
+y genera brand/prompts.json con los 40 prompts rellenos para Jess Trading.
+Producto: Gold Trading Bot (XAUUSD EA para MetaTrader 5). Precio: $147.
+```
+
+Claude produce un JSON con esta estructura por cada template:
+
+```json
+{
+  "template_number": 1,
+  "template_name": "headline",
+  "prompt": "Premium fintech aesthetic on Carbon Black... [prompt completo]",
+  "aspect_ratio": "4:5",
+  "needs_product_images": false,
+  "notes": "..."
+}
+```
+
+> Tip: antes de generar, revisá los prompts del JSON a mano. El copy generado por Claude es funcional pero genérico — mejora con frases reales de clientes o reviews.
+
+---
+
+## Phase 3 — Generación de imágenes (desde la app)
+
+**Cuándo hacerlo:** Una vez que `brand/prompts.json` existe.
+
+**Cómo hacerlo:** Desde la app en `http://localhost:5173`:
+
+1. Ir a **Static Ad Generator** en el sidebar
+2. Seleccionar los templates a generar (o dejar todos seleccionados)
+3. Elegir resolución:
+   - `1K` → test rápido y barato
+   - `2K` → producción (default recomendado)
+   - `4K` → hero assets
+4. Elegir imágenes por template (1 para test, 4 para producción)
+5. Ver el costo estimado y hacer click en **Generate**
+6. El progreso aparece en tiempo real — las imágenes se van mostrando a medida que se generan
+7. Las imágenes quedan guardadas en `brand/outputs/` y se pueden ver en **Gallery**
+
+### Costos de referencia
+
+| Resolución | Por imagen | 1 template × 4 imgs | 40 templates × 4 imgs |
+|------------|-----------|--------------------|-----------------------|
+| 1K         | $0.08     | $0.32              | $12.80                |
+| 2K         | $0.12     | $0.48              | $19.20                |
+| 4K         | $0.16     | $0.64              | $25.60                |
+
+---
+
+## Flujos típicos
+
+**Primera vez (setup completo):**
+1. Crear `brand-dna.md` con Claude Code (Phase 1) — ya hecho
+2. Pedir a Claude Code que genere `brand/prompts.json` (Phase 2)
+3. Poner la FAL Key en `.env`
+4. Abrir la app y generar → empezar con 1-3 templates en 1K para probar
+
+**Run de producción:**
+1. Verificar que `brand/prompts.json` esté actualizado
+2. Seleccionar todos los templates, resolución 2K, 4 imágenes
+3. Costo estimado: ~$19
+
+**Nuevo producto o nueva oferta:**
+1. Saltear Phase 1 (brand-dna.md no cambia)
+2. Pedir a Claude Code que regenere `prompts.json` con los nuevos detalles del producto
+3. Generar desde la app
+
+**Iterar sobre templates específicos:**
+1. En la app, seleccionar solo los templates que querés refinar
+2. Ajustar el copy en `prompts.json` a mano si hace falta
+3. Regenerar solo esos templates
+
+---
+
 ---
 name: static-ad-generator
 description: Generate production-ready static ad images for any brand using Claude + Nano Banana 2. End-to-end workflow from brand research → prompt generation → image generation via FAL API. Trigger on requests to create static ads, generate ad creatives, build ad images, or when user mentions Nano Banana, Higgsfield, FAL, or static ad generation. Also trigger when user drops a brand name + URL and asks for ad creatives.
