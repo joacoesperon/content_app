@@ -15,6 +15,10 @@ class BuildPromptRequest(BaseModel):
     format_ids: list[str]
     count: int = 6
     aspect_ratio: str = "4:5"
+    product_id: str = ""          # empty = use first product
+    use_product_images: bool = False
+    use_brand_dna: bool = True
+    offer_cta: str = ""           # e.g. "Shop Now, 20% off first order"
 
 
 class ParsePlanRequest(BaseModel):

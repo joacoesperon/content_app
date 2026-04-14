@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertCircle,
   CheckCircle,
@@ -7,22 +7,16 @@ import {
   Copy,
   Loader2,
   Play,
-  Plus,
   Sparkles,
-  Trash2,
-  Upload,
   X,
 } from 'lucide-react';
 import {
-  buildAvatarPrompt,
   buildConceptPrompt,
-  createAvatar,
-  deleteAvatar,
   fetchAvatars,
   fetchFormats,
+  fetchBrandProducts,
   getConceptImageUrl,
   getConceptWsUrl,
-  parseAvatars,
   parsePlan,
   startConceptGeneration,
   startRemix,
@@ -38,15 +32,17 @@ interface Avatar {
   name: string;
   description: string;
   pain_points: string[];
-  motivations: string[];
-  objections: string[];
-  language_sample: string;
 }
 
 interface Format {
   id: string;
   name: string;
   description: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
 }
 
 interface ConceptItem {
@@ -127,14 +123,12 @@ function ConceptsMode() {
   const [resolution, setResolution] = useState('2K');
   const [numImages, setNumImages] = useState(2);
 
-  // Manual Planner — Avatar Research
-  const [showAvatarPlanner, setShowAvatarPlanner] = useState(false);
-  const [avatarPrompt, setAvatarPrompt] = useState('');
-  const [avatarPasteRaw, setAvatarPasteRaw] = useState('');
-  const [parsedAvatarDraft, setParsedAvatarDraft] = useState<Avatar[]>([]);
-  const [avatarPlannerError, setAvatarPlannerError] = useState('');
-  const [loadingAvatarPrompt, setLoadingAvatarPrompt] = useState(false);
-  const [loadingParseAvatars, setLoadingParseAvatars] = useState(false);
+  // Product + brand options
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [useProductImages, setUseProductImages] = useState(false);
+  const [useBrandDna, setUseBrandDna] = useState(true);
+  const [offerCta, setOfferCta] = useState('');
 
   // Manual Planner — Concept Plan
   const [conceptPrompt, setConceptPrompt] = useState('');
@@ -144,13 +138,6 @@ function ConceptsMode() {
   const [planError, setPlanError] = useState('');
   const [loadingBuildPrompt, setLoadingBuildPrompt] = useState(false);
   const [loadingParsePlan, setLoadingParsePlan] = useState(false);
-
-  // New avatar form
-  const [showNewAvatarForm, setShowNewAvatarForm] = useState(false);
-  const [newAvatarId, setNewAvatarId] = useState('');
-  const [newAvatarName, setNewAvatarName] = useState('');
-  const [newAvatarDesc, setNewAvatarDesc] = useState('');
-  const [savingAvatar, setSavingAvatar] = useState(false);
 
   // Generation
   const [jobId, setJobId] = useState<string | null>(null);
@@ -163,6 +150,10 @@ function ConceptsMode() {
   useEffect(() => {
     fetchAvatars().then(setAvatars).catch(console.error);
     fetchFormats().then(setFormats).catch(console.error);
+    fetchBrandProducts().then((ps: Product[]) => {
+      setProducts(ps);
+      if (ps.length > 0) setSelectedProductId(ps[0].id);
+    }).catch(console.error);
   }, []);
 
   // Process WS messages
@@ -199,84 +190,6 @@ function ConceptsMode() {
     });
   };
 
-  const handleDeleteAvatar = async (id: string) => {
-    await deleteAvatar(id);
-    setAvatars((prev) => prev.filter((a) => a.id !== id));
-    setSelectedAvatars((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  };
-
-  const handleCreateAvatar = async () => {
-    if (!newAvatarId || !newAvatarName) return;
-    setSavingAvatar(true);
-    try {
-      const saved = await createAvatar({
-        id: newAvatarId,
-        name: newAvatarName,
-        description: newAvatarDesc,
-        pain_points: [],
-        motivations: [],
-        objections: [],
-        language_sample: '',
-      });
-      setAvatars((prev) => [...prev, saved]);
-      setNewAvatarId('');
-      setNewAvatarName('');
-      setNewAvatarDesc('');
-      setShowNewAvatarForm(false);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSavingAvatar(false);
-    }
-  };
-
-  const handleBuildAvatarPrompt = async () => {
-    setLoadingAvatarPrompt(true);
-    setAvatarPlannerError('');
-    try {
-      const res = await buildAvatarPrompt({});
-      setAvatarPrompt(res.prompt);
-    } catch (e) {
-      setAvatarPlannerError(String(e));
-    } finally {
-      setLoadingAvatarPrompt(false);
-    }
-  };
-
-  const handleParseAvatars = async () => {
-    setLoadingParseAvatars(true);
-    setAvatarPlannerError('');
-    try {
-      const res = await parseAvatars(avatarPasteRaw);
-      setParsedAvatarDraft(res.avatars);
-    } catch (e) {
-      setAvatarPlannerError(String(e));
-    } finally {
-      setLoadingParseAvatars(false);
-    }
-  };
-
-  const handleSaveParsedAvatars = async () => {
-    for (const a of parsedAvatarDraft) {
-      try {
-        const saved = await createAvatar(a as unknown as Record<string, unknown>);
-        setAvatars((prev) => {
-          if (prev.some((x) => x.id === saved.id)) return prev;
-          return [...prev, saved];
-        });
-      } catch {
-        // skip duplicates
-      }
-    }
-    setParsedAvatarDraft([]);
-    setAvatarPasteRaw('');
-    setShowAvatarPlanner(false);
-  };
-
   const handleBuildConceptPrompt = async () => {
     if (selectedAvatars.size === 0 || selectedFormats.size === 0) {
       setPlanError('Seleccioná al menos un avatar y un formato');
@@ -290,6 +203,10 @@ function ConceptsMode() {
         format_ids: Array.from(selectedFormats),
         count,
         aspect_ratio: aspectRatio,
+        product_id: selectedProductId,
+        use_product_images: useProductImages,
+        use_brand_dna: useBrandDna,
+        offer_cta: offerCta,
       });
       setConceptPrompt(res.prompt);
       setShowConceptPromptModal(true);
@@ -353,141 +270,14 @@ function ConceptsMode() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ── Left panel ── */}
         <div className="space-y-4">
-          {/* Avatars */}
+          {/* Avatars — selection only */}
           <div className="bg-carbon-light rounded-xl p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-semibold text-white">Avatars</h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setShowAvatarPlanner(!showAvatarPlanner); setAvatarPrompt(''); setParsedAvatarDraft([]); setAvatarPasteRaw(''); setAvatarPlannerError(''); }}
-                  className="flex items-center gap-1.5 text-xs text-electric hover:text-neon transition-colors"
-                >
-                  <Sparkles size={13} />
-                  Generar con IA
-                </button>
-                <button
-                  onClick={() => setShowNewAvatarForm(!showNewAvatarForm)}
-                  className="flex items-center gap-1.5 text-xs text-gray-mid hover:text-white transition-colors"
-                >
-                  <Plus size={13} />
-                  Nuevo
-                </button>
-              </div>
+              <span className="text-xs text-gray-mid">
+                {selectedAvatars.size} seleccionado{selectedAvatars.size !== 1 ? 's' : ''}
+              </span>
             </div>
-
-            {/* Avatar AI Planner */}
-            {showAvatarPlanner && (
-              <div className="mb-4 bg-carbon rounded-xl p-4 border border-electric/20 space-y-3">
-                <p className="text-xs text-gray-mid">
-                  Generá perfiles de cliente con Claude. Copiá el prompt → pegalo en{' '}
-                  <span className="text-electric">claude.ai</span> → pegá la respuesta JSON abajo.
-                </p>
-                {!avatarPrompt ? (
-                  <button
-                    onClick={handleBuildAvatarPrompt}
-                    disabled={loadingAvatarPrompt}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors disabled:opacity-50"
-                  >
-                    {loadingAvatarPrompt ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
-                    Construir prompt de investigación
-                  </button>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-mid">Prompt listo — copialo a claude.ai</span>
-                      <CopyButton text={avatarPrompt} />
-                    </div>
-                    <textarea
-                      readOnly
-                      value={avatarPrompt}
-                      rows={4}
-                      className="w-full bg-carbon-dark border border-carbon-light rounded-lg px-3 py-2 text-xs text-gray-mid font-mono resize-none"
-                    />
-                    <textarea
-                      value={avatarPasteRaw}
-                      onChange={(e) => setAvatarPasteRaw(e.target.value)}
-                      placeholder="Pegá aquí el JSON que te devolvió Claude..."
-                      rows={4}
-                      className="w-full bg-carbon-dark border border-carbon-light rounded-lg px-3 py-2 text-xs text-gray-mid font-mono resize-none focus:outline-none focus:border-electric/50"
-                    />
-                    {avatarPlannerError && (
-                      <p className="text-xs text-red-400">{avatarPlannerError}</p>
-                    )}
-                    {parsedAvatarDraft.length > 0 ? (
-                      <div className="space-y-2">
-                        <p className="text-xs text-neon">{parsedAvatarDraft.length} avatares parseados — revisalos y guardalos</p>
-                        {parsedAvatarDraft.map((a) => (
-                          <div key={a.id} className="bg-carbon-dark rounded-lg p-3 text-xs">
-                            <span className="font-medium text-white">{a.name}</span>
-                            <span className="text-gray-mid ml-2">({a.id})</span>
-                            <p className="text-gray-mid mt-1">{a.description}</p>
-                          </div>
-                        ))}
-                        <button
-                          onClick={handleSaveParsedAvatars}
-                          className="w-full py-2 rounded-lg bg-neon/20 hover:bg-neon/30 text-neon text-xs transition-colors"
-                        >
-                          Guardar avatares
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleParseAvatars}
-                        disabled={loadingParseAvatars || !avatarPasteRaw.trim()}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors disabled:opacity-50"
-                      >
-                        {loadingParseAvatars ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                        Parsear respuesta de Claude
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* New avatar inline form */}
-            {showNewAvatarForm && (
-              <div className="mb-4 bg-carbon rounded-xl p-4 space-y-2">
-                <input
-                  type="text"
-                  placeholder="id (sin espacios, ej: trader_agotado)"
-                  value={newAvatarId}
-                  onChange={(e) => setNewAvatarId(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
-                  className="w-full bg-carbon-dark border border-carbon-light rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-electric/50"
-                />
-                <input
-                  type="text"
-                  placeholder="Nombre del avatar"
-                  value={newAvatarName}
-                  onChange={(e) => setNewAvatarName(e.target.value)}
-                  className="w-full bg-carbon-dark border border-carbon-light rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-electric/50"
-                />
-                <input
-                  type="text"
-                  placeholder="Descripción breve"
-                  value={newAvatarDesc}
-                  onChange={(e) => setNewAvatarDesc(e.target.value)}
-                  className="w-full bg-carbon-dark border border-carbon-light rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-electric/50"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCreateAvatar}
-                    disabled={savingAvatar || !newAvatarId || !newAvatarName}
-                    className="flex-1 py-1.5 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors disabled:opacity-50"
-                  >
-                    {savingAvatar ? 'Guardando...' : 'Guardar'}
-                  </button>
-                  <button
-                    onClick={() => setShowNewAvatarForm(false)}
-                    className="px-3 py-1.5 rounded-lg bg-carbon-light text-gray-mid text-xs hover:text-white transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Avatar list */}
             <div className="space-y-2">
               {avatars.map((a) => (
                 <div
@@ -500,7 +290,7 @@ function ConceptsMode() {
                   onClick={() => toggleAvatar(a.id)}
                 >
                   <div
-                    className={`w-4 h-4 mt-0.5 rounded border flex-shrink-0 flex items-center justify-center ${
+                    className={`w-4 h-4 mt-0.5 rounded border shrink-0 flex items-center justify-center ${
                       selectedAvatars.has(a.id) ? 'bg-neon border-neon' : 'border-gray-mid'
                     }`}
                   >
@@ -510,17 +300,11 @@ function ConceptsMode() {
                     <div className="text-sm font-medium text-white">{a.name}</div>
                     <div className="text-xs text-gray-mid mt-0.5 line-clamp-1">{a.description}</div>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteAvatar(a.id); }}
-                    className="text-gray-mid hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
-                  >
-                    <Trash2 size={13} />
-                  </button>
                 </div>
               ))}
               {avatars.length === 0 && (
                 <p className="text-xs text-gray-mid text-center py-4">
-                  No hay avatares. Creá uno o generá con IA.
+                  No hay avatares. Creálos en la tool <span className="text-electric">Avatars</span>.
                 </p>
               )}
             </div>
@@ -553,6 +337,23 @@ function ConceptsMode() {
           {/* Settings */}
           <div className="bg-carbon-light rounded-xl p-5">
             <h2 className="text-base font-semibold text-white mb-4">Configuración</h2>
+
+            {/* Product selector */}
+            {products.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-xs text-gray-mid mb-1">Producto</label>
+                <select
+                  value={selectedProductId}
+                  onChange={(e) => setSelectedProductId(e.target.value)}
+                  className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
+                >
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-xs text-gray-mid mb-1">Conceptos a generar</label>
@@ -581,6 +382,7 @@ function ConceptsMode() {
                   onChange={(e) => setResolution(e.target.value)}
                   className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
                 >
+                  <option value="0.5K">0.5K (rápido)</option>
                   <option value="1K">1K (test)</option>
                   <option value="2K">2K (producción)</option>
                   <option value="4K">4K (hero)</option>
@@ -596,6 +398,40 @@ function ConceptsMode() {
                   {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
+            </div>
+
+            {/* Toggles */}
+            <div className="flex flex-wrap gap-4 mb-4">
+              <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useBrandDna}
+                  onChange={(e) => setUseBrandDna(e.target.checked)}
+                  className="accent-electric"
+                />
+                Usar Brand Kit (DNA)
+              </label>
+              <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useProductImages}
+                  onChange={(e) => setUseProductImages(e.target.checked)}
+                  className="accent-electric"
+                />
+                Incluir imágenes del producto
+              </label>
+            </div>
+
+            {/* Offer / CTA */}
+            <div className="mb-4">
+              <label className="block text-xs text-gray-mid mb-1">Offer / CTA (opcional)</label>
+              <input
+                type="text"
+                value={offerCta}
+                onChange={(e) => setOfferCta(e.target.value)}
+                placeholder="Shop Now, 20% off first order"
+                className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white placeholder-gray-mid focus:outline-none focus:border-electric/50"
+              />
             </div>
 
             {/* Build prompt button */}
@@ -789,7 +625,7 @@ function ConceptCard({
             </div>
           )}
         </div>
-        <button onClick={() => setExpanded(!expanded)} className="text-gray-mid hover:text-white flex-shrink-0">
+        <button onClick={() => setExpanded(!expanded)} className="text-gray-mid hover:text-white shrink-0">
           {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
       </div>
@@ -800,23 +636,19 @@ function ConceptCard({
 // ─── Remix Mode ───────────────────────────────────────────────────────────────
 
 function RemixMode() {
-  const [referenceFile, setReferenceFile] = useState<File | null>(null);
-  const [referencePreview, setReferencePreview] = useState<string | null>(null);
-  const [referencePath, setReferencePath] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-
+  const [_refFile, setRefFile] = useState<File | null>(null);
+  const [refPath, setRefPath] = useState('');
+  const [refPreview, setRefPreview] = useState('');
   const [instructions, setInstructions] = useState('');
   const [count, setCount] = useState(2);
   const [aspectRatio, setAspectRatio] = useState('4:5');
   const [resolution, setResolution] = useState('2K');
-
+  const [uploading, setUploading] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
   const [generatedImages, setGeneratedImages] = useState<{ src: string; label: string }[]>([]);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { messages, status, reset } = useWebSocket(jobId, getConceptWsUrl);
 
   useEffect(() => {
@@ -827,62 +659,40 @@ function RemixMode() {
       const imgs = last.images as string[];
       setGeneratedImages((prev) => [
         ...prev,
-        ...imgs.map((f) => ({
-          src: getConceptImageUrl(folder, f),
-          label: `Remix — ${f}`,
-        })),
+        ...imgs.map((f) => ({ src: getConceptImageUrl(folder, f), label: f })),
       ]);
     }
-    if (last.type === 'status' && last.status === 'completed') {
-      setGenerating(false);
-    }
+    if (last.type === 'status' && last.status === 'completed') setGenerating(false);
   }, [messages]);
 
-  const handleFileDrop = async (file: File) => {
-    setReferenceFile(file);
-    setReferencePreview(URL.createObjectURL(file));
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setRefFile(file);
+    setRefPreview(URL.createObjectURL(file));
     setUploading(true);
-    setUploadError('');
     try {
       const res = await uploadReference(file);
-      setReferencePath(res.path);
-    } catch (e) {
-      setUploadError(String(e));
+      setRefPath(res.path);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) handleFileDrop(file);
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFileDrop(file);
-  };
-
   const handleGenerate = async () => {
-    if (!referencePath) return;
+    if (!refPath || !instructions.trim()) return;
     setGenError(null);
     setGeneratedImages([]);
     reset();
     setGenerating(true);
     try {
       const result = await startRemix({
-        reference_path: referencePath,
+        reference_path: refPath,
         instructions,
         count,
         aspect_ratio: aspectRatio,
         resolution,
       });
-      if (result.error) {
-        setGenError(result.error);
-        setGenerating(false);
-        return;
-      }
       setJobId(result.job_id);
     } catch (e) {
       setGenError(String(e));
@@ -890,164 +700,109 @@ function RemixMode() {
     }
   };
 
-  const progressMessages = messages.filter(
-    (m) => m.type === 'progress' || m.type === 'concept_done' || m.type === 'concept_error'
-  );
+  const progressMsg = messages.find((m) => m.type === 'progress');
 
   return (
     <div className="max-w-2xl space-y-5">
+      {/* Reference image */}
       <div className="bg-carbon-light rounded-xl p-5">
-        <h2 className="text-base font-semibold text-white mb-4">Imagen de referencia</h2>
-
-        {/* Dropzone */}
-        <div
-          onDrop={handleDrop}
-          onDragOver={(e) => e.preventDefault()}
-          onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-carbon rounded-xl p-8 text-center cursor-pointer hover:border-electric/50 transition-colors"
-        >
-          {referencePreview ? (
-            <div className="flex flex-col items-center gap-3">
-              <img src={referencePreview} alt="reference" className="max-h-48 rounded-lg object-contain" />
-              {uploading ? (
-                <span className="text-xs text-electric flex items-center gap-1.5">
-                  <Loader2 size={13} className="animate-spin" /> Subiendo...
-                </span>
-              ) : referencePath ? (
-                <span className="text-xs text-neon flex items-center gap-1.5">
-                  <CheckCircle size={13} /> Imagen lista
-                </span>
-              ) : null}
-            </div>
+        <h2 className="text-base font-semibold text-white mb-3">Imagen de referencia</h2>
+        <label className="flex flex-col items-center justify-center border-2 border-dashed border-carbon rounded-xl p-8 cursor-pointer hover:border-electric/40 transition-colors">
+          {refPreview ? (
+            <img src={refPreview} alt="reference" className="max-h-48 rounded-lg object-contain" />
           ) : (
-            <div className="flex flex-col items-center gap-3 text-gray-mid">
-              <Upload size={32} />
-              <div>
-                <p className="text-sm">Arrastrá una imagen aquí o hacé click</p>
-                <p className="text-xs mt-1">PNG, JPG, WEBP</p>
-              </div>
-            </div>
+            <>
+              <Upload size={24} className="text-gray-mid mb-2" />
+              <span className="text-sm text-gray-mid">Click para subir imagen</span>
+            </>
           )}
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileInput} />
-        </div>
-
-        {uploadError && <p className="mt-2 text-xs text-red-400">{uploadError}</p>}
-        {referenceFile && (
-          <button
-            onClick={() => { setReferenceFile(null); setReferencePreview(null); setReferencePath(null); }}
-            className="mt-2 text-xs text-gray-mid hover:text-red-400 transition-colors flex items-center gap-1"
-          >
-            <X size={12} /> Quitar imagen
-          </button>
-        )}
+          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+        </label>
+        {uploading && <p className="text-xs text-electric mt-2">Subiendo...</p>}
+        {refPath && !uploading && <p className="text-xs text-neon mt-2">Imagen lista</p>}
       </div>
 
+      {/* Instructions */}
       <div className="bg-carbon-light rounded-xl p-5 space-y-4">
-        <div>
-          <label className="block text-xs text-gray-mid mb-1">Instrucciones (opcional)</label>
-          <textarea
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
-            placeholder="Ej: Mantené el layout pero hacelo más oscuro y con estética fintech..."
-            rows={3}
-            className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none focus:border-electric/50"
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
+        <h2 className="text-base font-semibold text-white">Instrucciones</h2>
+        <textarea
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+          placeholder="Describe how to remix this image — keep the same composition but change the color palette to neon green highlights..."
+          rows={4}
+          className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white placeholder-gray-mid focus:outline-none focus:border-electric resize-none"
+        />
+        <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs text-gray-mid mb-1">Imágenes</label>
-            <select
-              value={count}
-              onChange={(e) => setCount(Number(e.target.value))}
-              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-            >
+            <label className="block text-xs text-gray-mid mb-1">Variaciones</label>
+            <select value={count} onChange={(e) => setCount(Number(e.target.value))} className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white">
               {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-xs text-gray-mid mb-1">Aspect ratio</label>
-            <select
-              value={aspectRatio}
-              onChange={(e) => setAspectRatio(e.target.value)}
-              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-            >
+            <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white">
               {['1:1', '4:5', '9:16', '16:9'].map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-xs text-gray-mid mb-1">Resolución</label>
-            <select
-              value={resolution}
-              onChange={(e) => setResolution(e.target.value)}
-              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-            >
+            <select value={resolution} onChange={(e) => setResolution(e.target.value)} className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white">
+              <option value="0.5K">0.5K</option>
               <option value="1K">1K</option>
               <option value="2K">2K</option>
               <option value="4K">4K</option>
             </select>
           </div>
         </div>
-
-        {genError && (
-          <div className="flex items-center gap-2 text-xs text-red-400">
-            <AlertCircle size={13} /> {genError}
-          </div>
-        )}
-
         <button
           onClick={handleGenerate}
-          disabled={generating || !referencePath}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-sm transition-all ${
-            generating || !referencePath
-              ? 'bg-carbon text-gray-mid cursor-not-allowed'
-              : 'bg-electric hover:bg-electric/80 text-white'
-          }`}
+          disabled={generating || !refPath || !instructions.trim()}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-electric text-white text-sm font-medium hover:bg-electric/80 disabled:opacity-40 transition-colors"
         >
-          {generating ? (
-            <><Loader2 size={15} className="animate-spin" /> Generando...</>
-          ) : (
-            <><Play size={15} /> Generar remix</>
-          )}
+          {generating ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Play size={15} /> Generar remix</>}
         </button>
+        {genError && <p className="text-xs text-red-400">{genError}</p>}
+        {progressMsg && generating && (
+          <p className="text-xs text-electric">{progressMsg.message as string}</p>
+        )}
       </div>
-
-      {/* Progress */}
-      {progressMessages.length > 0 && (
-        <div className="bg-carbon-light rounded-xl p-4">
-          <div className="space-y-1 font-mono text-xs">
-            {progressMessages.map((msg, i) => (
-              <div key={i} className="flex items-center gap-2">
-                {msg.type === 'concept_done' ? (
-                  <CheckCircle size={12} className="text-neon" />
-                ) : msg.type === 'concept_error' ? (
-                  <AlertCircle size={12} className="text-red-400" />
-                ) : (
-                  <Loader2 size={12} className={generating ? 'text-electric animate-spin' : 'text-gray-mid'} />
-                )}
-                <span className={msg.type === 'concept_error' ? 'text-red-400' : 'text-gray-mid'}>
-                  {(msg.message as string) || 'Procesando...'}
-                  {msg.type === 'concept_done' && ` — ${(msg.time as number)?.toFixed(1)}s`}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {status === 'completed' && (
         <div className="bg-neon/10 border border-neon/30 rounded-xl p-4 flex items-center gap-3 text-neon text-sm">
           <CheckCircle size={18} />
-          Remix completo — {generatedImages.length} imágenes generadas
+          Remix completo — {generatedImages.length} variaciones generadas
         </div>
       )}
 
       {generatedImages.length > 0 && (
         <div>
-          <h2 className="text-base font-semibold text-white mb-4">Imágenes generadas</h2>
+          <h2 className="text-base font-semibold text-white mb-4">Variaciones</h2>
           <ImageGrid images={generatedImages} />
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Inline Upload icon (used in RemixMode) ───────────────────────────────────
+function Upload({ size, className }: { size: number; className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
   );
 }

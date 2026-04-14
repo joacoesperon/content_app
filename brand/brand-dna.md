@@ -28,12 +28,12 @@ Props and Surfaces: Clean tech surfaces, screens with trading data, abstract geo
 Mood: Premium, futuristic, trustworthy, sophisticated.
 
 PRODUCT DETAILS
-Product Type: Digital — Algorithmic trading bot (Gold/XAUUSD)
-Product Description: Plug-and-play trading bot with proven strategy for gold (XAUUSD). Delivered as bot file + step-by-step tutorial + video guide. Runs 24/7, requires no coding knowledge.
-Price: $147 (launch), increasing to $197
-Delivery Platform: Whop (https://whop.com/joined/jesstrading/)
-Distinctive Features: Lifetime access, one-time payment, 40% affiliate commission, 100% automated discipline
-Product Ecosystem: Future expansion to Learn / Build / Buy / Copytrade platform
+Product 1: Digital — Algorithmic trading bot (Gold/XAUUSD)
+  Description: Plug-and-play trading bot with proven strategy for gold (XAUUSD). Delivered as bot file + step-by-step tutorial + video guide. Runs 24/7, requires no coding knowledge.
+  Price: $147 (launch), increasing to $197
+  Delivery Platform: Whop (https://whop.com/joined/jesstrading/)
+  Distinctive Features: Lifetime access, One-time payment, 40% affiliate commission, 100% automated discipline
+  Product Ecosystem: Future expansion to Learn / Build / Buy / Copytrade platform
 
 AD CREATIVE STYLE
 Typical formats: Dark background static ads, stat callout cards, result screenshots, comparison ads (bot vs manual trading), testimonial/review cards

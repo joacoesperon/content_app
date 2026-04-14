@@ -32,13 +32,33 @@ class BrandPhotographyDirection(BaseModel):
     mood: str
 
 
-class BrandProduct(BaseModel):
-    type: str
+class Product(BaseModel):
+    id: str
+    name: str
     description: str
     price: str
     delivery_platform: str
     distinctive_features: list[str]
     ecosystem: str
+
+
+class ProductCreate(BaseModel):
+    id: str
+    name: str
+    description: str = ""
+    price: str = ""
+    delivery_platform: str = ""
+    distinctive_features: list[str] = []
+    ecosystem: str = ""
+
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[str] = None
+    delivery_platform: Optional[str] = None
+    distinctive_features: Optional[list[str]] = None
+    ecosystem: Optional[str] = None
 
 
 class BrandAdCreativeStyle(BaseModel):
@@ -53,7 +73,7 @@ class BrandDna(BaseModel):
     overview: BrandOverview
     visual_system: BrandVisualSystem
     photography_direction: BrandPhotographyDirection
-    product: BrandProduct
+    products: list[Product]
     ad_creative_style: BrandAdCreativeStyle
     image_prompt_modifier: str
 
@@ -89,15 +109,6 @@ class BrandPhotographyDirectionUpdate(BaseModel):
     mood: Optional[str] = None
 
 
-class BrandProductUpdate(BaseModel):
-    type: Optional[str] = None
-    description: Optional[str] = None
-    price: Optional[str] = None
-    delivery_platform: Optional[str] = None
-    distinctive_features: Optional[list[str]] = None
-    ecosystem: Optional[str] = None
-
-
 class BrandAdCreativeStyleUpdate(BaseModel):
     typical_formats: Optional[str] = None
     text_overlay_style: Optional[str] = None
@@ -110,7 +121,11 @@ class BrandPromptModifierUpdate(BaseModel):
     image_prompt_modifier: str
 
 
+class BrandRawUpdate(BaseModel):
+    json_str: str
+
+
 class MediaFile(BaseModel):
     filename: str
-    type: str  # "product-images" | "reference-images"
+    type: str
     url: str

@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import { useTools } from '../hooks/useTools';
-import { LayoutDashboard, Image, Lightbulb, FolderOpen } from 'lucide-react';
+import { LayoutDashboard, Image, Lightbulb, FolderOpen, Palette, Users } from 'lucide-react';
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {
   image: <Image size={18} />,
   lightbulb: <Lightbulb size={18} />,
+  palette: <Palette size={18} />,
+  users: <Users size={18} />,
 };
 
 export default function Sidebar() {

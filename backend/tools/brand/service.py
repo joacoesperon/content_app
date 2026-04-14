@@ -3,9 +3,6 @@ import json
 from pathlib import Path
 
 
-DNA_FILE = None  # set at import time by router
-
-
 def _dna_path(brand_dir: Path) -> Path:
     return brand_dir / "data" / "brand-dna.json"
 
@@ -18,7 +15,24 @@ def load_dna(brand_dir: Path) -> dict:
     path = _dna_path(brand_dir)
     if not path.exists():
         raise FileNotFoundError("brand-dna.json not found")
-    return json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8"))
+
+    # Migrate: legacy single "product" → "products" array
+    if "products" not in data and "product" in data:
+        old = data.pop("product")
+        data["products"] = [{
+            "id": "main_product",
+            "name": old.get("type", "Main Product"),
+            "description": old.get("description", ""),
+            "price": old.get("price", ""),
+            "delivery_platform": old.get("delivery_platform", ""),
+            "distinctive_features": old.get("distinctive_features", []),
+            "ecosystem": old.get("ecosystem", ""),
+        }]
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        _regenerate_md(brand_dir, data)
+
+    return data
 
 
 def save_dna(brand_dir: Path, data: dict) -> None:
@@ -33,12 +47,25 @@ def _regenerate_md(brand_dir: Path, data: dict) -> None:
     ov = data.get("overview", {})
     vs = data.get("visual_system", {})
     ph = data.get("photography_direction", {})
-    pr = data.get("product", {})
+    products = data.get("products", [])
     ac = data.get("ad_creative_style", {})
     modifier = data.get("image_prompt_modifier", "")
 
     voice = ", ".join(ov.get("voice_adjectives", []))
-    features = ", ".join(pr.get("distinctive_features", []))
+
+    # Build products block
+    products_block = ""
+    for i, pr in enumerate(products):
+        features = ", ".join(pr.get("distinctive_features", []))
+        label = f"Product {i + 1}: {pr.get('name', pr.get('id', ''))}"
+        products_block += f"""
+{label}
+  Description: {pr.get('description', '')}
+  Price: {pr.get('price', '')}
+  Delivery Platform: {pr.get('delivery_platform', '')}
+  Distinctive Features: {features}
+  Product Ecosystem: {pr.get('ecosystem', '')}
+"""
 
     md = f"""BRAND DNA DOCUMENT
 ==================
@@ -70,12 +97,7 @@ Props and Surfaces: {ph.get('props_and_surfaces', '')}
 Mood: {ph.get('mood', '')}
 
 PRODUCT DETAILS
-Product Type: {pr.get('type', '')}
-Product Description: {pr.get('description', '')}
-Price: {pr.get('price', '')}
-Delivery Platform: {pr.get('delivery_platform', '')}
-Distinctive Features: {features}
-Product Ecosystem: {pr.get('ecosystem', '')}
+{products_block.strip()}
 
 AD CREATIVE STYLE
 Typical formats: {ac.get('typical_formats', '')}
@@ -90,26 +112,31 @@ IMAGE GENERATION PROMPT MODIFIER
     _md_path(brand_dir).write_text(md, encoding="utf-8")
 
 
-def list_media(brand_dir: Path, media_type: str) -> list[dict]:
-    media_dir = brand_dir / media_type
+def list_media(brand_dir: Path, media_type: str, product_id: str = "") -> list[dict]:
+    if media_type == "product-images" and product_id:
+        media_dir = brand_dir / "product-images" / product_id
+    else:
+        media_dir = brand_dir / media_type
     if not media_dir.exists():
         return []
     allowed = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov"}
     files = []
     for f in sorted(media_dir.iterdir()):
         if f.is_file() and f.suffix.lower() in allowed:
-            files.append({
-                "filename": f.name,
-                "type": media_type,
-                "url": f"/files/{media_type}/{f.name}",
-            })
+            if media_type == "product-images" and product_id:
+                url = f"/files/product-images/{product_id}/{f.name}"
+            else:
+                url = f"/files/{media_type}/{f.name}"
+            files.append({"filename": f.name, "type": media_type, "url": url})
     return files
 
 
-def delete_media(brand_dir: Path, media_type: str, filename: str) -> None:
-    path = brand_dir / media_type / filename
+def delete_media(brand_dir: Path, media_type: str, filename: str, product_id: str = "") -> None:
+    if media_type == "product-images" and product_id:
+        path = brand_dir / "product-images" / product_id / filename
+    else:
+        path = brand_dir / media_type / filename
     if not path.exists():
         raise FileNotFoundError(f"{filename} not found")
-    # Safety: ensure we stay within the brand dir
     path.resolve().relative_to(brand_dir.resolve())
     path.unlink()

@@ -59,6 +59,46 @@ def _get_brand_modifier() -> str:
     return "\n".join(lines).strip()
 
 
+def _load_products() -> list[dict]:
+    """Load products from brand-dna.json."""
+    dna_path = BRAND_DIR / "data" / "brand-dna.json"
+    if not dna_path.exists():
+        return []
+    data = json.loads(dna_path.read_text(encoding="utf-8"))
+    # Support both old single-product and new products array
+    if "products" in data:
+        return data["products"]
+    if "product" in data:
+        p = data["product"]
+        return [{"id": "main", "name": p.get("type", "Main Product"), **p}]
+    return []
+
+
+def _get_product(product_id: str) -> dict | None:
+    """Return a specific product by id, or the first product if id is empty."""
+    products = _load_products()
+    if not products:
+        return None
+    if not product_id:
+        return products[0]
+    return next((p for p in products if p["id"] == product_id), products[0])
+
+
+def _list_product_images(product_id: str) -> list[str]:
+    """Return list of product image URLs for a given product."""
+    if not product_id:
+        return []
+    img_dir = BRAND_DIR / "product-images" / product_id
+    if not img_dir.exists():
+        return []
+    allowed = {".png", ".jpg", ".jpeg", ".webp"}
+    return [
+        f"/files/product-images/{product_id}/{f.name}"
+        for f in sorted(img_dir.iterdir())
+        if f.is_file() and f.suffix.lower() in allowed
+    ]
+
+
 # ─── Avatars (read-only — managed by Avatars tool) ───────────────────────────
 
 @router.get("/avatars")
@@ -89,10 +129,40 @@ async def build_concept_prompt(body: BuildPromptRequest):
     if not selected_formats:
         raise HTTPException(status_code=422, detail="No valid format IDs provided")
 
-    dna_file = BRAND_DIR / "brand-dna.md"
-    brand_context = ""
-    if dna_file.exists():
-        brand_context = dna_file.read_text(encoding="utf-8")[:3000]
+    # Brand context (optional)
+    brand_context_block = ""
+    if body.use_brand_dna:
+        dna_file = BRAND_DIR / "brand-dna.md"
+        if dna_file.exists():
+            brand_context_block = f"BRAND CONTEXT:\n{dna_file.read_text(encoding='utf-8')[:3000]}\n\n"
+
+    # Product details
+    product = _get_product(body.product_id)
+    product_block = ""
+    if product:
+        features = ", ".join(product.get("distinctive_features", []))
+        product_block = (
+            f"PRODUCT: {product.get('name', product.get('id', 'Main Product'))}\n"
+            f"Description: {product.get('description', '')}\n"
+            f"Price: {product.get('price', '')}\n"
+            f"Platform: {product.get('delivery_platform', '')}\n"
+            f"Key features: {features}\n\n"
+        )
+
+    # Product images note
+    product_images_block = ""
+    if body.use_product_images and body.product_id:
+        images = _list_product_images(body.product_id)
+        if images:
+            product_images_block = (
+                f"PRODUCT IMAGES AVAILABLE: {len(images)} images. "
+                "When relevant, prompt_additions may reference 'product image overlay' or 'product mockup' as a visual element.\n\n"
+            )
+
+    # Offer/CTA
+    offer_block = ""
+    if body.offer_cta:
+        offer_block = f"OFFER/CTA TO FEATURE: \"{body.offer_cta}\" — incorporate this into the hook or copy guidance where appropriate.\n\n"
 
     avatars_block = "\n\n".join(
         f"AVATAR: {a['name']} (id: {a['id']})\n"
@@ -112,14 +182,11 @@ async def build_concept_prompt(body: BuildPromptRequest):
 
     prompt = f"""You are an expert direct-response ad creative strategist.
 
-Your task: Generate {body.count} distinct ad concepts for the brand below, using the provided customer avatars and ad formats.
+Your task: Generate {body.count} distinct ad concepts using the provided customer avatars and ad formats.
 
 Each concept must combine ONE avatar with ONE format and produce a specific, actionable creative brief.
 
-BRAND CONTEXT:
-{brand_context}
-
-AVAILABLE AVATARS:
+{brand_context_block}{product_block}{product_images_block}{offer_block}AVAILABLE AVATARS:
 {avatars_block}
 
 AVAILABLE FORMATS:
