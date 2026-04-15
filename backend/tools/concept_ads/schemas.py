@@ -40,6 +40,7 @@ class GenerateConceptsRequest(BaseModel):
     resolution: str = "2K"
     num_images: int = 2
     output_format: str = "png"
+    use_brand_modifier: bool = False
 
 
 class RemixRequest(BaseModel):
@@ -49,6 +50,7 @@ class RemixRequest(BaseModel):
     aspect_ratio: str = "4:5"
     resolution: str = "2K"
     output_format: str = "png"
+    use_brand_modifier: bool = False
 
 
 class ConceptJobStatus(BaseModel):

@@ -2,6 +2,7 @@ import json
 import shutil
 from pathlib import Path
 
+
 from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from backend.config import BRAND_DIR
@@ -187,4 +188,70 @@ async def delete_media(media_type: str, filename: str, product_id: str = ""):
         service.delete_media(BRAND_DIR, media_type, filename, product_id)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"{filename} not found")
+    return {"deleted": filename}
+
+
+# ─── Reference Ads Library ────────────────────────────────────────────────────
+
+REF_ADS_DIR = BRAND_DIR / "reference-ads"
+REF_ADS_META = BRAND_DIR / "data" / "reference-ads.json"
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+def _load_ref_ads_meta() -> dict[str, str]:
+    if not REF_ADS_META.exists():
+        return {}
+    return json.loads(REF_ADS_META.read_text(encoding="utf-8"))
+
+
+def _save_ref_ads_meta(meta: dict[str, str]):
+    REF_ADS_META.parent.mkdir(parents=True, exist_ok=True)
+    REF_ADS_META.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+@router.get("/reference-ads")
+async def list_reference_ads():
+    REF_ADS_DIR.mkdir(parents=True, exist_ok=True)
+    meta = _load_ref_ads_meta()
+    files = sorted(
+        f for f in REF_ADS_DIR.iterdir()
+        if f.is_file() and f.suffix.lower() in _IMAGE_EXTS
+    )
+    return [
+        {"filename": f.name, "url": f"/files/reference-ads/{f.name}", "label": meta.get(f.name, "")}
+        for f in files
+    ]
+
+
+@router.post("/reference-ads")
+async def upload_reference_ad(label: str = "", file: UploadFile = File(...)):
+    REF_ADS_DIR.mkdir(parents=True, exist_ok=True)
+    safe_name = Path(file.filename).name if file.filename else "ad.png"
+    dest = REF_ADS_DIR / safe_name
+    with open(dest, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    if label:
+        meta = _load_ref_ads_meta()
+        meta[safe_name] = label
+        _save_ref_ads_meta(meta)
+    return {"filename": safe_name, "url": f"/files/reference-ads/{safe_name}", "label": label}
+
+
+@router.patch("/reference-ads/{filename}")
+async def update_reference_ad_label(filename: str, body: dict):
+    meta = _load_ref_ads_meta()
+    meta[filename] = body.get("label", "")
+    _save_ref_ads_meta(meta)
+    return {"filename": filename, "label": meta[filename]}
+
+
+@router.delete("/reference-ads/{filename}")
+async def delete_reference_ad(filename: str):
+    path = REF_ADS_DIR / filename
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"{filename} not found")
+    path.unlink()
+    meta = _load_ref_ads_meta()
+    meta.pop(filename, None)
+    _save_ref_ads_meta(meta)
     return {"deleted": filename}

@@ -4,44 +4,74 @@
     "name": "Trader Agotado",
     "description": "Opera manualmente en XAUUSD, pega 8+ horas a la pantalla por día, pierde trades por fatiga y decisiones emocionales.",
     "pain_points": ["tiempo frente a pantalla", "fatiga mental", "disciplina emocional", "perder trades mientras duerme"],
+    "desires": ["recuperar tiempo libre", "operar sin emociones", "tener resultados consistentes sin esfuerzo diario"],
     "motivations": ["recuperar tiempo libre", "operar sin emociones", "que el mercado trabaje por él"],
     "objections": ["¿el bot realmente funciona?", "¿qué pasa si el mercado cambia?", "ya probé otros y perdí"],
-    "language_sample": "Me paso el día mirando el chart y cuando me distraigo dos minutos pierdo el mejor trade del día. Estoy harto de vivir esclavo del mercado."
+    "language_sample": "Me paso el día mirando el chart y cuando me distraigo dos minutos pierdo el mejor trade del día. Estoy harto de vivir esclavo del mercado.",
+    "ad_angles": [
+      "Libertad de tiempo: 'Tu estrategia operando sola mientras vos dormís' — contraste visual entre trader exhausto vs. vida normal",
+      "Consistencia emocional: 'El bot no tiene miedo, no tiene codicia. Solo ejecuta' — apunta a la raíz del problema del trader manual",
+      "Resultado pasivo: cuántos trades cerró el bot mientras vos estabas haciendo otra cosa"
+    ]
   },
   {
     "id": "inversor_pasivo",
     "name": "Inversor Pasivo",
     "description": "Tiene capital disponible pero no quiere operar activamente. Busca rendimiento en oro/forex sin dedicarle tiempo ni aprender análisis técnico.",
     "pain_points": ["no tiene tiempo para operar", "no entiende el análisis técnico", "desconfía de las promesas del mercado"],
+    "desires": ["ingresos pasivos reales", "diversificar fuera de acciones y crypto", "sistema que corra solo sin su atención"],
     "motivations": ["ingresos pasivos reales", "diversificar fuera de acciones y crypto", "acceso a mercados profesionales"],
     "objections": ["es demasiado técnico para mí", "¿cómo sé que no es una estafa?", "prefiero algo más simple"],
-    "language_sample": "Tengo plata para invertir pero no quiero aprender a tradear. Solo quiero algo que funcione sin que tenga que mirar pantallas."
+    "language_sample": "Tengo plata para invertir pero no quiero aprender a tradear. Solo quiero algo que funcione sin que tenga que mirar pantallas.",
+    "ad_angles": [
+      "Pasividad total: 'Configurás una vez. Opera para siempre' — no requiere conocimiento ni tiempo",
+      "Oro como activo real: posicionarlo como alternativa a crypto/acciones con el oro como respaldo tangible",
+      "Prueba social + simpleza: testimonial de alguien sin experiencia técnica que lo configuró en minutos"
+    ]
   },
   {
     "id": "trader_principiante",
     "name": "Trader Principiante",
     "description": "Empezó hace menos de un año en forex o trading de oro. Abrumado por la complejidad, quemó una cuenta demo y busca una forma más fácil de empezar.",
     "pain_points": ["curva de aprendizaje enorme", "miedo a perder dinero real", "no sabe configurar MT5", "información contradictoria online"],
+    "desires": ["empezar a generar ingresos del trading sin ser experto", "ver resultados reales rápido", "aprender mientras gana"],
     "motivations": ["empezar a generar ingresos del trading", "aprender sin arriesgar demasiado", "ver resultados reales"],
     "objections": ["no sé si puedo configurarlo", "¿necesito experiencia previa?", "¿qué pasa si lo configuro mal?"],
-    "language_sample": "Llevo meses viendo tutoriales de trading y cada vez entiendo menos. Quiero algo que funcione mientras aprendo, sin tener que ser experto."
+    "language_sample": "Llevo meses viendo tutoriales de trading y cada vez entiendo menos. Quiero algo que funcione mientras aprendo, sin tener que ser experto.",
+    "ad_angles": [
+      "Permiso para empezar: 'No necesitás entender el mercado. El bot sí' — elimina la barrera de conocimiento como requisito",
+      "Velocidad vs. esfuerzo: 'Meses de tutoriales vs. 8 minutos de configuración' — before/after del tiempo invertido",
+      "Primer win: historia de alguien que quemó su cuenta demo y con el bot tuvo su primera operación ganadora"
+    ]
   },
   {
     "id": "trader_intermedio",
     "name": "Trader Intermedio",
     "description": "Opera desde hace 1-3 años con una estrategia propia, pero los resultados son inconsistentes. Sabe que sus emociones le juegan en contra.",
     "pain_points": ["inconsistencia de resultados", "saltarse las reglas de su propia estrategia", "no respetar stop loss", "sobre-operar en días malos"],
+    "desires": ["ejecutar su estrategia perfectamente sin errores humanos", "consistencia mes a mes", "escalar sin dedicar más tiempo"],
     "motivations": ["ejecutar su estrategia sin errores humanos", "consistencia mes a mes", "escalar sin aumentar el tiempo dedicado"],
     "objections": ["el bot no entiende el contexto del mercado", "prefiero tener control total", "¿puede adaptarse a mi estrategia?"],
-    "language_sample": "Tengo una buena estrategia pero cuando el mercado se mueve rápido me paralizo o entro tarde. El bot ejecutaría mejor que yo mis propias reglas."
+    "language_sample": "Tengo una buena estrategia pero cuando el mercado se mueve rápido me paralizo o entro tarde. El bot ejecutaría mejor que yo mis propias reglas.",
+    "ad_angles": [
+      "Tu estrategia, sin errores: el bot como versión mejorada de su propio sistema — elimina el factor humano que lo sabotea",
+      "Consistencia como ventaja: trading no es talento sino disciplina repetida — el bot es disciplina perfecta",
+      "Escalabilidad: mismo esfuerzo, más posiciones — el bot no se cansa ni pierde el foco"
+    ]
   },
   {
     "id": "emprendedor_digital",
     "name": "Emprendedor Digital",
     "description": "Emprendedor con ingresos online que busca diversificar en activos reales. Le atrae el oro como refugio de valor y la automatización como concepto.",
     "pain_points": ["ingresos volátiles del negocio digital", "no sabe dónde invertir los excedentes", "no tiene tiempo para otro proyecto"],
+    "desires": ["flujo de caja adicional automatizado", "protección contra inflación vía oro", "diversificación sin complejidad"],
     "motivations": ["flujo de caja adicional automatizado", "protección contra inflación vía oro", "sistema que corre solo como su negocio"],
     "objections": ["¿se integra bien con MT5?", "¿cuánto capital mínimo necesito?", "¿cómo retiro las ganancias?"],
-    "language_sample": "Tengo un negocio online que genera bien, pero quiero que ese dinero también trabaje. El oro siempre fue mi idea pero nunca supe cómo entrar de forma inteligente."
+    "language_sample": "Tengo un negocio online que genera bien, pero quiero que ese dinero también trabaje. El oro siempre fue mi idea pero nunca supe cómo entrar de forma inteligente.",
+    "ad_angles": [
+      "Sistema sobre sistema: como tu negocio online corre en autopiloto, este bot hace lo mismo con tu capital",
+      "Oro como hedge: para alguien con ingresos digitales (volátiles), el oro automatizado es la diversificación natural",
+      "Costo de oportunidad: cuánto dejó de ganar su capital 'parado' mientras él construía su negocio"
+    ]
   }
 ]

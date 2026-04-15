@@ -5,19 +5,24 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Download,
   Loader2,
   Play,
   Sparkles,
+  Trash2,
   X,
 } from 'lucide-react';
 import {
   buildConceptPrompt,
+  deleteConceptOutput,
   fetchAvatars,
   fetchFormats,
   fetchBrandProducts,
+  fetchConceptOutputs,
   getConceptImageUrl,
   getConceptWsUrl,
   parsePlan,
+  prepareReference,
   startConceptGeneration,
   startRemix,
   uploadReference,
@@ -77,8 +82,20 @@ function CopyButton({ text }: { text: string }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+interface RemixRef {
+  src: string;
+  path: string;
+  filename: string;
+}
+
 export default function ConceptAds() {
-  const [activeTab, setActiveTab] = useState<'concepts' | 'remix'>('concepts');
+  const [activeTab, setActiveTab] = useState<'concepts' | 'remix' | 'history'>('concepts');
+  const [remixRef, setRemixRef] = useState<RemixRef | null>(null);
+
+  const handleRemixThis = (ref: RemixRef) => {
+    setRemixRef(ref);
+    setActiveTab('remix');
+  };
 
   return (
     <div className="max-w-6xl">
@@ -89,7 +106,7 @@ export default function ConceptAds() {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-carbon-light rounded-xl p-1 mb-8 w-fit">
-        {(['concepts', 'remix'] as const).map((tab) => (
+        {(['concepts', 'remix', 'history'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -99,12 +116,18 @@ export default function ConceptAds() {
                 : 'text-gray-mid hover:text-gray-light'
             }`}
           >
-            {tab === 'concepts' ? 'Concepts Mode' : 'Remix Mode'}
+            {tab === 'concepts' ? 'Concepts Mode' : tab === 'remix' ? 'Remix Mode' : 'Historial'}
           </button>
         ))}
       </div>
 
-      {activeTab === 'concepts' ? <ConceptsMode /> : <RemixMode />}
+      {activeTab === 'concepts' ? (
+        <ConceptsMode />
+      ) : activeTab === 'remix' ? (
+        <RemixMode initialRef={remixRef} onRefConsumed={() => setRemixRef(null)} />
+      ) : (
+        <OutputsHistory onRemixThis={handleRemixThis} />
+      )}
     </div>
   );
 }
@@ -128,6 +151,7 @@ function ConceptsMode() {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [useProductImages, setUseProductImages] = useState(false);
   const [useBrandDna, setUseBrandDna] = useState(true);
+  const [useBrandModifier, setUseBrandModifier] = useState(false);
   const [offerCta, setOfferCta] = useState('');
 
   // Manual Planner — Concept Plan
@@ -242,6 +266,7 @@ function ConceptsMode() {
         concepts: conceptPlan,
         resolution,
         num_images: numImages,
+        use_brand_modifier: useBrandModifier,
       });
       if (result.error) {
         setGenError(result.error);
@@ -400,8 +425,9 @@ function ConceptsMode() {
               </div>
             </div>
 
-            {/* Toggles */}
-            <div className="flex flex-wrap gap-4 mb-4">
+            {/* Toggles — planning prompt */}
+            <p className="text-xs text-gray-mid mb-1">Prompt de planificación (Claude)</p>
+            <div className="flex flex-wrap gap-4 mb-1">
               <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
                 <input
                   type="checkbox"
@@ -409,7 +435,7 @@ function ConceptsMode() {
                   onChange={(e) => setUseBrandDna(e.target.checked)}
                   className="accent-electric"
                 />
-                Usar Brand Kit (DNA)
+                Incluir Brand Kit (DNA)
               </label>
               <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
                 <input
@@ -419,6 +445,19 @@ function ConceptsMode() {
                   className="accent-electric"
                 />
                 Incluir imágenes del producto
+              </label>
+            </div>
+            {/* Toggles — image generation */}
+            <p className="text-xs text-gray-mid mb-1 mt-3">Generación de imágenes (FAL)</p>
+            <div className="flex flex-wrap gap-4 mb-4">
+              <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useBrandModifier}
+                  onChange={(e) => setUseBrandModifier(e.target.checked)}
+                  className="accent-electric"
+                />
+                Aplicar brand modifier visual
               </label>
             </div>
 
@@ -635,15 +674,44 @@ function ConceptCard({
 
 // ─── Remix Mode ───────────────────────────────────────────────────────────────
 
-function RemixMode() {
+function detectAspectRatio(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const r = img.naturalWidth / img.naturalHeight;
+      if (r < 0.75) resolve('9:16');
+      else if (r < 0.95) resolve('4:5');
+      else if (r < 1.15) resolve('1:1');
+      else resolve('16:9');
+    };
+    img.onerror = () => resolve('4:5');
+    img.src = src;
+  });
+}
+
+function RemixMode({ initialRef, onRefConsumed }: { initialRef?: { src: string; path: string; filename: string } | null; onRefConsumed?: () => void }) {
   const [_refFile, setRefFile] = useState<File | null>(null);
-  const [refPath, setRefPath] = useState('');
-  const [refPreview, setRefPreview] = useState('');
+  const [refPath, setRefPath] = useState(initialRef?.path ?? '');
+  const [refPreview, setRefPreview] = useState(initialRef?.src ?? '');
   const [instructions, setInstructions] = useState('');
   const [count, setCount] = useState(2);
   const [aspectRatio, setAspectRatio] = useState('4:5');
+  const [aspectRatioAuto, setAspectRatioAuto] = useState(false);
   const [resolution, setResolution] = useState('2K');
+  const [useBrandModifier, setUseBrandModifier] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (initialRef) {
+      setRefPath(initialRef.path);
+      setRefPreview(initialRef.src);
+      detectAspectRatio(initialRef.src).then((ar) => {
+        setAspectRatio(ar);
+        setAspectRatioAuto(true);
+      });
+      onRefConsumed?.();
+    }
+  }, [initialRef]);
   const [jobId, setJobId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
@@ -669,7 +737,12 @@ function RemixMode() {
     const file = e.target.files?.[0];
     if (!file) return;
     setRefFile(file);
-    setRefPreview(URL.createObjectURL(file));
+    const objectUrl = URL.createObjectURL(file);
+    setRefPreview(objectUrl);
+    detectAspectRatio(objectUrl).then((ar) => {
+      setAspectRatio(ar);
+      setAspectRatioAuto(true);
+    });
     setUploading(true);
     try {
       const res = await uploadReference(file);
@@ -692,6 +765,7 @@ function RemixMode() {
         count,
         aspect_ratio: aspectRatio,
         resolution,
+        use_brand_modifier: useBrandModifier,
       });
       setJobId(result.job_id);
     } catch (e) {
@@ -740,8 +814,17 @@ function RemixMode() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-mid mb-1">Aspect ratio</label>
-            <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white">
+            <div className="flex items-center gap-1.5 mb-1">
+              <label className="text-xs text-gray-mid">Aspect ratio</label>
+              {aspectRatioAuto && (
+                <span className="text-[10px] bg-electric/15 text-electric px-1.5 py-0.5 rounded font-medium">auto</span>
+              )}
+            </div>
+            <select
+              value={aspectRatio}
+              onChange={(e) => { setAspectRatio(e.target.value); setAspectRatioAuto(false); }}
+              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
+            >
               {['1:1', '4:5', '9:16', '16:9'].map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
@@ -755,6 +838,15 @@ function RemixMode() {
             </select>
           </div>
         </div>
+        <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
+          <input
+            type="checkbox"
+            checked={useBrandModifier}
+            onChange={(e) => setUseBrandModifier(e.target.checked)}
+            className="accent-electric"
+          />
+          Aplicar brand modifier visual
+        </label>
         <button
           onClick={handleGenerate}
           disabled={generating || !refPath || !instructions.trim()}
@@ -782,6 +874,268 @@ function RemixMode() {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Outputs History ──────────────────────────────────────────────────────────
+
+interface OutputFolder {
+  folder: string;
+  images: string[];
+  meta: {
+    concept_index?: number;
+    avatar_id?: string;
+    avatar_name?: string;
+    format_id?: string;
+    format_name?: string;
+    hook?: string;
+    angle?: string;
+    prompt?: string;
+    type?: string;
+    instructions?: string;
+    resolution?: string;
+  };
+}
+
+interface SelectedImage {
+  src: string;
+  folder: string;
+  filename: string;
+  meta: OutputFolder['meta'];
+}
+
+function AdDetailModal({
+  selected,
+  onClose,
+  onRemixThis,
+}: {
+  selected: SelectedImage;
+  onClose: () => void;
+  onRemixThis: (ref: { src: string; path: string; filename: string }) => void;
+}) {
+  const [loadingRemix, setLoadingRemix] = useState(false);
+  const { meta } = selected;
+  const isRemix = meta.type === 'remix';
+
+  const handleRemixThis = async () => {
+    setLoadingRemix(true);
+    try {
+      const relativePath = `concept-outputs/${selected.folder}/${selected.filename}`;
+      const res = await prepareReference(relativePath);
+      onRemixThis({ src: selected.src, path: res.path, filename: res.filename });
+      onClose();
+    } finally {
+      setLoadingRemix(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-carbon-dark border border-carbon-light rounded-2xl overflow-hidden flex flex-col lg:flex-row max-w-5xl w-full max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Image panel */}
+        <div className="lg:w-1/2 bg-black flex items-center justify-center p-4 min-h-64">
+          <img
+            src={selected.src}
+            alt="Ad"
+            className="max-w-full max-h-[70vh] object-contain rounded-lg"
+          />
+        </div>
+
+        {/* Metadata panel */}
+        <div className="lg:w-1/2 flex flex-col overflow-y-auto">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-carbon-light">
+            <span className="text-xs font-mono text-gray-mid">{selected.folder}</span>
+            <button onClick={onClose} className="text-gray-mid hover:text-white">
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="flex-1 px-5 py-4 space-y-4 overflow-y-auto">
+            {/* Type badge */}
+            <div className="flex flex-wrap gap-2">
+              {meta.resolution && (
+                <span className="text-xs border border-carbon-light rounded px-2 py-0.5 text-gray-mid">{meta.resolution}</span>
+              )}
+              {isRemix ? (
+                <span className="text-xs border border-electric/30 rounded px-2 py-0.5 text-electric">Remix</span>
+              ) : (
+                <>
+                  {(meta.format_name ?? meta.format_id) && (
+                    <span className="text-xs border border-electric/30 rounded px-2 py-0.5 text-electric">{meta.format_name ?? meta.format_id}</span>
+                  )}
+                  {(meta.avatar_name ?? meta.avatar_id) && (
+                    <span className="text-xs border border-neon/30 rounded px-2 py-0.5 text-neon">{meta.avatar_name ?? meta.avatar_id}</span>
+                  )}
+                </>
+              )}
+            </div>
+
+            {meta.hook && (
+              <div>
+                <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Hook</p>
+                <p className="text-sm text-white font-medium">"{meta.hook}"</p>
+              </div>
+            )}
+
+            {meta.angle && (
+              <div>
+                <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Ángulo</p>
+                <p className="text-sm text-gray-light">{meta.angle}</p>
+              </div>
+            )}
+
+            {meta.instructions && (
+              <div>
+                <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Instrucciones</p>
+                <p className="text-sm text-gray-light">{meta.instructions}</p>
+              </div>
+            )}
+
+            {meta.prompt && (
+              <div>
+                <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Prompt enviado a FAL</p>
+                <p className="text-xs text-gray-mid font-mono bg-carbon rounded-lg p-3 whitespace-pre-wrap wrap-break-word">{meta.prompt}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="px-5 py-4 border-t border-carbon-light flex gap-2">
+            <a
+              href={selected.src}
+              download={selected.filename}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-carbon-light text-gray-light text-xs hover:text-white transition-colors"
+            >
+              <Download size={13} /> Descargar
+            </a>
+            <button
+              onClick={handleRemixThis}
+              disabled={loadingRemix}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors disabled:opacity-50"
+            >
+              {loadingRemix ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+              Remix this
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OutputsHistory({ onRemixThis }: { onRemixThis: (ref: { src: string; path: string; filename: string }) => void }) {
+  const [folders, setFolders] = useState<OutputFolder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<SelectedImage | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchConceptOutputs()
+      .then((data) => setFolders([...data].reverse()))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleDelete(folder: string) {
+    if (!confirm(`¿Eliminar "${folder}" y todas sus imágenes?`)) return;
+    setDeleting(folder);
+    try {
+      await deleteConceptOutput(folder);
+      setFolders((prev) => prev.filter((f) => f.folder !== folder));
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-48 text-gray-mid text-sm">
+        <Loader2 size={16} className="animate-spin mr-2" /> Cargando historial...
+      </div>
+    );
+  }
+
+  if (folders.length === 0) {
+    return (
+      <div className="text-center py-20 text-gray-mid">
+        <p className="text-sm">No hay generaciones todavía.</p>
+        <p className="text-xs mt-1">Las imágenes generadas aparecerán aquí.</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="space-y-6">
+        <p className="text-xs text-gray-mid">{folders.length} generacion{folders.length !== 1 ? 'es' : ''}</p>
+        {folders.map((f) => {
+          const isRemix = f.meta.type === 'remix';
+          const title = isRemix
+            ? `Remix — ${f.meta.instructions?.slice(0, 60) ?? f.folder}`
+            : f.meta.hook ? f.meta.hook.slice(0, 70) : f.folder;
+          const subtitle = isRemix
+            ? 'Remix Mode'
+            : [f.meta.format_name ?? f.meta.format_id, f.meta.avatar_name ?? f.meta.avatar_id]
+                .filter(Boolean).join(' × ');
+
+          const images = f.images.map((img) => ({
+            src: getConceptImageUrl(f.folder, img),
+            label: img,
+          }));
+
+          return (
+            <div key={f.folder} className="bg-carbon-light rounded-xl p-5">
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="font-mono text-xs text-gray-mid">{f.folder}</span>
+                  {f.meta.resolution && (
+                    <span className="text-xs text-gray-mid border border-carbon-light rounded px-1.5 py-0.5">
+                      {f.meta.resolution}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => handleDelete(f.folder)}
+                    disabled={deleting === f.folder}
+                    className="ml-auto text-gray-mid hover:text-red-400 disabled:opacity-40 transition-colors"
+                    title="Eliminar generación"
+                  >
+                    {deleting === f.folder
+                      ? <Loader2 size={14} className="animate-spin" />
+                      : <Trash2 size={14} />}
+                  </button>
+                </div>
+                <p className="text-sm font-medium text-white line-clamp-1">{title}</p>
+                {subtitle && <p className="text-xs text-gray-mid mt-0.5">{subtitle}</p>}
+              </div>
+              <ImageGrid
+                images={images}
+                onImageClick={(img) => setSelected({
+                  src: img.src,
+                  folder: f.folder,
+                  filename: img.label,
+                  meta: f.meta,
+                })}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {selected && (
+        <AdDetailModal
+          selected={selected}
+          onClose={() => setSelected(null)}
+          onRemixThis={onRemixThis}
+        />
+      )}
+    </>
   );
 }
 

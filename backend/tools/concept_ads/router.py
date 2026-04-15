@@ -134,7 +134,7 @@ async def build_concept_prompt(body: BuildPromptRequest):
     if body.use_brand_dna:
         dna_file = BRAND_DIR / "brand-dna.md"
         if dna_file.exists():
-            brand_context_block = f"BRAND CONTEXT:\n{dna_file.read_text(encoding='utf-8')[:3000]}\n\n"
+            brand_context_block = f"BRAND CONTEXT:\n{dna_file.read_text(encoding='utf-8')}\n\n"
 
     # Product details
     product = _get_product(body.product_id)
@@ -180,11 +180,9 @@ async def build_concept_prompt(body: BuildPromptRequest):
         for f in selected_formats
     )
 
-    prompt = f"""You are an expert direct-response ad creative strategist.
+    prompt = f"""You are an expert direct-response ad creative strategist and AI image prompt writer.
 
-Your task: Generate {body.count} distinct ad concepts using the provided customer avatars and ad formats.
-
-Each concept must combine ONE avatar with ONE format and produce a specific, actionable creative brief.
+Your task: Generate {body.count} distinct ad concepts using the provided customer avatars and ad formats. Each concept must combine ONE avatar with ONE format and produce a complete, ready-to-use creative brief — including a full image generation prompt for an AI image model (Nano Banana / FAL).
 
 {brand_context_block}{product_block}{product_images_block}{offer_block}AVAILABLE AVATARS:
 {avatars_block}
@@ -197,7 +195,17 @@ RULES:
 - Use each format at least once (distribute variety)
 - Each concept must have a SPECIFIC hook — not generic, but something this exact avatar would stop scrolling for
 - The angle must be emotionally or logically distinct from the other concepts
-- prompt_additions should describe the specific visual scene, NOT repeat the format rules
+- prompt_additions must be a COMPLETE, STANDALONE image generation prompt (see instructions below)
+
+PROMPT_ADDITIONS INSTRUCTIONS — this field is sent directly to an AI image model. It must be self-contained and rich enough to generate the image without any other context. Include ALL of the following:
+1. The visual scene: environment, setting, time of day, background
+2. The subject: person (age, appearance, expression, body language) or graphic layout if no person
+3. The avatar's emotional state: what they're feeling in this moment — frustration, relief, excitement, confidence
+4. Ad hook integration: how the hook is visually communicated — overlay text, expression, composition
+5. Copywriting angle made visual: the emotion or logic of the angle translated into a specific visual moment
+6. Lighting, color palette, mood, camera framing (e.g. "handheld portrait selfie angle", "dark studio with neon accent")
+7. Style: photorealistic / UGC-style / graphic / typographic — be explicit
+Do NOT repeat the format rules — those are layout constraints, not image content. Write the prompt as a single rich paragraph, not bullet points.
 
 OUTPUT FORMAT — Return ONLY a valid JSON array (no markdown, no explanation):
 [
@@ -207,7 +215,7 @@ OUTPUT FORMAT — Return ONLY a valid JSON array (no markdown, no explanation):
     "format_id": "exact_format_id",
     "hook": "The specific headline or opening line that stops this avatar from scrolling",
     "angle": "1-sentence description of the emotional or logical angle being exploited",
-    "prompt_additions": "Specific visual details for the image: scene, lighting, props, subject, mood",
+    "prompt_additions": "Full standalone image generation prompt: subject, scene, emotional state, visual translation of the hook and angle, lighting, style, framing — everything an AI needs to generate this ad image",
     "aspect_ratio": "{body.aspect_ratio}"
   }}
 ]
@@ -275,7 +283,7 @@ async def start_generate(req: GenerateConceptsRequest):
     service = ConceptAdService(BRAND_DIR)
     avatars_map = {a["id"]: a for a in _load_avatars()}
     formats_map = {f["id"]: f for f in _load_formats()}
-    brand_modifier = _get_brand_modifier()
+    brand_modifier = _get_brand_modifier() if req.use_brand_modifier else ""
 
     asyncio.create_task(
         _run_concepts(job_id, service, req, avatars_map, formats_map, brand_modifier, queue)
@@ -374,6 +382,20 @@ async def websocket_progress(websocket: WebSocket, job_id: str):
         job_queues.pop(job_id, None)
 
 
+# ─── Prepare existing output as remix reference ───────────────────────────────
+
+@router.post("/prepare-reference")
+async def prepare_reference(body: dict):
+    """Return the full path for an existing concept output file so it can be used as a remix reference."""
+    relative = body.get("relative_path", "")
+    if not relative:
+        raise HTTPException(status_code=422, detail="relative_path is required")
+    full_path = BRAND_DIR / relative
+    if not full_path.exists() or not full_path.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+    return {"path": str(full_path), "filename": full_path.name}
+
+
 # ─── Remix Mode ───────────────────────────────────────────────────────────────
 
 @router.post("/upload-reference")
@@ -402,7 +424,7 @@ async def start_remix(req: RemixRequest):
     jobs[job_id] = job
 
     service = ConceptAdService(BRAND_DIR)
-    brand_modifier = _get_brand_modifier()
+    brand_modifier = _get_brand_modifier() if req.use_brand_modifier else ""
 
     asyncio.create_task(_run_remix(job_id, service, req, brand_modifier, queue))
 
@@ -479,3 +501,14 @@ async def list_outputs():
         })
 
     return result
+
+
+@router.delete("/outputs/{folder}")
+async def delete_output(folder: str):
+    """Delete a concept output folder and all its images."""
+    outputs_dir = BRAND_DIR / "concept-outputs"
+    folder_path = outputs_dir / folder
+    if not folder_path.exists() or not folder_path.is_dir():
+        raise HTTPException(status_code=404, detail=f"Output folder '{folder}' not found")
+    shutil.rmtree(folder_path)
+    return {"deleted": folder}

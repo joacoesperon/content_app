@@ -25,18 +25,22 @@ interface Avatar {
   name: string;
   description: string;
   pain_points: string[];
+  desires: string[];
   motivations: string[];
   objections: string[];
   language_sample: string;
+  ad_angles: string[];
 }
 
 const EMPTY_AVATAR: Omit<Avatar, 'id'> = {
   name: '',
   description: '',
   pain_points: [],
+  desires: [],
   motivations: [],
   objections: [],
   language_sample: '',
+  ad_angles: [],
 };
 
 // ─── Tag list editor ──────────────────────────────────────────────────────────
@@ -149,8 +153,10 @@ function AvatarForm({
         </div>
       </div>
       <TagList label="Pain Points" values={form.pain_points} onChange={(v) => set('pain_points', v)} />
+      <TagList label="Deseos" values={form.desires ?? []} onChange={(v) => set('desires', v)} />
       <TagList label="Motivaciones" values={form.motivations} onChange={(v) => set('motivations', v)} />
       <TagList label="Objeciones" values={form.objections} onChange={(v) => set('objections', v)} />
+      <TagList label="Ángulos de Ad" values={form.ad_angles ?? []} onChange={(v) => set('ad_angles', v)} />
       <div className="space-y-1">
         <label className="text-xs font-medium text-gray-mid uppercase tracking-wider">Frase representativa</label>
         <textarea
@@ -203,9 +209,11 @@ function AvatarCard({
         name: updated.name,
         description: updated.description,
         pain_points: updated.pain_points,
+        desires: updated.desires,
         motivations: updated.motivations,
         objections: updated.objections,
         language_sample: updated.language_sample,
+        ad_angles: updated.ad_angles,
       });
       onUpdated(result);
       setEditing(false);
@@ -286,6 +294,16 @@ function AvatarCard({
               </div>
             </div>
           )}
+          {(avatar.desires ?? []).length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1.5">Deseos</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(avatar.desires ?? []).map((d) => (
+                  <span key={d} className="px-2 py-0.5 rounded-full bg-purple-900/20 border border-purple-700/30 text-xs text-purple-300">{d}</span>
+                ))}
+              </div>
+            </div>
+          )}
           {avatar.motivations.length > 0 && (
             <div>
               <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1.5">Motivaciones</p>
@@ -310,6 +328,16 @@ function AvatarCard({
             <div>
               <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Frase representativa</p>
               <p className="text-xs text-gray-light italic">"{avatar.language_sample}"</p>
+            </div>
+          )}
+          {(avatar.ad_angles ?? []).length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1.5">Ángulos de Ad</p>
+              <div className="space-y-1.5">
+                {(avatar.ad_angles ?? []).map((a, i) => (
+                  <p key={i} className="text-xs text-electric bg-electric/5 border border-electric/15 rounded px-2.5 py-1.5">{a}</p>
+                ))}
+              </div>
             </div>
           )}
         </div>

@@ -24,6 +24,10 @@ import {
   createBrandProduct,
   updateBrandProduct,
   deleteBrandProduct,
+  fetchReferenceAds,
+  uploadReferenceAd,
+  updateReferenceAdLabel,
+  deleteReferenceAd,
 } from '../lib/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -430,6 +434,100 @@ function ReferenceImages() {
   );
 }
 
+// ─── Reference Ads Library ───────────────────────────────────────────────────
+
+interface RefAd { filename: string; url: string; label: string }
+
+function ReferenceAdsLibrary() {
+  const [ads, setAds] = useState<RefAd[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [editingLabel, setEditingLabel] = useState<string | null>(null);
+  const [labelDraft, setLabelDraft] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { fetchReferenceAds().then(setAds); }, []);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const result = await uploadReferenceAd(file);
+      setAds((prev) => [...prev, result]);
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  const handleSaveLabel = async (filename: string) => {
+    const updated = await updateReferenceAdLabel(filename, labelDraft);
+    setAds((prev) => prev.map((a) => a.filename === filename ? { ...a, label: updated.label } : a));
+    setEditingLabel(null);
+  };
+
+  const handleDelete = async (filename: string) => {
+    await deleteReferenceAd(filename);
+    setAds((prev) => prev.filter((a) => a.filename !== filename));
+  };
+
+  return (
+    <div className="bg-carbon-dark border border-carbon-light rounded-xl p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-semibold text-white">Reference Ads Library</h3>
+          <p className="text-xs text-gray-mid mt-0.5">Ads de referencia de la marca — usados como contexto en generación.</p>
+        </div>
+        <label className="flex items-center gap-2 px-3 py-1.5 bg-carbon-light rounded-lg text-sm text-gray-light hover:text-white cursor-pointer transition-colors">
+          <Upload size={14} />
+          {uploading ? 'Subiendo…' : 'Subir ad'}
+          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+        </label>
+      </div>
+
+      {ads.length === 0 ? (
+        <p className="text-sm text-gray-mid">No hay ads de referencia todavía.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {ads.map((ad) => (
+            <div key={ad.filename} className="group relative rounded-lg overflow-hidden bg-carbon border border-carbon-light">
+              <img src={ad.url} alt={ad.label || ad.filename} className="w-full aspect-square object-cover" />
+              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+                <button
+                  onClick={() => { setEditingLabel(ad.filename); setLabelDraft(ad.label); }}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded bg-carbon-light text-gray-light text-xs hover:text-white"
+                >
+                  <Pencil size={11} /> Etiquetar
+                </button>
+                <button onClick={() => handleDelete(ad.filename)} className="flex items-center gap-1 px-2.5 py-1 rounded bg-red-900/60 text-red-300 text-xs hover:bg-red-900">
+                  <Trash2 size={11} /> Eliminar
+                </button>
+              </div>
+              {ad.label && (
+                <div className="px-2 py-1 text-xs text-gray-mid truncate border-t border-carbon-light">{ad.label}</div>
+              )}
+              {editingLabel === ad.filename && (
+                <div className="absolute inset-x-0 bottom-0 bg-carbon-dark p-2 flex gap-1" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    autoFocus
+                    value={labelDraft}
+                    onChange={(e) => setLabelDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveLabel(ad.filename)}
+                    placeholder="Etiqueta..."
+                    className="flex-1 bg-carbon border border-electric/40 rounded px-2 py-1 text-xs text-white focus:outline-none"
+                  />
+                  <button onClick={() => handleSaveLabel(ad.filename)} className="p-1 text-neon hover:text-white"><Check size={13} /></button>
+                  <button onClick={() => setEditingLabel(null)} className="p-1 text-gray-mid hover:text-white"><X size={13} /></button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Plain Text Editor ────────────────────────────────────────────────────────
 
 function PlainTextEditor({ onSwitchToStructured: _onSwitchToStructured }: { onSwitchToStructured: () => void }) {
@@ -633,6 +731,12 @@ export default function Brand() {
           <div>
             <h3 className="text-base font-semibold text-white mb-3">Reference Images</h3>
             <ReferenceImages />
+          </div>
+
+          {/* Reference Ads Library */}
+          <div>
+            <h3 className="text-base font-semibold text-white mb-3">Reference Ads Library</h3>
+            <ReferenceAdsLibrary />
           </div>
         </>
       )}

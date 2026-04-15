@@ -1,12 +1,25 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 
 interface ImageGridProps {
   images: { src: string; label: string }[];
+  onImageClick?: (img: { src: string; label: string }) => void;
 }
 
-export default function ImageGrid({ images }: ImageGridProps) {
-  const [lightbox, setLightbox] = useState<string | null>(null);
+function downloadImage(src: string, label: string) {
+  const filename = label.split('/').pop()?.split(' — ').pop() ?? 'image.png';
+  const a = document.createElement('a');
+  a.href = src;
+  a.download = filename;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+export default function ImageGrid({ images, onImageClick }: ImageGridProps) {
+  const [lightbox, setLightbox] = useState<{ src: string; label: string } | null>(null);
 
   if (images.length === 0) {
     return (
@@ -22,15 +35,23 @@ export default function ImageGrid({ images }: ImageGridProps) {
         {images.map((img, i) => (
           <div
             key={i}
-            className="bg-carbon-light rounded-lg overflow-hidden cursor-pointer hover:ring-1 hover:ring-neon/30 transition-all"
-            onClick={() => setLightbox(img.src)}
+            className="group bg-carbon-light rounded-lg overflow-hidden relative"
           >
             <img
               src={img.src}
               alt={img.label}
-              className="w-full aspect-square object-cover"
+              className="w-full aspect-square object-cover cursor-pointer"
               loading="lazy"
+              onClick={() => onImageClick ? onImageClick(img) : setLightbox(img)}
             />
+            {/* Download button overlay */}
+            <button
+              onClick={(e) => { e.stopPropagation(); downloadImage(img.src, img.label); }}
+              className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
+              title="Descargar"
+            >
+              <Download size={14} />
+            </button>
             <div className="px-3 py-2 text-xs text-gray-mid truncate">
               {img.label}
             </div>
@@ -41,7 +62,7 @@ export default function ImageGrid({ images }: ImageGridProps) {
       {/* Lightbox */}
       {lightbox && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center cursor-pointer"
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
           onClick={() => setLightbox(null)}
         >
           <button
@@ -50,10 +71,17 @@ export default function ImageGrid({ images }: ImageGridProps) {
           >
             <X size={24} />
           </button>
+          <button
+            className="absolute bottom-6 right-6 flex items-center gap-2 px-4 py-2 rounded-lg bg-carbon-light text-white text-sm hover:bg-carbon transition-colors"
+            onClick={(e) => { e.stopPropagation(); downloadImage(lightbox.src, lightbox.label); }}
+          >
+            <Download size={15} /> Descargar
+          </button>
           <img
-            src={lightbox}
+            src={lightbox.src}
             alt="Full size"
-            className="max-w-[90%] max-h-[90%] object-contain"
+            className="max-w-[90%] max-h-[85%] object-contain cursor-pointer"
+            onClick={() => setLightbox(null)}
           />
         </div>
       )}

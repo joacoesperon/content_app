@@ -58,15 +58,19 @@ class ConceptAdService:
             f"Language style: {avatar_data.get('language_sample', '')}."
         ).strip()
 
+        modifier_block = f"{brand_modifier}\n\n" if brand_modifier else ""
         full_prompt = (
-            f"{brand_modifier}\n\n"
+            f"{modifier_block}"
             f"FORMAT: {format_data.get('name', format_id)}. "
             f"Visual rules: {format_data.get('visual_rules', '')} "
             f"Copy guidance: {format_data.get('copy_guidance', '')}\n\n"
             f"AVATAR CONTEXT: {avatar_context}\n\n"
             f"HOOK: {hook}\n"
             f"ANGLE: {angle}\n\n"
-            f"ADDITIONAL: {prompt_additions}"
+            f"ADDITIONAL: {prompt_additions}\n\n"
+            f"IMPORTANT: If the concept includes a person, generate a completely original individual "
+            f"who embodies the avatar archetype described above. Do not replicate any specific "
+            f"person's face, identity, or likeness."
         ).strip()
 
         start = time.time()
@@ -134,11 +138,15 @@ class ConceptAdService:
         # Upload reference to FAL storage
         ref_url = fal_client.upload_file(str(ref_file))
 
+        modifier_block = f"{brand_modifier}\n\n" if brand_modifier else ""
         full_prompt = (
-            f"{brand_modifier}\n\n"
-            f"Replicate the visual style, composition, and mood of the reference image "
-            f"but apply it to Jess Trading's brand and product. "
-            f"{instructions}"
+            f"{modifier_block}"
+            f"Replicate the visual style, composition, and mood of the reference image. "
+            f"{instructions}\n\n"
+            f"IMPORTANT: If the reference image contains a person, do NOT copy their face, "
+            f"age, ethnicity, or identity. Instead, cast a completely different individual "
+            f"who plays the same role (e.g. same archetype: 'young trader at desk', "
+            f"'confident professional', etc.) but with entirely different appearance."
         ).strip()
 
         idx = int(time.time()) % 100000

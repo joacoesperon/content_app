@@ -62,26 +62,26 @@ async def build_avatar_prompt(body: BuildAvatarPromptRequest):
     dna_file = BRAND_DIR / "brand-dna.md"
     brand_context = ""
     if dna_file.exists():
-        brand_context = dna_file.read_text(encoding="utf-8")[:3000]
+        brand_context = dna_file.read_text(encoding="utf-8")
 
-    product = body.product or "Gold Trading Bot (XAUUSD EA for MetaTrader 5) — $147 lifetime"
+    product_override = f"\nPRODUCT FOCUS (override): {body.product}" if body.product else ""
     extra_context = f"\nAdditional context: {body.context}" if body.context else ""
 
-    prompt = f"""You are a direct-response marketing strategist specializing in customer avatar research.
+    prompt = f"""You are a direct-response marketing strategist specializing in customer avatar research and Facebook/Instagram ad creative strategy.
 
-Your task: Analyze the product below and identify 5-6 distinct customer avatar archetypes. Each avatar should represent a real, specific type of person who would buy this product.
+Your task: Produce a deep research report on the target audience for this brand. Identify 10 distinct customer avatar archetypes who would buy this product. Each avatar must represent a real, specific type of person — not a demographic abstraction.
 
-PRODUCT: {product}{extra_context}
+BRAND CONTEXT (includes product details, visual system, and ad style):
+{brand_context}{product_override}{extra_context}
 
-BRAND CONTEXT:
-{brand_context}
-
-For each avatar, research and define:
-- Their specific situation and daily reality
-- What they've already tried and why it failed
-- The exact language they use to describe their problem
-- Their primary objections to buying
-- Their core motivation (what they're really buying)
+For each avatar, deeply research and define:
+1. **Who they are** — their specific situation, daily reality, identity
+2. **Pain points** — what they struggle with right now (be concrete, not generic)
+3. **Desires** — what they actually want (the transformation they're seeking)
+4. **Why they BUY** — their core motivation, the emotional trigger that pushes them to purchase
+5. **Why they DON'T buy** — specific objections and fears that hold them back
+6. **Language they use** — the exact words, phrases, and expressions they use to describe their problem (not marketing-speak — their actual language)
+7. **Facebook/Instagram ad angles** — 2-3 specific angles that would stop this avatar mid-scroll; what hook, message, or creative direction would resonate most with them given their pain points and desires
 
 OUTPUT FORMAT — Return ONLY a valid JSON array with this exact structure (no markdown, no explanation):
 [
@@ -90,13 +90,24 @@ OUTPUT FORMAT — Return ONLY a valid JSON array with this exact structure (no m
     "name": "Avatar Name (2-3 words)",
     "description": "1-2 sentences describing their specific situation and identity",
     "pain_points": ["specific pain 1", "specific pain 2", "specific pain 3"],
-    "motivations": ["what they really want 1", "what they really want 2"],
-    "objections": ["objection 1", "objection 2"],
-    "language_sample": "A quote in their own words — how they'd describe their problem to a friend"
+    "desires": ["what they truly want 1", "what they truly want 2"],
+    "motivations": ["core buying motivation 1", "core buying motivation 2"],
+    "objections": ["specific objection/fear 1", "specific objection/fear 2"],
+    "language_sample": "A quote in their own words — exactly how they'd describe their situation to a friend",
+    "ad_angles": [
+      "Angle 1: specific hook or creative direction that would resonate with this avatar",
+      "Angle 2: different angle exploiting a different pain point or desire",
+      "Angle 3: a contrarian or curiosity-based angle for this avatar"
+    ]
   }}
 ]
 
-Be specific and concrete. Avoid generic marketing language. Each avatar must be meaningfully different from the others."""
+Rules:
+- Be specific and concrete — avoid generic marketing language
+- Each avatar must be meaningfully different from the others
+- The language_sample must sound like a real person, not a marketer
+- Ad angles must be specific enough to brief a creative team, not vague directions
+- Generate exactly 10 avatars"""
 
     return {"prompt": prompt, "char_count": len(prompt)}
 
@@ -132,9 +143,11 @@ async def parse_avatars(body: ParseAvatarsRequest):
             "name": item["name"],
             "description": item["description"],
             "pain_points": item.get("pain_points", []),
+            "desires": item.get("desires", []),
             "motivations": item.get("motivations", []),
             "objections": item.get("objections", []),
             "language_sample": item.get("language_sample", ""),
+            "ad_angles": item.get("ad_angles", []),
         })
 
     return {"avatars": parsed, "count": len(parsed)}

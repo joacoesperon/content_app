@@ -114,6 +114,53 @@ export async function deleteBrandMedia(type: string, filename: string, productId
   return res.json();
 }
 
+// ─── Brand — Reference Ads Library ───────────────────────────────────────────
+
+export async function fetchReferenceAds() {
+  const res = await fetch(`${BASE}/api/tools/brand/reference-ads`);
+  return res.json();
+}
+
+export async function uploadReferenceAd(file: File, label = '') {
+  const params = new URLSearchParams();
+  if (label) params.set('label', label);
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${BASE}/api/tools/brand/reference-ads?${params}`, {
+    method: 'POST',
+    body: form,
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail ?? 'Upload error');
+  }
+  return res.json();
+}
+
+export async function updateReferenceAdLabel(filename: string, label: string) {
+  const res = await fetch(`${BASE}/api/tools/brand/reference-ads/${filename}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail ?? 'Update error');
+  }
+  return res.json();
+}
+
+export async function deleteReferenceAd(filename: string) {
+  const res = await fetch(`${BASE}/api/tools/brand/reference-ads/${filename}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail ?? 'Delete error');
+  }
+  return res.json();
+}
+
 // ─── Brand DNA — Raw JSON ─────────────────────────────────────────────────────
 
 export async function fetchBrandDnaRaw() {
@@ -289,6 +336,7 @@ export async function startConceptGeneration(data: {
   resolution: string;
   num_images: number;
   output_format?: string;
+  use_brand_modifier?: boolean;
 }) {
   const res = await fetch(`${BASE}/api/tools/concept_ads/generate`, {
     method: 'POST',
@@ -299,6 +347,19 @@ export async function startConceptGeneration(data: {
 }
 
 // ─── Concept Ads — Remix ─────────────────────────────────────────────────────
+
+export async function prepareReference(relativePath: string) {
+  const res = await fetch(`${BASE}/api/tools/concept_ads/prepare-reference`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ relative_path: relativePath }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail ?? 'Error preparing reference');
+  }
+  return res.json();
+}
 
 export async function uploadReference(file: File) {
   const form = new FormData();
@@ -321,6 +382,7 @@ export async function startRemix(data: {
   aspect_ratio: string;
   resolution: string;
   output_format?: string;
+  use_brand_modifier?: boolean;
 }) {
   const res = await fetch(`${BASE}/api/tools/concept_ads/remix`, {
     method: 'POST',
@@ -334,5 +396,16 @@ export async function startRemix(data: {
 
 export async function fetchConceptOutputs() {
   const res = await fetch(`${BASE}/api/tools/concept_ads/outputs`);
+  return res.json();
+}
+
+export async function deleteConceptOutput(folder: string) {
+  const res = await fetch(`${BASE}/api/tools/concept_ads/outputs/${folder}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail ?? 'Delete error');
+  }
   return res.json();
 }
