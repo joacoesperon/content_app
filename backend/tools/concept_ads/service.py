@@ -131,17 +131,61 @@ class ConceptAdService:
         num_images: int = 2,
         resolution: str = "2K",
         output_format: str = "png",
+        ref_ad_paths: list[str] | None = None,
+        product_image_paths: list[str] | None = None,
+        avatar_data: dict | None = None,
     ) -> dict:
         """Generate remix images using a reference image via FAL edit endpoint."""
         ref_file = Path(reference_path)
 
-        # Upload reference to FAL storage
+        # Upload main reference to FAL storage
         ref_url = fal_client.upload_file(str(ref_file))
 
+        # Upload product images (passed as additional image inputs to FAL)
+        product_urls: list[str] = []
+        for path in (product_image_paths or []):
+            try:
+                product_urls.append(fal_client.upload_file(path))
+            except Exception:
+                pass
+
+        # Upload brand reference ads as additional style inputs
+        ref_ad_urls: list[str] = []
+        for path in (ref_ad_paths or []):
+            try:
+                ref_ad_urls.append(fal_client.upload_file(path))
+            except Exception:
+                pass
+
+        # Order: [reference ad, product images, brand reference ads]
+        all_image_urls = [ref_url] + product_urls + ref_ad_urls
+
         modifier_block = f"{brand_modifier}\n\n" if brand_modifier else ""
+
+        # Avatar context block
+        avatar_block = ""
+        if avatar_data:
+            avatar_block = (
+                f"\nTARGET AUDIENCE: {avatar_data.get('name', '')}. "
+                f"{avatar_data.get('description', '')} "
+                f"Pain points: {', '.join(avatar_data.get('pain_points', []))}. "
+                f"Desires: {', '.join(avatar_data.get('desires', []))}. "
+                f"Language style: {avatar_data.get('language_sample', '')}.\n"
+            )
+
+        product_note = (
+            " The product image(s) provided must be featured prominently in the ad."
+        ) if product_urls else ""
+
+        ref_ads_note = (
+            " The additional brand reference images show the brand's existing ad style — "
+            "use them as a soft visual style guide."
+        ) if ref_ad_urls else ""
+
         full_prompt = (
             f"{modifier_block}"
-            f"Replicate the visual style, composition, and mood of the reference image. "
+            f"Replicate the visual style, composition, and mood of the first reference image.{product_note}{ref_ads_note}"
+            f"{avatar_block}\n"
             f"{instructions}\n\n"
             f"IMPORTANT: If the reference image contains a person, do NOT copy their face, "
             f"age, ethnicity, or identity. Instead, cast a completely different individual "
@@ -160,7 +204,7 @@ class ConceptAdService:
             IMAGE_EDIT_MODEL,
             arguments={
                 "prompt": full_prompt,
-                "image_urls": [ref_url],
+                "image_urls": all_image_urls,
                 "num_images": num_images,
                 "aspect_ratio": aspect_ratio,
                 "output_format": output_format,
@@ -187,6 +231,10 @@ class ConceptAdService:
             "aspect_ratio": aspect_ratio,
             "resolution": resolution,
             "prompt": full_prompt,
+            "reference_ads_used": len(ref_ad_urls),
+            "product_images_used": len(product_urls),
+            "avatar_id": (avatar_data or {}).get("id", ""),
+            "avatar_name": (avatar_data or {}).get("name", ""),
         }
         with open(remix_dir / "meta.json", "w", encoding="utf-8") as f:
             json.dump(meta, f, ensure_ascii=False, indent=2)

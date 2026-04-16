@@ -51,6 +51,9 @@ class RemixRequest(BaseModel):
     resolution: str = "2K"
     output_format: str = "png"
     use_brand_modifier: bool = False
+    use_reference_ads: bool = False
+    product_id: str = ""
+    avatar_id: str = ""
 
 
 class ConceptJobStatus(BaseModel):

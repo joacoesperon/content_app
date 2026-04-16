@@ -29,6 +29,19 @@ job_queues: dict[str, asyncio.Queue] = {}
 AVATARS_FILE = BRAND_DIR / "data" / "avatars.json"
 FORMATS_FILE = Path(__file__).parent / "formats.json"
 REFERENCE_DIR = BRAND_DIR / "reference-images"
+REF_ADS_DIR = BRAND_DIR / "reference-ads"
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+def _get_reference_ad_paths(max_refs: int = 3) -> list[str]:
+    """Return up to max_refs reference ad file paths from brand/reference-ads/."""
+    if not REF_ADS_DIR.exists():
+        return []
+    files = sorted(
+        f for f in REF_ADS_DIR.iterdir()
+        if f.is_file() and f.suffix.lower() in _IMAGE_EXTS
+    )
+    return [str(f) for f in files[:max_refs]]
 
 
 def _load_avatars() -> list[dict]:
@@ -425,8 +438,28 @@ async def start_remix(req: RemixRequest):
 
     service = ConceptAdService(BRAND_DIR)
     brand_modifier = _get_brand_modifier() if req.use_brand_modifier else ""
+    ref_ad_paths = _get_reference_ad_paths() if req.use_reference_ads else []
 
-    asyncio.create_task(_run_remix(job_id, service, req, brand_modifier, queue))
+    # Resolve product images
+    product_image_paths: list[str] = []
+    if req.product_id:
+        prod_img_dir = BRAND_DIR / "product-images" / req.product_id
+        if prod_img_dir.exists():
+            product_image_paths = [
+                str(f) for f in sorted(prod_img_dir.iterdir())
+                if f.is_file() and f.suffix.lower() in _IMAGE_EXTS
+            ][:2]  # max 2 product images
+
+    # Resolve avatar data
+    avatar_data: dict = {}
+    if req.avatar_id:
+        avatars = _load_avatars()
+        avatar_data = next((a for a in avatars if a["id"] == req.avatar_id), {})
+
+    asyncio.create_task(_run_remix(
+        job_id, service, req, brand_modifier, ref_ad_paths,
+        product_image_paths, avatar_data, queue,
+    ))
 
     return {"job_id": job_id}
 
@@ -436,6 +469,9 @@ async def _run_remix(
     service: ConceptAdService,
     req: RemixRequest,
     brand_modifier: str,
+    ref_ad_paths: list[str],
+    product_image_paths: list[str],
+    avatar_data: dict,
     queue: asyncio.Queue,
 ):
     job = jobs[job_id]
@@ -453,6 +489,9 @@ async def _run_remix(
             num_images=req.count,
             resolution=req.resolution,
             output_format=req.output_format,
+            ref_ad_paths=ref_ad_paths,
+            product_image_paths=product_image_paths,
+            avatar_data=avatar_data,
         )
         job.completed = 1
         await queue.put({

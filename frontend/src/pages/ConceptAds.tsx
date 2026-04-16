@@ -699,7 +699,17 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: { src: string; 
   const [aspectRatioAuto, setAspectRatioAuto] = useState(false);
   const [resolution, setResolution] = useState('2K');
   const [useBrandModifier, setUseBrandModifier] = useState(false);
+  const [useReferenceAds, setUseReferenceAds] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [selectedAvatarId, setSelectedAvatarId] = useState('');
+  const [remixAvatars, setRemixAvatars] = useState<Avatar[]>([]);
+  const [remixProducts, setRemixProducts] = useState<Product[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    fetchAvatars().then(setRemixAvatars).catch(console.error);
+    fetchBrandProducts().then((ps: Product[]) => setRemixProducts(ps)).catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (initialRef) {
@@ -766,6 +776,9 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: { src: string; 
         aspect_ratio: aspectRatio,
         resolution,
         use_brand_modifier: useBrandModifier,
+        use_reference_ads: useReferenceAds,
+        product_id: selectedProductId || undefined,
+        avatar_id: selectedAvatarId || undefined,
       });
       setJobId(result.job_id);
     } catch (e) {
@@ -794,6 +807,42 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: { src: string; 
         </label>
         {uploading && <p className="text-xs text-electric mt-2">Subiendo...</p>}
         {refPath && !uploading && <p className="text-xs text-neon mt-2">Imagen lista</p>}
+      </div>
+
+      {/* Product + Avatar */}
+      <div className="bg-carbon-light rounded-xl p-5 space-y-3">
+        <h2 className="text-base font-semibold text-white">Producto y audiencia</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-gray-mid mb-1">Producto <span className="text-gray-mid/60">(opcional)</span></label>
+            <select
+              value={selectedProductId}
+              onChange={(e) => setSelectedProductId(e.target.value)}
+              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
+            >
+              <option value="">Sin producto</option>
+              {remixProducts.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-mid mb-1">Avatar <span className="text-gray-mid/60">(opcional)</span></label>
+            <select
+              value={selectedAvatarId}
+              onChange={(e) => setSelectedAvatarId(e.target.value)}
+              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
+            >
+              <option value="">Sin avatar</option>
+              {remixAvatars.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {selectedProductId && (
+          <p className="text-xs text-electric">Las imágenes del producto se pasarán a FAL como input visual adicional.</p>
+        )}
       </div>
 
       {/* Instructions */}
@@ -838,15 +887,26 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: { src: string; 
             </select>
           </div>
         </div>
-        <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
-          <input
-            type="checkbox"
-            checked={useBrandModifier}
-            onChange={(e) => setUseBrandModifier(e.target.checked)}
-            className="accent-electric"
-          />
-          Aplicar brand modifier visual
-        </label>
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useBrandModifier}
+              onChange={(e) => setUseBrandModifier(e.target.checked)}
+              className="accent-electric"
+            />
+            Aplicar brand modifier visual
+          </label>
+          <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useReferenceAds}
+              onChange={(e) => setUseReferenceAds(e.target.checked)}
+              className="accent-electric"
+            />
+            Incluir reference ads como guía de estilo
+          </label>
+        </div>
         <button
           onClick={handleGenerate}
           disabled={generating || !refPath || !instructions.trim()}

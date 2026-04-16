@@ -383,6 +383,9 @@ export async function startRemix(data: {
   resolution: string;
   output_format?: string;
   use_brand_modifier?: boolean;
+  use_reference_ads?: boolean;
+  product_id?: string;
+  avatar_id?: string;
 }) {
   const res = await fetch(`${BASE}/api/tools/concept_ads/remix`, {
     method: 'POST',
