@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { fetchTemplates, startGeneration, getImageUrl } from '../lib/api';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { useEffect, useRef, useState } from 'react';
+import { fetchTemplates, startGeneration, getImageUrl, getWebSocketUrl } from '../lib/api';
+import { useJob } from '../context/JobContext';
 import ImageGrid from '../components/ImageGrid';
 import { Play, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -16,37 +16,60 @@ export default function StaticAds() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [resolution, setResolution] = useState('1K');
   const [numImages, setNumImages] = useState(4);
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [generatedImages, setGeneratedImages] = useState<{ src: string; label: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const { messages, status, reset } = useWebSocket(jobId);
+  const { jobId, messages, generating, generatedImages, setJobId, addMessage, addImages, setGenerating, reset } = useJob();
+
+  const wsRef = useRef<WebSocket | null>(null);
 
   // Load templates
   useEffect(() => {
     fetchTemplates().then(setTemplates).catch(console.error);
   }, []);
 
-  // Process WebSocket messages
+  // Connect / reconnect WebSocket whenever jobId changes or component mounts with active job
   useEffect(() => {
-    const lastMsg = messages[messages.length - 1];
-    if (!lastMsg) return;
+    if (!jobId) return;
 
-    if (lastMsg.type === 'template_done') {
-      const folder = lastMsg.folder as string;
-      const imgs = lastMsg.images as string[];
-      const newImages = imgs.map((filename) => ({
-        src: getImageUrl(folder, filename),
-        label: `#${lastMsg.template_number} ${lastMsg.template_name} — ${filename}`,
-      }));
-      setGeneratedImages((prev) => [...prev, ...newImages]);
-    }
+    // If already completed, no need to reconnect
+    const lastStatus = [...messages].reverse().find((m) => m.type === 'status');
+    if (lastStatus?.status === 'completed' || lastStatus?.status === 'failed') return;
 
-    if (lastMsg.type === 'status' && lastMsg.status === 'completed') {
-      setGenerating(false);
-    }
-  }, [messages]);
+    // Close any existing connection
+    wsRef.current?.close();
+
+    const ws = new WebSocket(getWebSocketUrl(jobId));
+    wsRef.current = ws;
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      // Avoid duplicating history messages that were replayed by the backend
+      // We identify replayed messages by checking if an identical message already exists
+      // Backend sends full history on reconnect — deduplicate by (type + template_number + status)
+      addMessage(msg);
+
+      if (msg.type === 'template_done') {
+        const folder = msg.folder as string;
+        const imgs = msg.images as string[];
+        addImages(imgs.map((filename) => ({
+          src: getImageUrl(folder, filename),
+          label: `#${msg.template_number} ${msg.template_name} — ${filename}`,
+        })));
+      }
+
+      if (msg.type === 'status' && (msg.status === 'completed' || msg.status === 'failed')) {
+        setGenerating(false);
+        ws.close();
+      }
+    };
+
+    ws.onerror = () => setGenerating(false);
+
+    return () => {
+      ws.close();
+    };
+  }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleTemplate = (num: number) => {
     setSelected((prev) => {
@@ -70,7 +93,6 @@ export default function StaticAds() {
 
   const handleGenerate = async () => {
     setError(null);
-    setGeneratedImages([]);
     reset();
     setGenerating(true);
 
@@ -95,12 +117,33 @@ export default function StaticAds() {
     }
   };
 
-  // Progress info from messages
-  const progressMessages = messages.filter((m) => m.type === 'progress' || m.type === 'template_done' || m.type === 'template_error');
-  const lastProgress = progressMessages[progressMessages.length - 1];
-  const completedCount = messages.filter((m) => m.type === 'template_done').length;
-  const errorCount = messages.filter((m) => m.type === 'template_error').length;
-  const totalTemplates = lastProgress?.total as number || 0;
+  // Derive progress info from messages
+  const progressMessages = messages.filter(
+    (m) => m.type === 'progress' || m.type === 'template_done' || m.type === 'template_error'
+  );
+  // Deduplicate by message identity for reconnect replays
+  const seenKeys = new Set<string>();
+  const dedupedMessages = progressMessages.filter((m) => {
+    const key = `${m.type}-${m.template_number}-${m.message ?? ''}-${m.error ?? ''}`;
+    if (seenKeys.has(key)) return false;
+    seenKeys.add(key);
+    return true;
+  });
+
+  const completedCount = dedupedMessages.filter((m) => m.type === 'template_done').length;
+  const errorCount = dedupedMessages.filter((m) => m.type === 'template_error').length;
+  const lastProgress = dedupedMessages[dedupedMessages.length - 1];
+  const totalTemplates = (lastProgress?.total as number) || 0;
+
+  const isCompleted = messages.some((m) => m.type === 'status' && m.status === 'completed');
+
+  // Deduplicate generated images too
+  const seenImages = new Set<string>();
+  const dedupedImages = generatedImages.filter(({ src }) => {
+    if (seenImages.has(src)) return false;
+    seenImages.add(src);
+    return true;
+  });
 
   return (
     <div className="max-w-6xl">
@@ -207,14 +250,14 @@ export default function StaticAds() {
       )}
 
       {/* Progress / Log */}
-      {progressMessages.length > 0 && (
+      {dedupedMessages.length > 0 && (
         <div className="bg-carbon-light rounded-xl p-6 mb-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-white">
-              {generating ? 'Generating...' : 'Run log'}
+              {generating ? 'Generating...' : isCompleted ? 'Completed' : 'Run log'}
             </h2>
             <span className="text-sm text-gray-mid">
-              {completedCount + errorCount} / {totalTemplates || progressMessages.length}
+              {completedCount + errorCount} / {totalTemplates || dedupedMessages.length}
             </span>
           </div>
 
@@ -230,7 +273,7 @@ export default function StaticAds() {
 
           {/* Log */}
           <div className="space-y-1 max-h-64 overflow-y-auto font-mono text-xs">
-            {progressMessages.map((msg, i) => (
+            {dedupedMessages.map((msg, i) => (
               <div key={i} className="flex items-start gap-2">
                 {msg.type === 'template_done' ? (
                   <CheckCircle size={13} className="text-neon shrink-0 mt-0.5" />
@@ -251,21 +294,21 @@ export default function StaticAds() {
       )}
 
       {/* Completed banner */}
-      {status === 'completed' && (
+      {isCompleted && (
         <div className="bg-neon/10 border border-neon/30 rounded-xl p-4 mb-6 flex items-center gap-3 text-neon">
           <CheckCircle size={18} />
           <span className="text-sm">
-            Generation complete — {completedCount} templates, {generatedImages.length} images
+            Generation complete — {completedCount} templates, {dedupedImages.length} images
             {errorCount > 0 && `, ${errorCount} errors`}
           </span>
         </div>
       )}
 
       {/* Generated images */}
-      {generatedImages.length > 0 && (
+      {dedupedImages.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold text-white mb-4">Generated Images</h2>
-          <ImageGrid images={generatedImages} />
+          <ImageGrid images={dedupedImages} />
         </div>
       )}
     </div>

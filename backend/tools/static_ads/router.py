@@ -138,14 +138,19 @@ async def _run_generation(
     """Background task that runs the image generation pipeline."""
     job = jobs[job_id]
     job.status = "running"
-    await queue.put({"type": "status", "status": "running"})
+
+    async def emit(msg: dict):
+        job.messages.append(msg)
+        await queue.put(msg)
+
+    await emit({"type": "status", "status": "running"})
 
     for i, prompt_data in enumerate(prompts):
         num = prompt_data["template_number"]
         name = prompt_data["template_name"]
         job.current_template = f"#{num:02d} — {name}"
 
-        await queue.put({
+        await emit({
             "type": "progress",
             "template_number": num,
             "template_name": name,
@@ -174,7 +179,7 @@ async def _run_generation(
             job.results.append(template_result)
             job.completed_templates = i + 1
 
-            await queue.put({
+            await emit({
                 "type": "template_done",
                 "template_number": num,
                 "template_name": name,
@@ -195,7 +200,7 @@ async def _run_generation(
             job.results.append(template_result)
             job.completed_templates = i + 1
 
-            await queue.put({
+            await emit({
                 "type": "template_error",
                 "template_number": num,
                 "template_name": name,
@@ -210,7 +215,8 @@ async def _run_generation(
 
     job.status = "completed"
     job.current_template = None
-    await queue.put({"type": "status", "status": "completed", "results": [r.model_dump() for r in job.results]})
+    await emit({"type": "status", "status": "completed", "results": [r.model_dump() for r in job.results]})
+    job_queues.pop(job_id, None)  # cleanup queue only after job is fully done
 
 
 @router.get("/jobs/{job_id}", response_model=GenerateJobStatus)
@@ -223,12 +229,26 @@ async def get_job_status(job_id: str):
 
 @router.websocket("/ws/{job_id}")
 async def websocket_progress(websocket: WebSocket, job_id: str):
-    """WebSocket endpoint for real-time generation progress."""
+    """WebSocket endpoint for real-time generation progress. Supports reconnection."""
     await websocket.accept()
+
+    job = jobs.get(job_id)
+    if not job:
+        await websocket.send_json({"type": "error", "message": "Job not found"})
+        await websocket.close()
+        return
+
+    # Replay message history so reconnecting clients catch up
+    for msg in job.messages:
+        await websocket.send_json(msg)
+
+    # If job already finished, nothing more to stream
+    if job.status in ("completed", "failed"):
+        await websocket.close()
+        return
 
     queue = job_queues.get(job_id)
     if not queue:
-        await websocket.send_json({"type": "error", "message": "Job not found"})
         await websocket.close()
         return
 
@@ -239,10 +259,7 @@ async def websocket_progress(websocket: WebSocket, job_id: str):
             if msg.get("type") == "status" and msg.get("status") in ("completed", "failed"):
                 break
     except WebSocketDisconnect:
-        pass
-    finally:
-        # Cleanup
-        job_queues.pop(job_id, None)
+        pass  # client navigated away — don't clean up queue, job keeps running
 
 
 @router.get("/outputs", response_model=list[OutputFolder])

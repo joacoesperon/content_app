@@ -27,6 +27,7 @@ class GenerateJobStatus(BaseModel):
     results: list[TemplateResult] = []
     started_at: datetime | None = None
     estimated_cost: float = 0.0
+    messages: list[dict] = []  # full message history for reconnection
 
 
 class TemplateInfo(BaseModel):
