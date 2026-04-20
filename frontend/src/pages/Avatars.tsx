@@ -19,6 +19,15 @@ import {
   buildAvatarPrompt,
   parseAvatars,
 } from '../lib/api';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface Avatar {
   id: string;
@@ -43,8 +52,6 @@ const EMPTY_AVATAR: Omit<Avatar, 'id'> = {
   ad_angles: [],
 };
 
-// ─── Tag list editor ──────────────────────────────────────────────────────────
-
 function TagList({ label, values, onChange }: { label: string; values: string[]; onChange: (v: string[]) => void }) {
   const [input, setInput] = useState('');
   const add = () => {
@@ -54,34 +61,34 @@ function TagList({ label, values, onChange }: { label: string; values: string[];
   };
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-gray-mid uppercase tracking-wider">{label}</label>
-      <div className="flex flex-wrap gap-1.5">
-        {values.map((v) => (
-          <span key={v} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-carbon-light text-xs text-gray-light">
-            {v}
-            <button onClick={() => onChange(values.filter((x) => x !== v))} className="text-gray-mid hover:text-white">
-              <X size={10} />
-            </button>
-          </span>
-        ))}
-      </div>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+      {values.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {values.map((v) => (
+            <Badge key={v} variant="secondary" className="gap-1 pr-1">
+              {v}
+              <button onClick={() => onChange(values.filter((x) => x !== v))} className="text-muted-foreground hover:text-foreground">
+                <X size={10} />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
       <div className="flex gap-2">
-        <input
+        <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), add())}
           placeholder="Agregar y Enter"
-          className="flex-1 bg-carbon border border-carbon-light rounded px-2.5 py-1.5 text-xs text-white placeholder-gray-mid focus:outline-none focus:border-electric"
+          className="h-8 text-xs"
         />
-        <button onClick={add} className="px-2.5 py-1.5 bg-carbon-light rounded text-gray-light hover:text-white text-xs">
+        <Button type="button" variant="secondary" size="sm" onClick={add} className="h-8 px-2">
           <Plus size={12} />
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
-
-// ─── Copy button ──────────────────────────────────────────────────────────────
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -91,17 +98,12 @@ function CopyButton({ text }: { text: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button
-      onClick={copy}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors"
-    >
+    <Button type="button" variant="secondary" size="sm" onClick={copy} className="h-7 text-xs">
       {copied ? <CheckCircle size={12} /> : <Copy size={12} />}
       {copied ? 'Copiado!' : 'Copiar'}
-    </button>
+    </Button>
   );
 }
-
-// ─── Avatar form (create / edit) ──────────────────────────────────────────────
 
 function AvatarForm({
   initial,
@@ -120,35 +122,35 @@ function AvatarForm({
   const set = (field: keyof Avatar, value: unknown) => setForm((f) => ({ ...f, [field]: value }));
 
   return (
-    <div className="space-y-3 bg-carbon rounded-xl p-4 border border-carbon-light">
+    <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
       {isNew && (
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-mid uppercase tracking-wider">ID (sin espacios)</label>
-          <input
+        <div className="space-y-1.5">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">ID (sin espacios)</Label>
+          <Input
             value={form.id}
             onChange={(e) => set('id', e.target.value.toLowerCase().replace(/\s+/g, '_'))}
             placeholder="ej: trader_agotado"
-            className="w-full bg-carbon-dark border border-carbon-light rounded px-2.5 py-1.5 text-xs text-white placeholder-gray-mid focus:outline-none focus:border-electric font-mono"
+            className="h-8 font-mono text-xs"
           />
         </div>
       )}
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-mid uppercase tracking-wider">Nombre</label>
-          <input
+        <div className="space-y-1.5">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Nombre</Label>
+          <Input
             value={form.name}
             onChange={(e) => set('name', e.target.value)}
             placeholder="Trader Agotado"
-            className="w-full bg-carbon-dark border border-carbon-light rounded px-2.5 py-1.5 text-xs text-white placeholder-gray-mid focus:outline-none focus:border-electric"
+            className="h-8 text-xs"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-mid uppercase tracking-wider">Descripción</label>
-          <input
+        <div className="space-y-1.5">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Descripción</Label>
+          <Input
             value={form.description}
             onChange={(e) => set('description', e.target.value)}
             placeholder="Breve descripción"
-            className="w-full bg-carbon-dark border border-carbon-light rounded px-2.5 py-1.5 text-xs text-white placeholder-gray-mid focus:outline-none focus:border-electric"
+            className="h-8 text-xs"
           />
         </div>
       </div>
@@ -157,36 +159,31 @@ function AvatarForm({
       <TagList label="Motivaciones" values={form.motivations} onChange={(v) => set('motivations', v)} />
       <TagList label="Objeciones" values={form.objections} onChange={(v) => set('objections', v)} />
       <TagList label="Ángulos de Ad" values={form.ad_angles ?? []} onChange={(v) => set('ad_angles', v)} />
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-gray-mid uppercase tracking-wider">Frase representativa</label>
-        <textarea
+      <div className="space-y-1.5">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Frase representativa</Label>
+        <Textarea
           value={form.language_sample}
           onChange={(e) => set('language_sample', e.target.value)}
           rows={2}
           placeholder="En sus propias palabras..."
-          className="w-full bg-carbon-dark border border-carbon-light rounded px-2.5 py-1.5 text-xs text-white placeholder-gray-mid focus:outline-none focus:border-electric resize-none"
+          className="text-xs"
         />
       </div>
       <div className="flex gap-2 pt-1">
-        <button
+        <Button
           onClick={() => onSave(form)}
           disabled={saving || !form.name || (isNew && !form.id)}
-          className="flex-1 py-2 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs font-medium transition-colors disabled:opacity-50"
+          className="flex-1"
         >
           {saving ? 'Guardando...' : 'Guardar'}
-        </button>
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg bg-carbon-light text-gray-mid text-xs hover:text-white transition-colors"
-        >
+        </Button>
+        <Button variant="ghost" onClick={onCancel}>
           Cancelar
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
-
-// ─── Avatar card ──────────────────────────────────────────────────────────────
 
 function AvatarCard({
   avatar,
@@ -228,47 +225,59 @@ function AvatarCard({
   };
 
   return (
-    <div className="bg-carbon-dark border border-carbon-light rounded-xl overflow-hidden">
-      {/* Header */}
+    <Card className="overflow-hidden py-0">
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-white text-sm">{avatar.name}</span>
-            <span className="text-xs font-mono text-gray-mid">#{avatar.id}</span>
+            <span className="font-semibold text-foreground text-sm">{avatar.name}</span>
+            <span className="text-xs font-mono text-muted-foreground">#{avatar.id}</span>
           </div>
-          <p className="text-xs text-gray-mid mt-0.5 line-clamp-1">{avatar.description}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{avatar.description}</p>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => { setEditing(!editing); setExpanded(false); }}
-            className="px-2.5 py-1 rounded text-xs text-gray-mid hover:text-electric transition-colors"
+            className="h-7 text-xs"
           >
             Editar
-          </button>
+          </Button>
           {confirmDelete ? (
             <>
-              <button onClick={handleDelete} className="px-2.5 py-1 rounded text-xs text-red-400 hover:text-red-300 transition-colors">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                className="h-7 text-xs text-destructive hover:text-destructive"
+              >
                 Confirmar
-              </button>
-              <button onClick={() => setConfirmDelete(false)} className="text-gray-mid hover:text-white">
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => setConfirmDelete(false)} className="h-7 w-7">
                 <X size={13} />
-              </button>
+              </Button>
             </>
           ) : (
-            <button onClick={() => setConfirmDelete(true)} className="p-1.5 text-gray-mid hover:text-red-400 transition-colors">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setConfirmDelete(true)}
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            >
               <Trash2 size={13} />
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => { setExpanded(!expanded); setEditing(false); }}
-            className="p-1.5 text-gray-mid hover:text-white transition-colors"
+            className="h-7 w-7"
           >
             {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Edit form */}
       {editing && (
         <div className="px-4 pb-4">
           <AvatarForm
@@ -281,72 +290,64 @@ function AvatarCard({
         </div>
       )}
 
-      {/* Expanded details */}
       {expanded && !editing && (
-        <div className="px-4 pb-4 border-t border-carbon-light pt-3 space-y-3">
-          {avatar.pain_points.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1.5">Pain Points</p>
-              <div className="flex flex-wrap gap-1.5">
-                {avatar.pain_points.map((p) => (
-                  <span key={p} className="px-2 py-0.5 rounded-full bg-red-900/20 border border-red-800/30 text-xs text-red-300">{p}</span>
-                ))}
+        <>
+          <Separator />
+          <div className="px-4 py-4 space-y-3">
+            {avatar.pain_points.length > 0 && (
+              <AttrRow label="Pain Points" items={avatar.pain_points} tone="destructive" />
+            )}
+            {(avatar.desires ?? []).length > 0 && (
+              <AttrRow label="Deseos" items={avatar.desires} tone="desires" />
+            )}
+            {avatar.motivations.length > 0 && (
+              <AttrRow label="Motivaciones" items={avatar.motivations} tone="accent" />
+            )}
+            {avatar.objections.length > 0 && (
+              <AttrRow label="Objeciones" items={avatar.objections} tone="warning" />
+            )}
+            {avatar.language_sample && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Frase representativa</p>
+                <p className="text-xs text-foreground italic">"{avatar.language_sample}"</p>
               </div>
-            </div>
-          )}
-          {(avatar.desires ?? []).length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1.5">Deseos</p>
-              <div className="flex flex-wrap gap-1.5">
-                {(avatar.desires ?? []).map((d) => (
-                  <span key={d} className="px-2 py-0.5 rounded-full bg-purple-900/20 border border-purple-700/30 text-xs text-purple-300">{d}</span>
-                ))}
+            )}
+            {(avatar.ad_angles ?? []).length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Ángulos de Ad</p>
+                <div className="space-y-1.5">
+                  {(avatar.ad_angles ?? []).map((a, i) => (
+                    <p key={i} className="text-xs text-primary bg-primary/5 border border-primary/15 rounded px-2.5 py-1.5">{a}</p>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          {avatar.motivations.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1.5">Motivaciones</p>
-              <div className="flex flex-wrap gap-1.5">
-                {avatar.motivations.map((m) => (
-                  <span key={m} className="px-2 py-0.5 rounded-full bg-neon/10 border border-neon/20 text-xs text-neon">{m}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {avatar.objections.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1.5">Objeciones</p>
-              <div className="flex flex-wrap gap-1.5">
-                {avatar.objections.map((o) => (
-                  <span key={o} className="px-2 py-0.5 rounded-full bg-yellow-900/20 border border-yellow-700/30 text-xs text-yellow-300">{o}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {avatar.language_sample && (
-            <div>
-              <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Frase representativa</p>
-              <p className="text-xs text-gray-light italic">"{avatar.language_sample}"</p>
-            </div>
-          )}
-          {(avatar.ad_angles ?? []).length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1.5">Ángulos de Ad</p>
-              <div className="space-y-1.5">
-                {(avatar.ad_angles ?? []).map((a, i) => (
-                  <p key={i} className="text-xs text-electric bg-electric/5 border border-electric/15 rounded px-2.5 py-1.5">{a}</p>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </>
       )}
-    </div>
+    </Card>
   );
 }
 
-// ─── AI Assist section ────────────────────────────────────────────────────────
+function AttrRow({ label, items, tone }: { label: string; items: string[]; tone: 'destructive' | 'desires' | 'accent' | 'warning' }) {
+  const toneClass = {
+    destructive: 'bg-destructive/10 border-destructive/30 text-destructive',
+    desires: 'bg-purple-500/10 border-purple-500/30 text-purple-300',
+    accent: 'bg-accent/10 border-accent/30 text-accent',
+    warning: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
+  }[tone];
+
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((v) => (
+          <span key={v} className={cn('px-2 py-0.5 rounded-full border text-xs', toneClass)}>{v}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function AiAssist({ onSaved }: { onSaved: (avatars: Avatar[]) => void }) {
   const [open, setOpen] = useState(false);
@@ -406,96 +407,85 @@ function AiAssist({ onSaved }: { onSaved: (avatars: Avatar[]) => void }) {
   const reset = () => { setPrompt(''); setPasteRaw(''); setParsed([]); setError(''); setOpen(false); };
 
   return (
-    <div className="bg-carbon-dark border border-electric/20 rounded-xl overflow-hidden">
+    <Card className="overflow-hidden border-primary/30 py-0">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-carbon-light/20 transition-colors"
+        className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-muted/40 transition-colors"
       >
-        <Sparkles size={15} className="text-electric" />
-        <span className="text-sm font-medium text-electric">Generar avatares con IA</span>
-        <span className="ml-auto text-xs text-gray-mid">Claude + copiar/pegar</span>
-        {open ? <ChevronUp size={14} className="text-gray-mid" /> : <ChevronDown size={14} className="text-gray-mid" />}
+        <Sparkles size={15} className="text-primary" />
+        <span className="text-sm font-medium text-primary">Generar avatares con IA</span>
+        <span className="ml-auto text-xs text-muted-foreground">Claude + copiar/pegar</span>
+        {open ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
       </button>
 
       {open && (
-        <div className="px-4 pb-4 border-t border-electric/10 pt-4 space-y-3">
-          <p className="text-xs text-gray-mid">
-            Generá perfiles de cliente con Claude. Copiá el prompt → pegalo en{' '}
-            <span className="text-electric">claude.ai</span> → pegá el JSON abajo.
-          </p>
+        <>
+          <Separator />
+          <CardContent className="space-y-3 pt-4">
+            <p className="text-xs text-muted-foreground">
+              Generá perfiles de cliente con Claude. Copiá el prompt → pegalo en{' '}
+              <span className="text-primary">claude.ai</span> → pegá el JSON abajo.
+            </p>
 
-          {!prompt ? (
-            <button
-              onClick={handleBuild}
-              disabled={loadingPrompt}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors disabled:opacity-50"
-            >
-              {loadingPrompt ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
-              Construir prompt de investigación
-            </button>
-          ) : (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-mid">Prompt listo — copialo a claude.ai</span>
-                <CopyButton text={prompt} />
-              </div>
-              <textarea
-                readOnly
-                value={prompt}
-                rows={4}
-                className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-xs text-gray-mid font-mono resize-none"
-              />
-              <textarea
-                value={pasteRaw}
-                onChange={(e) => setPasteRaw(e.target.value)}
-                placeholder="Pegá aquí el JSON que devolvió Claude..."
-                rows={4}
-                className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-xs text-gray-mid font-mono resize-none focus:outline-none focus:border-electric/50"
-              />
-              {error && <p className="text-xs text-red-400">{error}</p>}
-
-              {parsed.length > 0 ? (
-                <div className="space-y-2">
-                  <p className="text-xs text-neon">{parsed.length} avatares parseados</p>
-                  {parsed.map((a) => (
-                    <div key={a.id} className="bg-carbon rounded-lg px-3 py-2 text-xs">
-                      <span className="font-medium text-white">{a.name}</span>
-                      <span className="text-gray-mid ml-2 font-mono">#{a.id}</span>
-                      <p className="text-gray-mid mt-0.5">{a.description}</p>
-                    </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="flex-1 py-2 rounded-lg bg-neon/20 hover:bg-neon/30 text-neon text-xs transition-colors disabled:opacity-50"
-                    >
-                      {saving ? 'Guardando...' : 'Guardar todos'}
-                    </button>
-                    <button onClick={reset} className="px-3 py-2 rounded-lg bg-carbon-light text-gray-mid text-xs hover:text-white">
-                      Cancelar
-                    </button>
-                  </div>
+            {!prompt ? (
+              <Button onClick={handleBuild} disabled={loadingPrompt} size="sm">
+                {loadingPrompt ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                Construir prompt de investigación
+              </Button>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Prompt listo — copialo a claude.ai</span>
+                  <CopyButton text={prompt} />
                 </div>
-              ) : (
-                <button
-                  onClick={handleParse}
-                  disabled={loadingParse || !pasteRaw.trim()}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors disabled:opacity-50"
-                >
-                  {loadingParse ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                  Parsear respuesta de Claude
-                </button>
-              )}
-            </>
-          )}
-        </div>
+                <Textarea readOnly value={prompt} rows={4} className="font-mono text-xs" />
+                <Textarea
+                  value={pasteRaw}
+                  onChange={(e) => setPasteRaw(e.target.value)}
+                  placeholder="Pegá aquí el JSON que devolvió Claude..."
+                  rows={4}
+                  className="font-mono text-xs"
+                />
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                {parsed.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-accent">{parsed.length} avatares parseados</p>
+                    {parsed.map((a) => (
+                      <div key={a.id} className="bg-muted/40 rounded-lg px-3 py-2 text-xs">
+                        <span className="font-medium text-foreground">{a.name}</span>
+                        <span className="text-muted-foreground ml-2 font-mono">#{a.id}</span>
+                        <p className="text-muted-foreground mt-0.5">{a.description}</p>
+                      </div>
+                    ))}
+                    <div className="flex gap-2">
+                      <Button onClick={handleSave} disabled={saving} size="sm" className="flex-1">
+                        {saving ? 'Guardando...' : 'Guardar todos'}
+                      </Button>
+                      <Button onClick={reset} variant="ghost" size="sm">
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button onClick={handleParse} disabled={loadingParse || !pasteRaw.trim()} size="sm">
+                    {loadingParse ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                    Parsear respuesta de Claude
+                  </Button>
+                )}
+              </>
+            )}
+          </CardContent>
+        </>
       )}
-    </div>
+    </Card>
   );
 }
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Avatars() {
   const [avatars, setAvatars] = useState<Avatar[]>([]);
@@ -545,7 +535,7 @@ export default function Avatars() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-mid text-sm">
+      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
         <Loader2 size={18} className="animate-spin mr-2" /> Cargando avatares...
       </div>
     );
@@ -555,24 +545,22 @@ export default function Avatars() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white">Avatares</h2>
-          <p className="text-sm text-gray-mid mt-1">
+          <h2 className="text-xl font-bold text-foreground">Avatares</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Perfiles de cliente de la marca. Se usan en Concept Ads para generar creativos dirigidos.
           </p>
         </div>
-        <button
+        <Button
+          variant="secondary"
           onClick={() => { setShowNewForm((o) => !o); setError(''); }}
-          className="flex items-center gap-2 px-3 py-2 bg-carbon-light rounded-lg text-sm text-gray-light hover:text-white transition-colors"
         >
           <Plus size={15} />
           Nuevo avatar
-        </button>
+        </Button>
       </div>
 
-      {/* AI Assist */}
       <AiAssist onSaved={handleAiSaved} />
 
-      {/* New avatar form */}
       {showNewForm && (
         <AvatarForm
           initial={newAvatar}
@@ -584,20 +572,20 @@ export default function Avatars() {
       )}
 
       {error && (
-        <div className="flex items-center gap-2 text-xs text-red-400">
-          <AlertCircle size={13} /> {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Avatar list */}
       {avatars.length === 0 ? (
-        <div className="text-center py-16 text-gray-mid">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-sm">No hay avatares todavía.</p>
           <p className="text-xs mt-1">Creá uno manualmente o generá con IA.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          <p className="text-xs text-gray-mid">{avatars.length} avatar{avatars.length !== 1 ? 'es' : ''}</p>
+          <p className="text-xs text-muted-foreground">{avatars.length} avatar{avatars.length !== 1 ? 'es' : ''}</p>
           {avatars.map((a) => (
             <AvatarCard
               key={a.id}

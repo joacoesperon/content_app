@@ -1,5 +1,9 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Brand palette (kept for backwards compat during migration) ───────────── */
 @theme {
   --color-carbon: #101010;
   --color-carbon-dark: #010101;
@@ -9,12 +13,71 @@
   --color-electric: #2979FF;
   --color-gray-light: #D7D7D7;
   --color-gray-mid: #A7A7A7;
+
+  /* shadcn semantic tokens (resolved from CSS vars below) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ─── shadcn tokens (dark-first — app has no light mode) ───────────────────── */
+:root {
+  --radius: 0.625rem;
+
+  --background: #101010;           /* carbon */
+  --foreground: #D7D7D7;           /* gray-light */
+
+  --card: #1a1a1a;                 /* carbon-light */
+  --card-foreground: #D7D7D7;
+
+  --popover: #1a1a1a;
+  --popover-foreground: #D7D7D7;
+
+  --primary: #2979FF;              /* electric */
+  --primary-foreground: #ffffff;
+
+  --secondary: #1a1a1a;
+  --secondary-foreground: #D7D7D7;
+
+  --muted: #1a1a1a;
+  --muted-foreground: #A7A7A7;     /* gray-mid */
+
+  --accent: #A5F28C;               /* neon */
+  --accent-foreground: #010101;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #2a2a2a;
+  --input: #2a2a2a;
+  --ring: #2979FF;                 /* electric */
 }
 
 body {
   margin: 0;
-  background-color: var(--color-carbon);
-  color: var(--color-gray-light);
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -28,7 +91,7 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-carbon);
+  background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
   background: #333;

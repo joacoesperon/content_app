@@ -3,6 +3,13 @@ import { fetchTemplates, startGeneration, getImageUrl, getWebSocketUrl } from '.
 import { useJob } from '../context/JobContext';
 import ImageGrid from '../components/ImageGrid';
 import { Play, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 interface Template {
   number: number;
@@ -22,20 +29,16 @@ export default function StaticAds() {
 
   const wsRef = useRef<WebSocket | null>(null);
 
-  // Load templates
   useEffect(() => {
     fetchTemplates().then(setTemplates).catch(console.error);
   }, []);
 
-  // Connect / reconnect WebSocket whenever jobId changes or component mounts with active job
   useEffect(() => {
     if (!jobId) return;
 
-    // If already completed, no need to reconnect
     const lastStatus = [...messages].reverse().find((m) => m.type === 'status');
     if (lastStatus?.status === 'completed' || lastStatus?.status === 'failed') return;
 
-    // Close any existing connection
     wsRef.current?.close();
 
     const ws = new WebSocket(getWebSocketUrl(jobId));
@@ -43,10 +46,6 @@ export default function StaticAds() {
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-
-      // Avoid duplicating history messages that were replayed by the backend
-      // We identify replayed messages by checking if an identical message already exists
-      // Backend sends full history on reconnect — deduplicate by (type + template_number + status)
       addMessage(msg);
 
       if (msg.type === 'template_done') {
@@ -117,11 +116,9 @@ export default function StaticAds() {
     }
   };
 
-  // Derive progress info from messages
   const progressMessages = messages.filter(
     (m) => m.type === 'progress' || m.type === 'template_done' || m.type === 'template_error'
   );
-  // Deduplicate by message identity for reconnect replays
   const seenKeys = new Set<string>();
   const dedupedMessages = progressMessages.filter((m) => {
     const key = `${m.type}-${m.template_number}-${m.message ?? ''}-${m.error ?? ''}`;
@@ -137,7 +134,6 @@ export default function StaticAds() {
 
   const isCompleted = messages.some((m) => m.type === 'status' && m.status === 'completed');
 
-  // Deduplicate generated images too
   const seenImages = new Set<string>();
   const dedupedImages = generatedImages.filter(({ src }) => {
     if (seenImages.has(src)) return false;
@@ -145,169 +141,149 @@ export default function StaticAds() {
     return true;
   });
 
+  const progressPct = totalTemplates > 0 ? ((completedCount + errorCount) / totalTemplates) * 100 : 0;
+
   return (
     <div className="max-w-6xl">
-      <h1 className="text-3xl font-bold text-white mb-2">Static Ad Generator</h1>
-      <p className="text-gray-mid mb-8">
+      <h1 className="text-3xl font-bold text-foreground mb-2">Static Ad Generator</h1>
+      <p className="text-muted-foreground mb-8">
         Generate production-ready static ads using Nano Banana 2.
       </p>
 
-      {/* Configuration */}
-      <div className="bg-carbon-light rounded-xl p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Templates</h2>
-          <button
-            onClick={selectAll}
-            className="text-sm text-electric hover:text-neon transition-colors"
-          >
-            {selected.size === templates.length ? 'Deselect all' : 'Select all'}
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-6">
-          {templates.map((t) => (
-            <button
-              key={t.number}
-              onClick={() => toggleTemplate(t.number)}
-              className={`text-left p-3 rounded-lg border transition-all text-sm ${
-                selected.has(t.number)
-                  ? 'border-neon/50 bg-neon/10 text-white'
-                  : 'border-carbon bg-carbon text-gray-mid hover:border-carbon-light hover:text-gray-light'
-              }`}
-            >
-              <span className="font-mono text-xs text-gray-mid">#{t.number}</span>
-              <div className="font-medium truncate">{t.name}</div>
-              <div className="text-xs text-gray-mid mt-1">{t.aspect_ratio}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* Settings row */}
-        <div className="flex flex-wrap items-end gap-6">
-          <div>
-            <label className="block text-xs text-gray-mid mb-1">Resolution</label>
-            <select
-              value={resolution}
-              onChange={(e) => setResolution(e.target.value)}
-              className="bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-            >
-              <option value="0.5K">0.5K (fast)</option>
-              <option value="1K">1K (test)</option>
-              <option value="2K">2K (production)</option>
-              <option value="4K">4K (hero)</option>
-            </select>
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Templates</CardTitle>
+            <Button variant="ghost" size="sm" onClick={selectAll}>
+              {selected.size === templates.length ? 'Deselect all' : 'Select all'}
+            </Button>
           </div>
-
-          <div>
-            <label className="block text-xs text-gray-mid mb-1">Images per template</label>
-            <select
-              value={numImages}
-              onChange={(e) => setNumImages(Number(e.target.value))}
-              className="bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-            >
-              {[1, 2, 3, 4].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="text-sm text-gray-mid">
-            <span className="text-neon font-mono">${estimatedCost.toFixed(2)}</span> estimated cost
-            {' · '}
-            {(selected.size || templates.length) * numImages} images
-          </div>
-
-          <div className="ml-auto">
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                generating
-                  ? 'bg-carbon text-gray-mid cursor-not-allowed'
-                  : 'bg-electric hover:bg-electric/80 text-white'
-              }`}
-            >
-              {generating ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" /> Generating...
-                </>
-              ) : (
-                <>
-                  <Play size={16} /> Generate
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 flex items-center gap-3 text-red-400">
-          <AlertCircle size={18} />
-          <span className="text-sm">{error}</span>
-        </div>
-      )}
-
-      {/* Progress / Log */}
-      {dedupedMessages.length > 0 && (
-        <div className="bg-carbon-light rounded-xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-white">
-              {generating ? 'Generating...' : isCompleted ? 'Completed' : 'Run log'}
-            </h2>
-            <span className="text-sm text-gray-mid">
-              {completedCount + errorCount} / {totalTemplates || dedupedMessages.length}
-            </span>
-          </div>
-
-          {/* Progress bar — only while running */}
-          {generating && totalTemplates > 0 && (
-            <div className="w-full h-2 bg-carbon rounded-full mb-4 overflow-hidden">
-              <div
-                className="h-full bg-neon rounded-full transition-all duration-500"
-                style={{ width: `${((completedCount + errorCount) / totalTemplates) * 100}%` }}
-              />
-            </div>
-          )}
-
-          {/* Log */}
-          <div className="space-y-1 max-h-64 overflow-y-auto font-mono text-xs">
-            {dedupedMessages.map((msg, i) => (
-              <div key={i} className="flex items-start gap-2">
-                {msg.type === 'template_done' ? (
-                  <CheckCircle size={13} className="text-neon shrink-0 mt-0.5" />
-                ) : msg.type === 'template_error' ? (
-                  <AlertCircle size={13} className="text-red-400 shrink-0 mt-0.5" />
-                ) : (
-                  <Loader2 size={13} className={`shrink-0 mt-0.5 ${generating ? 'text-electric animate-spin' : 'text-gray-mid'}`} />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-6">
+            {templates.map((t) => (
+              <button
+                key={t.number}
+                onClick={() => toggleTemplate(t.number)}
+                className={cn(
+                  'text-left p-3 rounded-lg border transition-all text-sm',
+                  selected.has(t.number)
+                    ? 'border-accent/50 bg-accent/10 text-foreground'
+                    : 'border-border bg-background text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
                 )}
-                <span className={msg.type === 'template_error' ? 'text-red-400' : 'text-gray-mid'}>
-                  {msg.message as string || `#${msg.template_number} ${msg.template_name}`}
-                  {msg.type === 'template_done' && ` — ${(msg.time as number)?.toFixed(1)}s`}
-                  {msg.type === 'template_error' && ` — ${msg.error}`}
-                </span>
-              </div>
+              >
+                <span className="font-mono text-xs text-muted-foreground">#{t.number}</span>
+                <div className="font-medium truncate">{t.name}</div>
+                <div className="text-xs text-muted-foreground mt-1">{t.aspect_ratio}</div>
+              </button>
             ))}
           </div>
-        </div>
+
+          <div className="flex flex-wrap items-end gap-6">
+            <div className="space-y-1.5">
+              <Label>Resolution</Label>
+              <Select value={resolution} onValueChange={setResolution}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0.5K">0.5K (fast)</SelectItem>
+                  <SelectItem value="1K">1K (test)</SelectItem>
+                  <SelectItem value="2K">2K (production)</SelectItem>
+                  <SelectItem value="4K">4K (hero)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Images per template</Label>
+              <Select value={String(numImages)} onValueChange={(v) => setNumImages(Number(v))}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="text-sm text-muted-foreground">
+              <span className="text-accent font-mono">${estimatedCost.toFixed(2)}</span> estimated cost
+              {' · '}
+              {(selected.size || templates.length) * numImages} images
+            </div>
+
+            <Button onClick={handleGenerate} disabled={generating} className="ml-auto">
+              {generating ? (
+                <><Loader2 className="animate-spin" /> Generating...</>
+              ) : (
+                <><Play /> Generate</>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Completed banner */}
+      {dedupedMessages.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                {generating ? 'Generating...' : isCompleted ? 'Completed' : 'Run log'}
+              </CardTitle>
+              <span className="text-sm text-muted-foreground">
+                {completedCount + errorCount} / {totalTemplates || dedupedMessages.length}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {generating && totalTemplates > 0 && (
+              <Progress value={progressPct} className="mb-4" />
+            )}
+            <div className="space-y-1 max-h-64 overflow-y-auto font-mono text-xs">
+              {dedupedMessages.map((msg, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  {msg.type === 'template_done' ? (
+                    <CheckCircle size={13} className="text-accent shrink-0 mt-0.5" />
+                  ) : msg.type === 'template_error' ? (
+                    <AlertCircle size={13} className="text-destructive shrink-0 mt-0.5" />
+                  ) : (
+                    <Loader2 size={13} className={cn('shrink-0 mt-0.5', generating ? 'text-primary animate-spin' : 'text-muted-foreground')} />
+                  )}
+                  <span className={msg.type === 'template_error' ? 'text-destructive' : 'text-muted-foreground'}>
+                    {msg.message as string || `#${msg.template_number} ${msg.template_name}`}
+                    {msg.type === 'template_done' && ` — ${(msg.time as number)?.toFixed(1)}s`}
+                    {msg.type === 'template_error' && ` — ${msg.error}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {isCompleted && (
-        <div className="bg-neon/10 border border-neon/30 rounded-xl p-4 mb-6 flex items-center gap-3 text-neon">
-          <CheckCircle size={18} />
-          <span className="text-sm">
+        <Alert className="mb-6 border-accent/30 bg-accent/10 text-accent">
+          <CheckCircle />
+          <AlertDescription className="text-accent">
             Generation complete — {completedCount} templates, {dedupedImages.length} images
             {errorCount > 0 && `, ${errorCount} errors`}
-          </span>
-        </div>
+          </AlertDescription>
+        </Alert>
       )}
 
-      {/* Generated images */}
       {dedupedImages.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-white mb-4">Generated Images</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Generated Images</h2>
           <ImageGrid images={dedupedImages} />
         </div>
       )}

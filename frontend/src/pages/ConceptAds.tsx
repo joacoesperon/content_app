@@ -10,6 +10,7 @@ import {
   Play,
   Sparkles,
   Trash2,
+  Upload as UploadIcon,
   X,
 } from 'lucide-react';
 import {
@@ -29,8 +30,26 @@ import {
 } from '../lib/api';
 import { useWebSocket } from '../hooks/useWebSocket';
 import ImageGrid from '../components/ImageGrid';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface Avatar {
   id: string;
@@ -60,8 +79,6 @@ interface ConceptItem {
   aspect_ratio: string;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -70,17 +87,12 @@ function CopyButton({ text }: { text: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button
-      onClick={copy}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors"
-    >
+    <Button variant="secondary" size="sm" onClick={copy}>
       {copied ? <CheckCircle size={13} /> : <Copy size={13} />}
       {copied ? 'Copied!' : 'Copy'}
-    </button>
+    </Button>
   );
 }
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 interface RemixRef {
   src: string;
@@ -99,40 +111,31 @@ export default function ConceptAds() {
 
   return (
     <div className="max-w-6xl">
-      <h1 className="text-3xl font-bold text-white mb-2">Concept Ads</h1>
-      <p className="text-gray-mid mb-6">
+      <h1 className="text-3xl font-bold text-foreground mb-2">Concept Ads</h1>
+      <p className="text-muted-foreground mb-6">
         Generate angle-driven creatives by avatar × format. Plan with Claude, generate with FAL.
       </p>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-carbon-light rounded-xl p-1 mb-8 w-fit">
-        {(['concepts', 'remix', 'history'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab
-                ? 'bg-carbon text-white'
-                : 'text-gray-mid hover:text-gray-light'
-            }`}
-          >
-            {tab === 'concepts' ? 'Concepts Mode' : tab === 'remix' ? 'Remix Mode' : 'Historial'}
-          </button>
-        ))}
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="mb-8">
+        <TabsList>
+          <TabsTrigger value="concepts">Concepts Mode</TabsTrigger>
+          <TabsTrigger value="remix">Remix Mode</TabsTrigger>
+          <TabsTrigger value="history">Historial</TabsTrigger>
+        </TabsList>
 
-      {activeTab === 'concepts' ? (
-        <ConceptsMode />
-      ) : activeTab === 'remix' ? (
-        <RemixMode initialRef={remixRef} onRefConsumed={() => setRemixRef(null)} />
-      ) : (
-        <OutputsHistory onRemixThis={handleRemixThis} />
-      )}
+        <TabsContent value="concepts" className="mt-6">
+          <ConceptsMode />
+        </TabsContent>
+        <TabsContent value="remix" className="mt-6">
+          <RemixMode initialRef={remixRef} onRefConsumed={() => setRemixRef(null)} />
+        </TabsContent>
+        <TabsContent value="history" className="mt-6">
+          <OutputsHistory onRemixThis={handleRemixThis} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
-
-// ─── Concepts Mode ────────────────────────────────────────────────────────────
 
 function ConceptsMode() {
   const [avatars, setAvatars] = useState<Avatar[]>([]);
@@ -140,13 +143,11 @@ function ConceptsMode() {
   const [selectedAvatars, setSelectedAvatars] = useState<Set<string>>(new Set());
   const [selectedFormats, setSelectedFormats] = useState<Set<string>>(new Set());
 
-  // Settings
   const [count, setCount] = useState(6);
   const [aspectRatio, setAspectRatio] = useState('4:5');
   const [resolution, setResolution] = useState('2K');
   const [numImages, setNumImages] = useState(2);
 
-  // Product + brand options
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [useProductImages, setUseProductImages] = useState(false);
@@ -154,7 +155,6 @@ function ConceptsMode() {
   const [useBrandModifier, setUseBrandModifier] = useState(false);
   const [offerCta, setOfferCta] = useState('');
 
-  // Manual Planner — Concept Plan
   const [conceptPrompt, setConceptPrompt] = useState('');
   const [showConceptPromptModal, setShowConceptPromptModal] = useState(false);
   const [pastePlanRaw, setPastePlanRaw] = useState('');
@@ -163,7 +163,6 @@ function ConceptsMode() {
   const [loadingBuildPrompt, setLoadingBuildPrompt] = useState(false);
   const [loadingParsePlan, setLoadingParsePlan] = useState(false);
 
-  // Generation
   const [jobId, setJobId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
@@ -180,7 +179,6 @@ function ConceptsMode() {
     }).catch(console.error);
   }, []);
 
-  // Process WS messages
   useEffect(() => {
     const last = messages[messages.length - 1];
     if (!last) return;
@@ -286,6 +284,7 @@ function ConceptsMode() {
   const completedCount = messages.filter((m) => m.type === 'concept_done').length;
   const errorCount = messages.filter((m) => m.type === 'concept_error').length;
   const totalConcepts = (messages.find((m) => m.type === 'progress')?.total as number) || 0;
+  const progressPct = totalConcepts > 0 ? ((completedCount + errorCount) / totalConcepts) * 100 : 0;
 
   const avatarsMap = Object.fromEntries(avatars.map((a) => [a.id, a]));
   const formatsMap = Object.fromEntries(formats.map((f) => [f.id, f]));
@@ -293,342 +292,314 @@ function ConceptsMode() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* ── Left panel ── */}
         <div className="space-y-4">
-          {/* Avatars — selection only */}
-          <div className="bg-carbon-light rounded-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold text-white">Avatars</h2>
-              <span className="text-xs text-gray-mid">
-                {selectedAvatars.size} seleccionado{selectedAvatars.size !== 1 ? 's' : ''}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {avatars.map((a) => (
-                <div
-                  key={a.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                    selectedAvatars.has(a.id)
-                      ? 'border-neon/50 bg-neon/10'
-                      : 'border-carbon bg-carbon hover:border-carbon-light'
-                  }`}
-                  onClick={() => toggleAvatar(a.id)}
-                >
+          <Card>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold text-foreground">Avatars</h2>
+                <span className="text-xs text-muted-foreground">
+                  {selectedAvatars.size} seleccionado{selectedAvatars.size !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {avatars.map((a) => (
                   <div
-                    className={`w-4 h-4 mt-0.5 rounded border shrink-0 flex items-center justify-center ${
-                      selectedAvatars.has(a.id) ? 'bg-neon border-neon' : 'border-gray-mid'
-                    }`}
+                    key={a.id}
+                    onClick={() => toggleAvatar(a.id)}
+                    className={cn(
+                      'flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all',
+                      selectedAvatars.has(a.id)
+                        ? 'border-accent/50 bg-accent/10'
+                        : 'border-border bg-background hover:border-muted-foreground/40'
+                    )}
                   >
-                    {selectedAvatars.has(a.id) && <CheckCircle size={10} className="text-carbon" />}
+                    <Checkbox checked={selectedAvatars.has(a.id)} className="mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground">{a.name}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{a.description}</div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white">{a.name}</div>
-                    <div className="text-xs text-gray-mid mt-0.5 line-clamp-1">{a.description}</div>
-                  </div>
-                </div>
-              ))}
-              {avatars.length === 0 && (
-                <p className="text-xs text-gray-mid text-center py-4">
-                  No hay avatares. Creálos en la tool <span className="text-electric">Avatars</span>.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Formats */}
-          <div className="bg-carbon-light rounded-xl p-5">
-            <h2 className="text-base font-semibold text-white mb-3">Formatos</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {formats.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => toggleFormat(f.id)}
-                  className={`text-left p-3 rounded-lg border transition-all text-xs ${
-                    selectedFormats.has(f.id)
-                      ? 'border-neon/50 bg-neon/10 text-white'
-                      : 'border-carbon bg-carbon text-gray-mid hover:border-carbon-light hover:text-gray-light'
-                  }`}
-                >
-                  <div className="font-medium">{f.name}</div>
-                  <div className="text-gray-mid mt-0.5 line-clamp-2">{f.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Right panel ── */}
-        <div className="space-y-4">
-          {/* Settings */}
-          <div className="bg-carbon-light rounded-xl p-5">
-            <h2 className="text-base font-semibold text-white mb-4">Configuración</h2>
-
-            {/* Product selector */}
-            {products.length > 0 && (
-              <div className="mb-4">
-                <label className="block text-xs text-gray-mid mb-1">Producto</label>
-                <select
-                  value={selectedProductId}
-                  onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-                >
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                ))}
+                {avatars.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">
+                    No hay avatares. Creálos en la tool <span className="text-primary">Avatars</span>.
+                  </p>
+                )}
               </div>
-            )}
+            </CardContent>
+          </Card>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-xs text-gray-mid mb-1">Conceptos a generar</label>
-                <select
-                  value={count}
-                  onChange={(e) => setCount(Number(e.target.value))}
-                  className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-                >
-                  {[4, 6, 8, 10, 12].map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-mid mb-1">Aspect ratio</label>
-                <select
-                  value={aspectRatio}
-                  onChange={(e) => setAspectRatio(e.target.value)}
-                  className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-                >
-                  {['1:1', '4:5', '9:16', '16:9', '3:4'].map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-mid mb-1">Resolución</label>
-                <select
-                  value={resolution}
-                  onChange={(e) => setResolution(e.target.value)}
-                  className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-                >
-                  <option value="0.5K">0.5K (rápido)</option>
-                  <option value="1K">1K (test)</option>
-                  <option value="2K">2K (producción)</option>
-                  <option value="4K">4K (hero)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-mid mb-1">Imágenes por concepto</label>
-                <select
-                  value={numImages}
-                  onChange={(e) => setNumImages(Number(e.target.value))}
-                  className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-                >
-                  {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Toggles — planning prompt */}
-            <p className="text-xs text-gray-mid mb-1">Prompt de planificación (Claude)</p>
-            <div className="flex flex-wrap gap-4 mb-1">
-              <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useBrandDna}
-                  onChange={(e) => setUseBrandDna(e.target.checked)}
-                  className="accent-electric"
-                />
-                Incluir Brand Kit (DNA)
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useProductImages}
-                  onChange={(e) => setUseProductImages(e.target.checked)}
-                  className="accent-electric"
-                />
-                Incluir imágenes del producto
-              </label>
-            </div>
-            {/* Toggles — image generation */}
-            <p className="text-xs text-gray-mid mb-1 mt-3">Generación de imágenes (FAL)</p>
-            <div className="flex flex-wrap gap-4 mb-4">
-              <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useBrandModifier}
-                  onChange={(e) => setUseBrandModifier(e.target.checked)}
-                  className="accent-electric"
-                />
-                Aplicar brand modifier visual
-              </label>
-            </div>
-
-            {/* Offer / CTA */}
-            <div className="mb-4">
-              <label className="block text-xs text-gray-mid mb-1">Offer / CTA (opcional)</label>
-              <input
-                type="text"
-                value={offerCta}
-                onChange={(e) => setOfferCta(e.target.value)}
-                placeholder="Shop Now, 20% off first order"
-                className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white placeholder-gray-mid focus:outline-none focus:border-electric/50"
-              />
-            </div>
-
-            {/* Build prompt button */}
-            <button
-              onClick={handleBuildConceptPrompt}
-              disabled={loadingBuildPrompt || selectedAvatars.size === 0 || selectedFormats.size === 0}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-sm transition-colors disabled:opacity-40"
-            >
-              {loadingBuildPrompt ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-              {selectedAvatars.size === 0 || selectedFormats.size === 0
-                ? 'Seleccioná avatares y formatos primero'
-                : 'Generar prompt para Claude'}
-            </button>
-
-            {planError && (
-              <div className="mt-3 flex items-center gap-2 text-xs text-red-400">
-                <AlertCircle size={13} />
-                {planError}
-              </div>
-            )}
-          </div>
-
-          {/* Concept prompt modal (inline) */}
-          {showConceptPromptModal && (
-            <div className="bg-carbon-light rounded-xl p-5 border border-electric/30">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-white">Prompt listo — copialo a claude.ai</h3>
-                <div className="flex items-center gap-2">
-                  <CopyButton text={conceptPrompt} />
-                  <button onClick={() => setShowConceptPromptModal(false)} className="text-gray-mid hover:text-white">
-                    <X size={15} />
+          <Card>
+            <CardContent className="space-y-3">
+              <h2 className="text-base font-semibold text-foreground">Formatos</h2>
+              <div className="grid grid-cols-2 gap-2">
+                {formats.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => toggleFormat(f.id)}
+                    className={cn(
+                      'text-left p-3 rounded-lg border transition-all text-xs',
+                      selectedFormats.has(f.id)
+                        ? 'border-accent/50 bg-accent/10 text-foreground'
+                        : 'border-border bg-background text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground'
+                    )}
+                  >
+                    <div className="font-medium">{f.name}</div>
+                    <div className="text-muted-foreground mt-0.5 line-clamp-2">{f.description}</div>
                   </button>
-                </div>
-              </div>
-              <textarea
-                readOnly
-                value={conceptPrompt}
-                rows={5}
-                className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-xs text-gray-mid font-mono resize-none mb-3"
-              />
-              <p className="text-xs text-gray-mid mb-2">
-                Pegá la respuesta JSON de Claude aquí:
-              </p>
-              <textarea
-                value={pastePlanRaw}
-                onChange={(e) => setPastePlanRaw(e.target.value)}
-                placeholder='[{ "concept_index": 1, "avatar_id": "...", ... }]'
-                rows={5}
-                className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-xs text-gray-mid font-mono resize-none focus:outline-none focus:border-electric/50 mb-3"
-              />
-              <button
-                onClick={handleParsePlan}
-                disabled={loadingParsePlan || !pastePlanRaw.trim()}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-sm transition-colors disabled:opacity-40"
-              >
-                {loadingParsePlan ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                Parsear plan de Claude
-              </button>
-              {planError && <p className="mt-2 text-xs text-red-400">{planError}</p>}
-            </div>
-          )}
-
-          {/* Concept plan preview */}
-          {conceptPlan.length > 0 && (
-            <div className="bg-carbon-light rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-white">
-                  Plan — {conceptPlan.length} conceptos
-                </h3>
-                <button
-                  onClick={handleGenerate}
-                  disabled={generating}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    generating
-                      ? 'bg-carbon text-gray-mid cursor-not-allowed'
-                      : 'bg-electric hover:bg-electric/80 text-white'
-                  }`}
-                >
-                  {generating ? (
-                    <><Loader2 size={14} className="animate-spin" /> Generando...</>
-                  ) : (
-                    <><Play size={14} /> Generar imágenes</>
-                  )}
-                </button>
-              </div>
-
-              {genError && (
-                <div className="mb-3 flex items-center gap-2 text-xs text-red-400">
-                  <AlertCircle size={13} /> {genError}
-                </div>
-              )}
-
-              <div className="space-y-2 max-h-72 overflow-y-auto">
-                {conceptPlan.map((c) => (
-                  <ConceptCard
-                    key={c.concept_index}
-                    concept={c}
-                    avatarName={avatarsMap[c.avatar_id]?.name ?? c.avatar_id}
-                    formatName={formatsMap[c.format_id]?.name ?? c.format_id}
-                  />
                 ))}
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="space-y-4">
+              <h2 className="text-base font-semibold text-foreground">Configuración</h2>
+
+              {products.length > 0 && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Producto</Label>
+                  <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {products.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Conceptos a generar</Label>
+                  <Select value={String(count)} onValueChange={(v) => setCount(Number(v))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[4, 6, 8, 10, 12].map((n) => (
+                        <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Aspect ratio</Label>
+                  <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {['1:1', '4:5', '9:16', '16:9', '3:4'].map((r) => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Resolución</Label>
+                  <Select value={resolution} onValueChange={setResolution}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0.5K">0.5K (rápido)</SelectItem>
+                      <SelectItem value="1K">1K (test)</SelectItem>
+                      <SelectItem value="2K">2K (producción)</SelectItem>
+                      <SelectItem value="4K">4K (hero)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Imágenes por concepto</Label>
+                  <Select value={String(numImages)} onValueChange={(v) => setNumImages(Number(v))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4].map((n) => (
+                        <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Prompt de planificación (Claude)</p>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                    <Checkbox checked={useBrandDna} onCheckedChange={(c) => setUseBrandDna(!!c)} />
+                    Incluir Brand Kit (DNA)
+                  </label>
+                  <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                    <Checkbox checked={useProductImages} onCheckedChange={(c) => setUseProductImages(!!c)} />
+                    Incluir imágenes del producto
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Generación de imágenes (FAL)</p>
+                <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                  <Checkbox checked={useBrandModifier} onCheckedChange={(c) => setUseBrandModifier(!!c)} />
+                  Aplicar brand modifier visual
+                </label>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Offer / CTA (opcional)</Label>
+                <Input
+                  value={offerCta}
+                  onChange={(e) => setOfferCta(e.target.value)}
+                  placeholder="Shop Now, 20% off first order"
+                />
+              </div>
+
+              <Button
+                onClick={handleBuildConceptPrompt}
+                disabled={loadingBuildPrompt || selectedAvatars.size === 0 || selectedFormats.size === 0}
+                variant="secondary"
+                className="w-full"
+              >
+                {loadingBuildPrompt ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                {selectedAvatars.size === 0 || selectedFormats.size === 0
+                  ? 'Seleccioná avatares y formatos primero'
+                  : 'Generar prompt para Claude'}
+              </Button>
+
+              {planError && (
+                <Alert variant="destructive">
+                  <AlertCircle />
+                  <AlertDescription>{planError}</AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          {showConceptPromptModal && (
+            <Card className="border-primary/30">
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Prompt listo — copialo a claude.ai</h3>
+                  <div className="flex items-center gap-2">
+                    <CopyButton text={conceptPrompt} />
+                    <Button variant="ghost" size="icon" onClick={() => setShowConceptPromptModal(false)} className="h-8 w-8">
+                      <X size={15} />
+                    </Button>
+                  </div>
+                </div>
+                <Textarea readOnly value={conceptPrompt} rows={5} className="font-mono text-xs" />
+                <p className="text-xs text-muted-foreground">Pegá la respuesta JSON de Claude aquí:</p>
+                <Textarea
+                  value={pastePlanRaw}
+                  onChange={(e) => setPastePlanRaw(e.target.value)}
+                  placeholder='[{ "concept_index": 1, "avatar_id": "...", ... }]'
+                  rows={5}
+                  className="font-mono text-xs"
+                />
+                <Button
+                  onClick={handleParsePlan}
+                  disabled={loadingParsePlan || !pastePlanRaw.trim()}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  {loadingParsePlan ? <Loader2 className="animate-spin" /> : <CheckCircle />}
+                  Parsear plan de Claude
+                </Button>
+                {planError && (
+                  <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>{planError}</AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {conceptPlan.length > 0 && (
+            <Card>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Plan — {conceptPlan.length} conceptos
+                  </h3>
+                  <Button onClick={handleGenerate} disabled={generating}>
+                    {generating ? (
+                      <><Loader2 className="animate-spin" /> Generando...</>
+                    ) : (
+                      <><Play /> Generar imágenes</>
+                    )}
+                  </Button>
+                </div>
+
+                {genError && (
+                  <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>{genError}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {conceptPlan.map((c) => (
+                    <ConceptCard
+                      key={c.concept_index}
+                      concept={c}
+                      avatarName={avatarsMap[c.avatar_id]?.name ?? c.avatar_id}
+                      formatName={formatsMap[c.format_id]?.name ?? c.format_id}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
 
-      {/* Progress */}
       {progressMessages.length > 0 && (
-        <div className="bg-carbon-light rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white">
-              {generating ? 'Generando...' : 'Run log'}
-            </h3>
-            <span className="text-xs text-gray-mid">
-              {completedCount + errorCount} / {totalConcepts || progressMessages.length}
-            </span>
-          </div>
-          {generating && totalConcepts > 0 && (
-            <div className="w-full h-1.5 bg-carbon rounded-full mb-3 overflow-hidden">
-              <div
-                className="h-full bg-neon rounded-full transition-all duration-500"
-                style={{ width: `${((completedCount + errorCount) / totalConcepts) * 100}%` }}
-              />
+        <Card>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">
+                {generating ? 'Generando...' : 'Run log'}
+              </h3>
+              <span className="text-xs text-muted-foreground">
+                {completedCount + errorCount} / {totalConcepts || progressMessages.length}
+              </span>
             </div>
-          )}
-          <div className="space-y-1 max-h-48 overflow-y-auto font-mono text-xs">
-            {progressMessages.map((msg, i) => (
-              <div key={i} className="flex items-start gap-2">
-                {msg.type === 'concept_done' ? (
-                  <CheckCircle size={12} className="text-neon shrink-0 mt-0.5" />
-                ) : msg.type === 'concept_error' ? (
-                  <AlertCircle size={12} className="text-red-400 shrink-0 mt-0.5" />
-                ) : (
-                  <Loader2 size={12} className={`shrink-0 mt-0.5 ${generating ? 'text-electric animate-spin' : 'text-gray-mid'}`} />
-                )}
-                <span className={msg.type === 'concept_error' ? 'text-red-400' : 'text-gray-mid'}>
-                  {(msg.message as string) || `Concept #${msg.concept_index}`}
-                  {msg.type === 'concept_done' && ` — ${(msg.time as number)?.toFixed(1)}s`}
-                  {msg.type === 'concept_error' && ` — ${msg.error}`}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+            {generating && totalConcepts > 0 && (
+              <Progress value={progressPct} />
+            )}
+            <div className="space-y-1 max-h-48 overflow-y-auto font-mono text-xs">
+              {progressMessages.map((msg, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  {msg.type === 'concept_done' ? (
+                    <CheckCircle size={12} className="text-accent shrink-0 mt-0.5" />
+                  ) : msg.type === 'concept_error' ? (
+                    <AlertCircle size={12} className="text-destructive shrink-0 mt-0.5" />
+                  ) : (
+                    <Loader2 size={12} className={cn('shrink-0 mt-0.5', generating ? 'text-primary animate-spin' : 'text-muted-foreground')} />
+                  )}
+                  <span className={msg.type === 'concept_error' ? 'text-destructive' : 'text-muted-foreground'}>
+                    {(msg.message as string) || `Concept #${msg.concept_index}`}
+                    {msg.type === 'concept_done' && ` — ${(msg.time as number)?.toFixed(1)}s`}
+                    {msg.type === 'concept_error' && ` — ${msg.error}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {status === 'completed' && (
-        <div className="bg-neon/10 border border-neon/30 rounded-xl p-4 flex items-center gap-3 text-neon text-sm">
-          <CheckCircle size={18} />
-          Generación completa — {completedCount} conceptos, {generatedImages.length} imágenes
-          {errorCount > 0 && `, ${errorCount} errores`}
-        </div>
+        <Alert className="border-accent/30 bg-accent/10 text-accent">
+          <CheckCircle />
+          <AlertDescription className="text-accent">
+            Generación completa — {completedCount} conceptos, {generatedImages.length} imágenes
+            {errorCount > 0 && `, ${errorCount} errores`}
+          </AlertDescription>
+        </Alert>
       )}
 
       {generatedImages.length > 0 && (
         <div>
-          <h2 className="text-base font-semibold text-white mb-4">Imágenes generadas</h2>
+          <h2 className="text-base font-semibold text-foreground mb-4">Imágenes generadas</h2>
           <ImageGrid images={generatedImages} />
         </div>
       )}
@@ -647,32 +618,30 @@ function ConceptCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
-    <div className="bg-carbon rounded-lg p-3 text-xs">
+    <div className="bg-background rounded-lg border border-border p-3 text-xs">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-gray-mid">#{concept.concept_index}</span>
-            <span className="text-electric">{formatName}</span>
-            <span className="text-gray-mid">×</span>
-            <span className="text-neon">{avatarName}</span>
+            <span className="font-mono text-muted-foreground">#{concept.concept_index}</span>
+            <span className="text-primary">{formatName}</span>
+            <span className="text-muted-foreground">×</span>
+            <span className="text-accent">{avatarName}</span>
           </div>
-          <p className="text-white font-medium line-clamp-1">{concept.hook}</p>
+          <p className="text-foreground font-medium line-clamp-1">{concept.hook}</p>
           {expanded && (
-            <div className="mt-2 space-y-1 text-gray-mid">
-              <p><span className="text-gray-light">Ángulo:</span> {concept.angle}</p>
-              <p><span className="text-gray-light">Visual:</span> {concept.prompt_additions}</p>
+            <div className="mt-2 space-y-1 text-muted-foreground">
+              <p><span className="text-foreground">Ángulo:</span> {concept.angle}</p>
+              <p><span className="text-foreground">Visual:</span> {concept.prompt_additions}</p>
             </div>
           )}
         </div>
-        <button onClick={() => setExpanded(!expanded)} className="text-gray-mid hover:text-white shrink-0">
+        <Button variant="ghost" size="icon" onClick={() => setExpanded(!expanded)} className="h-7 w-7 shrink-0">
           {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
-
-// ─── Remix Mode ───────────────────────────────────────────────────────────────
 
 function detectAspectRatio(src: string): Promise<string> {
   return new Promise((resolve) => {
@@ -689,7 +658,7 @@ function detectAspectRatio(src: string): Promise<string> {
   });
 }
 
-function RemixMode({ initialRef, onRefConsumed }: { initialRef?: { src: string; path: string; filename: string } | null; onRefConsumed?: () => void }) {
+function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null; onRefConsumed?: () => void }) {
   const [_refFile, setRefFile] = useState<File | null>(null);
   const [refPath, setRefPath] = useState(initialRef?.path ?? '');
   const [refPreview, setRefPreview] = useState(initialRef?.src ?? '');
@@ -721,7 +690,9 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: { src: string; 
       });
       onRefConsumed?.();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialRef]);
+
   const [jobId, setJobId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
@@ -791,153 +762,158 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: { src: string; 
 
   return (
     <div className="max-w-2xl space-y-5">
-      {/* Reference image */}
-      <div className="bg-carbon-light rounded-xl p-5">
-        <h2 className="text-base font-semibold text-white mb-3">Imagen de referencia</h2>
-        <label className="flex flex-col items-center justify-center border-2 border-dashed border-carbon rounded-xl p-8 cursor-pointer hover:border-electric/40 transition-colors">
-          {refPreview ? (
-            <img src={refPreview} alt="reference" className="max-h-48 rounded-lg object-contain" />
-          ) : (
-            <>
-              <Upload size={24} className="text-gray-mid mb-2" />
-              <span className="text-sm text-gray-mid">Click para subir imagen</span>
-            </>
-          )}
-          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-        </label>
-        {uploading && <p className="text-xs text-electric mt-2">Subiendo...</p>}
-        {refPath && !uploading && <p className="text-xs text-neon mt-2">Imagen lista</p>}
-      </div>
+      <Card>
+        <CardContent className="space-y-3">
+          <h2 className="text-base font-semibold text-foreground">Imagen de referencia</h2>
+          <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-8 cursor-pointer hover:border-primary/40 transition-colors">
+            {refPreview ? (
+              <img src={refPreview} alt="reference" className="max-h-48 rounded-lg object-contain" />
+            ) : (
+              <>
+                <UploadIcon size={24} className="text-muted-foreground mb-2" />
+                <span className="text-sm text-muted-foreground">Click para subir imagen</span>
+              </>
+            )}
+            <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+          </label>
+          {uploading && <p className="text-xs text-primary">Subiendo...</p>}
+          {refPath && !uploading && <p className="text-xs text-accent">Imagen lista</p>}
+        </CardContent>
+      </Card>
 
-      {/* Product + Avatar */}
-      <div className="bg-carbon-light rounded-xl p-5 space-y-3">
-        <h2 className="text-base font-semibold text-white">Producto y audiencia</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs text-gray-mid mb-1">Producto <span className="text-gray-mid/60">(opcional)</span></label>
-            <select
-              value={selectedProductId}
-              onChange={(e) => setSelectedProductId(e.target.value)}
-              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-            >
-              <option value="">Sin producto</option>
-              {remixProducts.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-mid mb-1">Avatar <span className="text-gray-mid/60">(opcional)</span></label>
-            <select
-              value={selectedAvatarId}
-              onChange={(e) => setSelectedAvatarId(e.target.value)}
-              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-            >
-              <option value="">Sin avatar</option>
-              {remixAvatars.map((a) => (
-                <option key={a.id} value={a.id}>{a.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        {selectedProductId && (
-          <p className="text-xs text-electric">Las imágenes del producto se pasarán a FAL como input visual adicional.</p>
-        )}
-      </div>
-
-      {/* Instructions */}
-      <div className="bg-carbon-light rounded-xl p-5 space-y-4">
-        <h2 className="text-base font-semibold text-white">Instrucciones</h2>
-        <textarea
-          value={instructions}
-          onChange={(e) => setInstructions(e.target.value)}
-          placeholder="Describe how to remix this image — keep the same composition but change the color palette to neon green highlights..."
-          rows={4}
-          className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white placeholder-gray-mid focus:outline-none focus:border-electric resize-none"
-        />
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs text-gray-mid mb-1">Variaciones</label>
-            <select value={count} onChange={(e) => setCount(Number(e.target.value))} className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white">
-              {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 mb-1">
-              <label className="text-xs text-gray-mid">Aspect ratio</label>
-              {aspectRatioAuto && (
-                <span className="text-[10px] bg-electric/15 text-electric px-1.5 py-0.5 rounded font-medium">auto</span>
-              )}
+      <Card>
+        <CardContent className="space-y-3">
+          <h2 className="text-base font-semibold text-foreground">Producto y audiencia</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Producto <span className="text-muted-foreground/60">(opcional)</span></Label>
+              <Select value={selectedProductId || '__none'} onValueChange={(v) => setSelectedProductId(v === '__none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Sin producto" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">Sin producto</SelectItem>
+                  {remixProducts.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <select
-              value={aspectRatio}
-              onChange={(e) => { setAspectRatio(e.target.value); setAspectRatioAuto(false); }}
-              className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white"
-            >
-              {['1:1', '4:5', '9:16', '16:9'].map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Avatar <span className="text-muted-foreground/60">(opcional)</span></Label>
+              <Select value={selectedAvatarId || '__none'} onValueChange={(v) => setSelectedAvatarId(v === '__none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Sin avatar" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">Sin avatar</SelectItem>
+                  {remixAvatars.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs text-gray-mid mb-1">Resolución</label>
-            <select value={resolution} onChange={(e) => setResolution(e.target.value)} className="w-full bg-carbon border border-carbon-light rounded-lg px-3 py-2 text-sm text-white">
-              <option value="0.5K">0.5K</option>
-              <option value="1K">1K</option>
-              <option value="2K">2K</option>
-              <option value="4K">4K</option>
-            </select>
+          {selectedProductId && (
+            <p className="text-xs text-primary">Las imágenes del producto se pasarán a FAL como input visual adicional.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-4">
+          <h2 className="text-base font-semibold text-foreground">Instrucciones</h2>
+          <Textarea
+            value={instructions}
+            onChange={(e) => setInstructions(e.target.value)}
+            placeholder="Describe how to remix this image — keep the same composition but change the color palette to neon green highlights..."
+            rows={4}
+          />
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Variaciones</Label>
+              <Select value={String(count)} onValueChange={(v) => setCount(Number(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs text-muted-foreground">Aspect ratio</Label>
+                {aspectRatioAuto && <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">auto</Badge>}
+              </div>
+              <Select
+                value={aspectRatio}
+                onValueChange={(v) => { setAspectRatio(v); setAspectRatioAuto(false); }}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['1:1', '4:5', '9:16', '16:9'].map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Resolución</Label>
+              <Select value={resolution} onValueChange={setResolution}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0.5K">0.5K</SelectItem>
+                  <SelectItem value="1K">1K</SelectItem>
+                  <SelectItem value="2K">2K</SelectItem>
+                  <SelectItem value="4K">4K</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
-        <div className="space-y-1.5">
-          <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useBrandModifier}
-              onChange={(e) => setUseBrandModifier(e.target.checked)}
-              className="accent-electric"
-            />
-            Aplicar brand modifier visual
-          </label>
-          <label className="flex items-center gap-2 text-xs text-gray-light cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useReferenceAds}
-              onChange={(e) => setUseReferenceAds(e.target.checked)}
-              className="accent-electric"
-            />
-            Incluir reference ads como guía de estilo
-          </label>
-        </div>
-        <button
-          onClick={handleGenerate}
-          disabled={generating || !refPath || !instructions.trim()}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-electric text-white text-sm font-medium hover:bg-electric/80 disabled:opacity-40 transition-colors"
-        >
-          {generating ? <><Loader2 size={15} className="animate-spin" /> Generando...</> : <><Play size={15} /> Generar remix</>}
-        </button>
-        {genError && <p className="text-xs text-red-400">{genError}</p>}
-        {progressMsg && generating && (
-          <p className="text-xs text-electric">{progressMsg.message as string}</p>
-        )}
-      </div>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+              <Checkbox checked={useBrandModifier} onCheckedChange={(c) => setUseBrandModifier(!!c)} />
+              Aplicar brand modifier visual
+            </label>
+            <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+              <Checkbox checked={useReferenceAds} onCheckedChange={(c) => setUseReferenceAds(!!c)} />
+              Incluir reference ads como guía de estilo
+            </label>
+          </div>
+          <Button
+            onClick={handleGenerate}
+            disabled={generating || !refPath || !instructions.trim()}
+            className="w-full"
+          >
+            {generating ? <><Loader2 className="animate-spin" /> Generando...</> : <><Play /> Generar remix</>}
+          </Button>
+          {genError && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{genError}</AlertDescription>
+            </Alert>
+          )}
+          {progressMsg && generating && (
+            <p className="text-xs text-primary">{progressMsg.message as string}</p>
+          )}
+        </CardContent>
+      </Card>
 
       {status === 'completed' && (
-        <div className="bg-neon/10 border border-neon/30 rounded-xl p-4 flex items-center gap-3 text-neon text-sm">
-          <CheckCircle size={18} />
-          Remix completo — {generatedImages.length} variaciones generadas
-        </div>
+        <Alert className="border-accent/30 bg-accent/10 text-accent">
+          <CheckCircle />
+          <AlertDescription className="text-accent">
+            Remix completo — {generatedImages.length} variaciones generadas
+          </AlertDescription>
+        </Alert>
       )}
 
       {generatedImages.length > 0 && (
         <div>
-          <h2 className="text-base font-semibold text-white mb-4">Variaciones</h2>
+          <h2 className="text-base font-semibold text-foreground mb-4">Variaciones</h2>
           <ImageGrid images={generatedImages} />
         </div>
       )}
     </div>
   );
 }
-
-// ─── Outputs History ──────────────────────────────────────────────────────────
 
 interface OutputFolder {
   folder: string;
@@ -971,7 +947,7 @@ function AdDetailModal({
 }: {
   selected: SelectedImage;
   onClose: () => void;
-  onRemixThis: (ref: { src: string; path: string; filename: string }) => void;
+  onRemixThis: (ref: RemixRef) => void;
 }) {
   const [loadingRemix, setLoadingRemix] = useState(false);
   const { meta } = selected;
@@ -990,106 +966,97 @@ function AdDetailModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-carbon-dark border border-carbon-light rounded-2xl overflow-hidden flex flex-col lg:flex-row max-w-5xl w-full max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-5xl! w-full p-0 overflow-hidden sm:rounded-2xl!"
       >
-        {/* Image panel */}
-        <div className="lg:w-1/2 bg-black flex items-center justify-center p-4 min-h-64">
-          <img
-            src={selected.src}
-            alt="Ad"
-            className="max-w-full max-h-[70vh] object-contain rounded-lg"
-          />
-        </div>
-
-        {/* Metadata panel */}
-        <div className="lg:w-1/2 flex flex-col overflow-y-auto">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-carbon-light">
-            <span className="text-xs font-mono text-gray-mid">{selected.folder}</span>
-            <button onClick={onClose} className="text-gray-mid hover:text-white">
-              <X size={18} />
-            </button>
+        <div className="flex flex-col lg:flex-row max-h-[90vh]">
+          <div className="lg:w-1/2 bg-black flex items-center justify-center p-4 min-h-64">
+            <img
+              src={selected.src}
+              alt="Ad"
+              className="max-w-full max-h-[70vh] object-contain rounded-lg"
+            />
           </div>
 
-          <div className="flex-1 px-5 py-4 space-y-4 overflow-y-auto">
-            {/* Type badge */}
-            <div className="flex flex-wrap gap-2">
-              {meta.resolution && (
-                <span className="text-xs border border-carbon-light rounded px-2 py-0.5 text-gray-mid">{meta.resolution}</span>
+          <div className="lg:w-1/2 flex flex-col overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4">
+              <span className="text-xs font-mono text-muted-foreground">{selected.folder}</span>
+              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+                <X size={18} />
+              </Button>
+            </div>
+            <Separator />
+
+            <div className="flex-1 px-5 py-4 space-y-4 overflow-y-auto">
+              <div className="flex flex-wrap gap-2">
+                {meta.resolution && (
+                  <Badge variant="outline">{meta.resolution}</Badge>
+                )}
+                {isRemix ? (
+                  <Badge variant="outline" className="border-primary/30 text-primary">Remix</Badge>
+                ) : (
+                  <>
+                    {(meta.format_name ?? meta.format_id) && (
+                      <Badge variant="outline" className="border-primary/30 text-primary">{meta.format_name ?? meta.format_id}</Badge>
+                    )}
+                    {(meta.avatar_name ?? meta.avatar_id) && (
+                      <Badge variant="outline" className="border-accent/30 text-accent">{meta.avatar_name ?? meta.avatar_id}</Badge>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {meta.hook && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Hook</p>
+                  <p className="text-sm text-foreground font-medium">"{meta.hook}"</p>
+                </div>
               )}
-              {isRemix ? (
-                <span className="text-xs border border-electric/30 rounded px-2 py-0.5 text-electric">Remix</span>
-              ) : (
-                <>
-                  {(meta.format_name ?? meta.format_id) && (
-                    <span className="text-xs border border-electric/30 rounded px-2 py-0.5 text-electric">{meta.format_name ?? meta.format_id}</span>
-                  )}
-                  {(meta.avatar_name ?? meta.avatar_id) && (
-                    <span className="text-xs border border-neon/30 rounded px-2 py-0.5 text-neon">{meta.avatar_name ?? meta.avatar_id}</span>
-                  )}
-                </>
+
+              {meta.angle && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Ángulo</p>
+                  <p className="text-sm text-foreground">{meta.angle}</p>
+                </div>
+              )}
+
+              {meta.instructions && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Instrucciones</p>
+                  <p className="text-sm text-foreground">{meta.instructions}</p>
+                </div>
+              )}
+
+              {meta.prompt && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Prompt enviado a FAL</p>
+                  <p className="text-xs text-muted-foreground font-mono bg-background border border-border rounded-lg p-3 whitespace-pre-wrap wrap-break-word">{meta.prompt}</p>
+                </div>
               )}
             </div>
 
-            {meta.hook && (
-              <div>
-                <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Hook</p>
-                <p className="text-sm text-white font-medium">"{meta.hook}"</p>
-              </div>
-            )}
-
-            {meta.angle && (
-              <div>
-                <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Ángulo</p>
-                <p className="text-sm text-gray-light">{meta.angle}</p>
-              </div>
-            )}
-
-            {meta.instructions && (
-              <div>
-                <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Instrucciones</p>
-                <p className="text-sm text-gray-light">{meta.instructions}</p>
-              </div>
-            )}
-
-            {meta.prompt && (
-              <div>
-                <p className="text-xs font-medium text-gray-mid uppercase tracking-wider mb-1">Prompt enviado a FAL</p>
-                <p className="text-xs text-gray-mid font-mono bg-carbon rounded-lg p-3 whitespace-pre-wrap wrap-break-word">{meta.prompt}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="px-5 py-4 border-t border-carbon-light flex gap-2">
-            <a
-              href={selected.src}
-              download={selected.filename}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-carbon-light text-gray-light text-xs hover:text-white transition-colors"
-            >
-              <Download size={13} /> Descargar
-            </a>
-            <button
-              onClick={handleRemixThis}
-              disabled={loadingRemix}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-electric/20 hover:bg-electric/30 text-electric text-xs transition-colors disabled:opacity-50"
-            >
-              {loadingRemix ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
-              Remix this
-            </button>
+            <Separator />
+            <div className="px-5 py-4 flex gap-2">
+              <Button asChild variant="secondary" size="sm">
+                <a href={selected.src} download={selected.filename}>
+                  <Download size={13} /> Descargar
+                </a>
+              </Button>
+              <Button onClick={handleRemixThis} disabled={loadingRemix} size="sm">
+                {loadingRemix ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                Remix this
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function OutputsHistory({ onRemixThis }: { onRemixThis: (ref: { src: string; path: string; filename: string }) => void }) {
+function OutputsHistory({ onRemixThis }: { onRemixThis: (ref: RemixRef) => void }) {
   const [folders, setFolders] = useState<OutputFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SelectedImage | null>(null);
@@ -1116,7 +1083,7 @@ function OutputsHistory({ onRemixThis }: { onRemixThis: (ref: { src: string; pat
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-mid text-sm">
+      <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">
         <Loader2 size={16} className="animate-spin mr-2" /> Cargando historial...
       </div>
     );
@@ -1124,7 +1091,7 @@ function OutputsHistory({ onRemixThis }: { onRemixThis: (ref: { src: string; pat
 
   if (folders.length === 0) {
     return (
-      <div className="text-center py-20 text-gray-mid">
+      <div className="text-center py-20 text-muted-foreground">
         <p className="text-sm">No hay generaciones todavía.</p>
         <p className="text-xs mt-1">Las imágenes generadas aparecerán aquí.</p>
       </div>
@@ -1134,7 +1101,7 @@ function OutputsHistory({ onRemixThis }: { onRemixThis: (ref: { src: string; pat
   return (
     <>
       <div className="space-y-6">
-        <p className="text-xs text-gray-mid">{folders.length} generacion{folders.length !== 1 ? 'es' : ''}</p>
+        <p className="text-xs text-muted-foreground">{folders.length} generacion{folders.length !== 1 ? 'es' : ''}</p>
         {folders.map((f) => {
           const isRemix = f.meta.type === 'remix';
           const title = isRemix
@@ -1151,39 +1118,41 @@ function OutputsHistory({ onRemixThis }: { onRemixThis: (ref: { src: string; pat
           }));
 
           return (
-            <div key={f.folder} className="bg-carbon-light rounded-xl p-5">
-              <div className="mb-3">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="font-mono text-xs text-gray-mid">{f.folder}</span>
-                  {f.meta.resolution && (
-                    <span className="text-xs text-gray-mid border border-carbon-light rounded px-1.5 py-0.5">
-                      {f.meta.resolution}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => handleDelete(f.folder)}
-                    disabled={deleting === f.folder}
-                    className="ml-auto text-gray-mid hover:text-red-400 disabled:opacity-40 transition-colors"
-                    title="Eliminar generación"
-                  >
-                    {deleting === f.folder
-                      ? <Loader2 size={14} className="animate-spin" />
-                      : <Trash2 size={14} />}
-                  </button>
+            <Card key={f.folder}>
+              <CardContent className="space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-mono text-xs text-muted-foreground">{f.folder}</span>
+                    {f.meta.resolution && (
+                      <Badge variant="outline" className="text-xs">{f.meta.resolution}</Badge>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(f.folder)}
+                      disabled={deleting === f.folder}
+                      title="Eliminar generación"
+                      className="ml-auto h-7 w-7 hover:text-destructive"
+                    >
+                      {deleting === f.folder
+                        ? <Loader2 size={14} className="animate-spin" />
+                        : <Trash2 size={14} />}
+                    </Button>
+                  </div>
+                  <p className="text-sm font-medium text-foreground line-clamp-1">{title}</p>
+                  {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
                 </div>
-                <p className="text-sm font-medium text-white line-clamp-1">{title}</p>
-                {subtitle && <p className="text-xs text-gray-mid mt-0.5">{subtitle}</p>}
-              </div>
-              <ImageGrid
-                images={images}
-                onImageClick={(img) => setSelected({
-                  src: img.src,
-                  folder: f.folder,
-                  filename: img.label,
-                  meta: f.meta,
-                })}
-              />
-            </div>
+                <ImageGrid
+                  images={images}
+                  onImageClick={(img) => setSelected({
+                    src: img.src,
+                    folder: f.folder,
+                    filename: img.label,
+                    meta: f.meta,
+                  })}
+                />
+              </CardContent>
+            </Card>
           );
         })}
       </div>
@@ -1196,27 +1165,5 @@ function OutputsHistory({ onRemixThis }: { onRemixThis: (ref: { src: string; pat
         />
       )}
     </>
-  );
-}
-
-// ─── Inline Upload icon (used in RemixMode) ───────────────────────────────────
-function Upload({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
-    </svg>
   );
 }

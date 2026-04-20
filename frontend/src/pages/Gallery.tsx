@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchOutputs, getImageUrl } from '../lib/api';
 import ImageGrid from '../components/ImageGrid';
+import { Separator } from '@/components/ui/separator';
 
 interface OutputFolder {
   folder: string;
@@ -29,15 +30,13 @@ export default function Gallery() {
 
   return (
     <div className="max-w-6xl">
-      <h1 className="text-3xl font-bold text-white mb-2">Gallery</h1>
-      <p className="text-gray-mid mb-8">
-        Browse all generated ad images.
-      </p>
+      <h1 className="text-3xl font-bold text-foreground mb-2">Gallery</h1>
+      <p className="text-muted-foreground mb-8">Browse all generated ad images.</p>
 
       {loading ? (
-        <div className="text-gray-mid">Loading...</div>
+        <p className="text-muted-foreground text-sm">Loading...</p>
       ) : outputs.length === 0 ? (
-        <div className="text-center py-16 text-gray-mid">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-lg mb-2">No images generated yet</p>
           <p className="text-sm">Go to Static Ad Generator to create your first ads.</p>
         </div>
@@ -45,7 +44,7 @@ export default function Gallery() {
         <div className="space-y-8">
           {outputs.map((o) => (
             <div key={o.folder}>
-              <h2 className="text-lg font-semibold text-neon mb-3">
+              <h2 className="text-lg font-semibold text-accent mb-3">
                 #{o.template_number} — {o.template_name.replace(/-/g, ' ')}
               </h2>
               <ImageGrid
@@ -57,11 +56,10 @@ export default function Gallery() {
             </div>
           ))}
 
-          <div className="border-t border-carbon-light pt-6">
-            <p className="text-sm text-gray-mid">
-              Total: {allImages.length} images across {outputs.length} templates
-            </p>
-          </div>
+          <Separator />
+          <p className="text-sm text-muted-foreground">
+            Total: {allImages.length} images across {outputs.length} templates
+          </p>
         </div>
       )}
     </div>
