@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   CheckCircle,
@@ -28,7 +28,7 @@ import {
   startRemix,
   uploadReference,
 } from '../lib/api';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { useJob } from '../context/JobContext';
 import ImageGrid from '../components/ImageGrid';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -100,13 +100,84 @@ interface RemixRef {
   filename: string;
 }
 
+interface JobCallbacks {
+  onJobStarted: (jobId: string) => void;
+  onReset: () => void;
+  generating: boolean;
+}
+
 export default function ConceptAds() {
   const [activeTab, setActiveTab] = useState<'concepts' | 'remix' | 'history'>('concepts');
   const [remixRef, setRemixRef] = useState<RemixRef | null>(null);
 
+  // Job state lives here — survives tab switches and navigation
+  const { jobId, messages, generating, generatedImages, setJobId, addMessage, addImages, setGenerating, reset } = useJob('concept_ads');
+  const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    if (!jobId) return;
+    const lastStatus = [...messages].reverse().find((m) => m.type === 'status');
+    if (lastStatus?.status === 'completed' || lastStatus?.status === 'failed') return;
+    wsRef.current?.close();
+    const ws = new WebSocket(getConceptWsUrl(jobId));
+    wsRef.current = ws;
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      addMessage(msg);
+      if (msg.type === 'concept_done') {
+        const folder = msg.folder as string;
+        const imgs = msg.images as string[];
+        addImages(imgs.map((f) => ({
+          src: getConceptImageUrl(folder, f),
+          label: `#${msg.concept_index} ${msg.format_id} × ${msg.avatar_id} — ${f}`,
+        })));
+      }
+      if (msg.type === 'status' && (msg.status === 'completed' || msg.status === 'failed')) {
+        setGenerating(false);
+        ws.close();
+      }
+    };
+    ws.onerror = () => setGenerating(false);
+    return () => { ws.close(); };
+  }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dedup messages (backend replays history on reconnect)
+  const seenKeys = new Set<string>();
+  const dedupedMessages = messages.filter((m) => {
+    if (m.type !== 'progress' && m.type !== 'concept_done' && m.type !== 'concept_error') return false;
+    const key = `${m.type}-${m.concept_index}-${m.message ?? ''}-${m.error ?? ''}`;
+    if (seenKeys.has(key)) return false;
+    seenKeys.add(key);
+    return true;
+  });
+
+  const completedCount = dedupedMessages.filter((m) => m.type === 'concept_done').length;
+  const errorCount = dedupedMessages.filter((m) => m.type === 'concept_error').length;
+  const totalConcepts = (dedupedMessages.find((m) => m.type === 'progress')?.total as number) || 0;
+  const isCompleted = messages.some((m) => m.type === 'status' && m.status === 'completed');
+
+  const seenImgs = new Set<string>();
+  const dedupedImages = generatedImages.filter(({ src }) => {
+    if (seenImgs.has(src)) return false;
+    seenImgs.add(src);
+    return true;
+  });
+
   const handleRemixThis = (ref: RemixRef) => {
     setRemixRef(ref);
     setActiveTab('remix');
+  };
+
+  const jobCallbacks: JobCallbacks = {
+    onJobStarted: (id: string) => {
+      setJobId(id);
+      setGenerating(true);
+    },
+    onReset: () => {
+      wsRef.current?.close();
+      reset();
+    },
+    generating,
   };
 
   return (
@@ -116,7 +187,7 @@ export default function ConceptAds() {
         Generate angle-driven creatives by avatar × format. Plan with Claude, generate with FAL.
       </p>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="mb-8">
+      <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as typeof activeTab)} className="mb-8">
         <TabsList>
           <TabsTrigger value="concepts">Concepts Mode</TabsTrigger>
           <TabsTrigger value="remix">Remix Mode</TabsTrigger>
@@ -124,20 +195,76 @@ export default function ConceptAds() {
         </TabsList>
 
         <TabsContent value="concepts" className="mt-6">
-          <ConceptsMode />
+          <ConceptsMode jobCallbacks={jobCallbacks} />
         </TabsContent>
         <TabsContent value="remix" className="mt-6">
-          <RemixMode initialRef={remixRef} onRefConsumed={() => setRemixRef(null)} />
+          <RemixMode initialRef={remixRef} onRefConsumed={() => setRemixRef(null)} jobCallbacks={jobCallbacks} />
         </TabsContent>
         <TabsContent value="history" className="mt-6">
           <OutputsHistory onRemixThis={handleRemixThis} />
         </TabsContent>
       </Tabs>
+
+      {/* Progress log — persists across all tabs and navigation */}
+      {dedupedMessages.length > 0 && (
+        <Card>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">
+                {generating ? 'Generando...' : isCompleted ? 'Completado' : 'Run log'}
+              </h3>
+              <span className="text-xs text-muted-foreground">
+                {completedCount + errorCount} / {totalConcepts || dedupedMessages.length}
+              </span>
+            </div>
+            {generating && totalConcepts > 0 && (
+              <Progress value={((completedCount + errorCount) / totalConcepts) * 100} />
+            )}
+            <div className="space-y-1 max-h-48 overflow-y-auto font-mono text-xs">
+              {dedupedMessages.map((msg, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  {msg.type === 'concept_done' ? (
+                    <CheckCircle size={12} className="text-accent shrink-0 mt-0.5" />
+                  ) : msg.type === 'concept_error' ? (
+                    <AlertCircle size={12} className="text-destructive shrink-0 mt-0.5" />
+                  ) : (
+                    <Loader2 size={12} className={cn('shrink-0 mt-0.5', generating ? 'text-primary animate-spin' : 'text-muted-foreground')} />
+                  )}
+                  <span className={msg.type === 'concept_error' ? 'text-destructive' : 'text-muted-foreground'}>
+                    {(msg.message as string) || `Concept #${msg.concept_index}`}
+                    {msg.type === 'concept_done' && ` — ${(msg.time as number)?.toFixed(1)}s`}
+                    {msg.type === 'concept_error' && ` — ${msg.error}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {isCompleted && (
+        <Alert className="border-accent/30 bg-accent/10 text-accent mt-4">
+          <CheckCircle />
+          <AlertDescription className="text-accent">
+            Generación completa — {completedCount} conceptos, {dedupedImages.length} imágenes
+            {errorCount > 0 && `, ${errorCount} errores`}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {dedupedImages.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-base font-semibold text-foreground mb-4">Imágenes generadas</h2>
+          <ImageGrid images={dedupedImages} />
+        </div>
+      )}
     </div>
   );
 }
 
-function ConceptsMode() {
+function ConceptsMode({ jobCallbacks }: { jobCallbacks: JobCallbacks }) {
+  const { onJobStarted, onReset, generating } = jobCallbacks;
+
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [formats, setFormats] = useState<Format[]>([]);
   const [selectedAvatars, setSelectedAvatars] = useState<Set<string>>(new Set());
@@ -162,13 +289,7 @@ function ConceptsMode() {
   const [planError, setPlanError] = useState('');
   const [loadingBuildPrompt, setLoadingBuildPrompt] = useState(false);
   const [loadingParsePlan, setLoadingParsePlan] = useState(false);
-
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
-  const [generatedImages, setGeneratedImages] = useState<{ src: string; label: string }[]>([]);
-
-  const { messages, status, reset } = useWebSocket(jobId, getConceptWsUrl);
 
   useEffect(() => {
     fetchAvatars().then(setAvatars).catch(console.error);
@@ -178,23 +299,6 @@ function ConceptsMode() {
       if (ps.length > 0) setSelectedProductId(ps[0].id);
     }).catch(console.error);
   }, []);
-
-  useEffect(() => {
-    const last = messages[messages.length - 1];
-    if (!last) return;
-    if (last.type === 'concept_done') {
-      const folder = last.folder as string;
-      const imgs = last.images as string[];
-      const newImgs = imgs.map((f) => ({
-        src: getConceptImageUrl(folder, f),
-        label: `#${last.concept_index} ${last.format_id} × ${last.avatar_id} — ${f}`,
-      }));
-      setGeneratedImages((prev) => [...prev, ...newImgs]);
-    }
-    if (last.type === 'status' && last.status === 'completed') {
-      setGenerating(false);
-    }
-  }, [messages]);
 
   const toggleAvatar = (id: string) => {
     setSelectedAvatars((prev) => {
@@ -256,9 +360,7 @@ function ConceptsMode() {
   const handleGenerate = async () => {
     if (conceptPlan.length === 0) return;
     setGenError(null);
-    setGeneratedImages([]);
-    reset();
-    setGenerating(true);
+    onReset();
     try {
       const result = await startConceptGeneration({
         concepts: conceptPlan,
@@ -268,23 +370,13 @@ function ConceptsMode() {
       });
       if (result.error) {
         setGenError(result.error);
-        setGenerating(false);
         return;
       }
-      setJobId(result.job_id);
+      onJobStarted(result.job_id);
     } catch (e) {
       setGenError(String(e));
-      setGenerating(false);
     }
   };
-
-  const progressMessages = messages.filter(
-    (m) => m.type === 'progress' || m.type === 'concept_done' || m.type === 'concept_error'
-  );
-  const completedCount = messages.filter((m) => m.type === 'concept_done').length;
-  const errorCount = messages.filter((m) => m.type === 'concept_error').length;
-  const totalConcepts = (messages.find((m) => m.type === 'progress')?.total as number) || 0;
-  const progressPct = totalConcepts > 0 ? ((completedCount + errorCount) / totalConcepts) * 100 : 0;
 
   const avatarsMap = Object.fromEntries(avatars.map((a) => [a.id, a]));
   const formatsMap = Object.fromEntries(formats.map((f) => [f.id, f]));
@@ -375,7 +467,7 @@ function ConceptsMode() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Conceptos a generar</Label>
-                  <Select value={String(count)} onValueChange={(v) => setCount(Number(v))}>
+                  <Select value={String(count)} onValueChange={(v: string) => setCount(Number(v))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {[4, 6, 8, 10, 12].map((n) => (
@@ -424,11 +516,11 @@ function ConceptsMode() {
                 <p className="text-xs text-muted-foreground mb-2">Prompt de planificación (Claude)</p>
                 <div className="flex flex-wrap gap-4">
                   <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
-                    <Checkbox checked={useBrandDna} onCheckedChange={(c) => setUseBrandDna(!!c)} />
+                    <Checkbox checked={useBrandDna} onCheckedChange={(c: boolean | 'indeterminate') => setUseBrandDna(!!c)} />
                     Incluir Brand Kit (DNA)
                   </label>
                   <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
-                    <Checkbox checked={useProductImages} onCheckedChange={(c) => setUseProductImages(!!c)} />
+                    <Checkbox checked={useProductImages} onCheckedChange={(c: boolean | 'indeterminate') => setUseProductImages(!!c)} />
                     Incluir imágenes del producto
                   </label>
                 </div>
@@ -437,7 +529,7 @@ function ConceptsMode() {
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Generación de imágenes (FAL)</p>
                 <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
-                  <Checkbox checked={useBrandModifier} onCheckedChange={(c) => setUseBrandModifier(!!c)} />
+                  <Checkbox checked={useBrandModifier} onCheckedChange={(c: boolean | 'indeterminate') => setUseBrandModifier(!!c)} />
                   Aplicar brand modifier visual
                 </label>
               </div>
@@ -550,59 +642,6 @@ function ConceptsMode() {
           )}
         </div>
       </div>
-
-      {progressMessages.length > 0 && (
-        <Card>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                {generating ? 'Generando...' : 'Run log'}
-              </h3>
-              <span className="text-xs text-muted-foreground">
-                {completedCount + errorCount} / {totalConcepts || progressMessages.length}
-              </span>
-            </div>
-            {generating && totalConcepts > 0 && (
-              <Progress value={progressPct} />
-            )}
-            <div className="space-y-1 max-h-48 overflow-y-auto font-mono text-xs">
-              {progressMessages.map((msg, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  {msg.type === 'concept_done' ? (
-                    <CheckCircle size={12} className="text-accent shrink-0 mt-0.5" />
-                  ) : msg.type === 'concept_error' ? (
-                    <AlertCircle size={12} className="text-destructive shrink-0 mt-0.5" />
-                  ) : (
-                    <Loader2 size={12} className={cn('shrink-0 mt-0.5', generating ? 'text-primary animate-spin' : 'text-muted-foreground')} />
-                  )}
-                  <span className={msg.type === 'concept_error' ? 'text-destructive' : 'text-muted-foreground'}>
-                    {(msg.message as string) || `Concept #${msg.concept_index}`}
-                    {msg.type === 'concept_done' && ` — ${(msg.time as number)?.toFixed(1)}s`}
-                    {msg.type === 'concept_error' && ` — ${msg.error}`}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {status === 'completed' && (
-        <Alert className="border-accent/30 bg-accent/10 text-accent">
-          <CheckCircle />
-          <AlertDescription className="text-accent">
-            Generación completa — {completedCount} conceptos, {generatedImages.length} imágenes
-            {errorCount > 0 && `, ${errorCount} errores`}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {generatedImages.length > 0 && (
-        <div>
-          <h2 className="text-base font-semibold text-foreground mb-4">Imágenes generadas</h2>
-          <ImageGrid images={generatedImages} />
-        </div>
-      )}
     </div>
   );
 }
@@ -658,7 +697,17 @@ function detectAspectRatio(src: string): Promise<string> {
   });
 }
 
-function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null; onRefConsumed?: () => void }) {
+function RemixMode({
+  initialRef,
+  onRefConsumed,
+  jobCallbacks,
+}: {
+  initialRef?: RemixRef | null;
+  onRefConsumed?: () => void;
+  jobCallbacks: JobCallbacks;
+}) {
+  const { onJobStarted, onReset, generating } = jobCallbacks;
+
   const [_refFile, setRefFile] = useState<File | null>(null);
   const [refPath, setRefPath] = useState(initialRef?.path ?? '');
   const [refPreview, setRefPreview] = useState(initialRef?.src ?? '');
@@ -674,6 +723,7 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
   const [remixAvatars, setRemixAvatars] = useState<Avatar[]>([]);
   const [remixProducts, setRemixProducts] = useState<Product[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAvatars().then(setRemixAvatars).catch(console.error);
@@ -690,29 +740,7 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
       });
       onRefConsumed?.();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialRef]);
-
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [genError, setGenError] = useState<string | null>(null);
-  const [generatedImages, setGeneratedImages] = useState<{ src: string; label: string }[]>([]);
-
-  const { messages, status, reset } = useWebSocket(jobId, getConceptWsUrl);
-
-  useEffect(() => {
-    const last = messages[messages.length - 1];
-    if (!last) return;
-    if (last.type === 'concept_done') {
-      const folder = last.folder as string;
-      const imgs = last.images as string[];
-      setGeneratedImages((prev) => [
-        ...prev,
-        ...imgs.map((f) => ({ src: getConceptImageUrl(folder, f), label: f })),
-      ]);
-    }
-    if (last.type === 'status' && last.status === 'completed') setGenerating(false);
-  }, [messages]);
+  }, [initialRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -736,9 +764,7 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
   const handleGenerate = async () => {
     if (!refPath || !instructions.trim()) return;
     setGenError(null);
-    setGeneratedImages([]);
-    reset();
-    setGenerating(true);
+    onReset();
     try {
       const result = await startRemix({
         reference_path: refPath,
@@ -751,14 +777,11 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
         product_id: selectedProductId || undefined,
         avatar_id: selectedAvatarId || undefined,
       });
-      setJobId(result.job_id);
+      onJobStarted(result.job_id);
     } catch (e) {
       setGenError(String(e));
-      setGenerating(false);
     }
   };
-
-  const progressMsg = messages.find((m) => m.type === 'progress');
 
   return (
     <div className="max-w-2xl space-y-5">
@@ -787,7 +810,7 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Producto <span className="text-muted-foreground/60">(opcional)</span></Label>
-              <Select value={selectedProductId || '__none'} onValueChange={(v) => setSelectedProductId(v === '__none' ? '' : v)}>
+              <Select value={selectedProductId || '__none'} onValueChange={(v: string) => setSelectedProductId(v === '__none' ? '' : v)}>
                 <SelectTrigger><SelectValue placeholder="Sin producto" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none">Sin producto</SelectItem>
@@ -799,7 +822,7 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Avatar <span className="text-muted-foreground/60">(opcional)</span></Label>
-              <Select value={selectedAvatarId || '__none'} onValueChange={(v) => setSelectedAvatarId(v === '__none' ? '' : v)}>
+              <Select value={selectedAvatarId || '__none'} onValueChange={(v: string) => setSelectedAvatarId(v === '__none' ? '' : v)}>
                 <SelectTrigger><SelectValue placeholder="Sin avatar" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none">Sin avatar</SelectItem>
@@ -828,7 +851,7 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Variaciones</Label>
-              <Select value={String(count)} onValueChange={(v) => setCount(Number(v))}>
+              <Select value={String(count)} onValueChange={(v: string) => setCount(Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4].map((n) => (
@@ -844,7 +867,7 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
               </div>
               <Select
                 value={aspectRatio}
-                onValueChange={(v) => { setAspectRatio(v); setAspectRatioAuto(false); }}
+                onValueChange={(v: string) => { setAspectRatio(v); setAspectRatioAuto(false); }}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -869,11 +892,11 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
           </div>
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
-              <Checkbox checked={useBrandModifier} onCheckedChange={(c) => setUseBrandModifier(!!c)} />
+              <Checkbox checked={useBrandModifier} onCheckedChange={(c: boolean | 'indeterminate') => setUseBrandModifier(!!c)} />
               Aplicar brand modifier visual
             </label>
             <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
-              <Checkbox checked={useReferenceAds} onCheckedChange={(c) => setUseReferenceAds(!!c)} />
+              <Checkbox checked={useReferenceAds} onCheckedChange={(c: boolean | 'indeterminate') => setUseReferenceAds(!!c)} />
               Incluir reference ads como guía de estilo
             </label>
           </div>
@@ -890,27 +913,8 @@ function RemixMode({ initialRef, onRefConsumed }: { initialRef?: RemixRef | null
               <AlertDescription>{genError}</AlertDescription>
             </Alert>
           )}
-          {progressMsg && generating && (
-            <p className="text-xs text-primary">{progressMsg.message as string}</p>
-          )}
         </CardContent>
       </Card>
-
-      {status === 'completed' && (
-        <Alert className="border-accent/30 bg-accent/10 text-accent">
-          <CheckCircle />
-          <AlertDescription className="text-accent">
-            Remix completo — {generatedImages.length} variaciones generadas
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {generatedImages.length > 0 && (
-        <div>
-          <h2 className="text-base font-semibold text-foreground mb-4">Variaciones</h2>
-          <ImageGrid images={generatedImages} />
-        </div>
-      )}
     </div>
   );
 }
@@ -966,7 +970,7 @@ function AdDetailModal({
   };
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
+    <Dialog open onOpenChange={(o: boolean) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
         className="max-w-5xl! w-full p-0 overflow-hidden sm:rounded-2xl!"

@@ -6,7 +6,7 @@ Synchronous methods designed to be called via asyncio.to_thread().
 import json
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import fal_client
@@ -60,13 +60,6 @@ class StaticAdService:
 
         elapsed = time.time() - start
 
-        # Save prompt text
-        with open(template_dir / "prompt.txt", "w", encoding="utf-8") as f:
-            f.write(prompt_data["prompt"])
-            f.write(f"\n\n---\nModel: {TEXT_TO_IMAGE_MODEL}\n")
-            f.write(f"Aspect ratio: {prompt_data.get('aspect_ratio', 'auto')}\n")
-            f.write(f"Resolution: {resolution}\n")
-
         # Download images — continue numbering from existing files to avoid overwriting
         images = result.get("images", [])
         image_files = []
@@ -77,6 +70,24 @@ class StaticAdService:
             filepath = template_dir / filename
             self._download_image(img["url"], filepath)
             image_files.append(filename)
+
+        # Append to meta.json (preserves history across re-runs)
+        meta_path = template_dir / "meta.json"
+        meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {
+            "template_number": num,
+            "template_name": name,
+            "aspect_ratio": prompt_data.get("aspect_ratio", "auto"),
+            "generations": [],
+        }
+        meta["generations"].append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "resolution": resolution,
+            "prompt": prompt_data["prompt"],
+            "images": image_files,
+        })
+        meta.update({"resolution": resolution, "prompt": prompt_data["prompt"]})
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(meta, f, ensure_ascii=False, indent=2)
 
         return {
             "folder": folder_name,

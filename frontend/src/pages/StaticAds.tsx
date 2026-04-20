@@ -25,7 +25,7 @@ export default function StaticAds() {
   const [numImages, setNumImages] = useState(4);
   const [error, setError] = useState<string | null>(null);
 
-  const { jobId, messages, generating, generatedImages, setJobId, addMessage, addImages, setGenerating, reset } = useJob();
+  const { jobId, messages, generating, generatedImages, setJobId, addMessage, addImages, setGenerating, reset } = useJob('static_ads');
 
   const wsRef = useRef<WebSocket | null>(null);
 

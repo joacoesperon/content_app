@@ -63,3 +63,4 @@ class ConceptJobStatus(BaseModel):
     completed: int = 0
     errors: int = 0
     message: str = ""
+    messages: list[dict] = []  # full history for WS reconnection

@@ -5,6 +5,7 @@ Synchronous methods designed to be called via asyncio.to_thread().
 
 import json
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import fal_client
@@ -70,7 +71,8 @@ class ConceptAdService:
             f"ADDITIONAL: {prompt_additions}\n\n"
             f"IMPORTANT: If the concept includes a person, generate a completely original individual "
             f"who embodies the avatar archetype described above. Do not replicate any specific "
-            f"person's face, identity, or likeness."
+            f"person's face, identity, or likeness.\n\n"
+            f"CRITICAL: Any text, overlays, headlines, or copy visible inside the image MUST be in English."
         ).strip()
 
         start = time.time()
@@ -99,20 +101,28 @@ class ConceptAdService:
             self._download_image(img["url"], concept_dir / filename)
             image_files.append(filename)
 
-        # Save meta.json
-        meta = {
+        # Append to meta.json (preserves history across re-runs)
+        meta_path = concept_dir / "meta.json"
+        meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {
             "concept_index": idx,
             "avatar_id": avatar_id,
             "avatar_name": avatar_data.get("name", avatar_id),
             "format_id": format_id,
             "format_name": format_data.get("name", format_id),
+            "aspect_ratio": aspect_ratio,
+            "generations": [],
+        }
+        meta["generations"].append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "hook": hook,
             "angle": angle,
-            "aspect_ratio": aspect_ratio,
             "resolution": resolution,
             "prompt": full_prompt,
-        }
-        with open(concept_dir / "meta.json", "w", encoding="utf-8") as f:
+            "images": image_files,
+        })
+        # Keep top-level hook/angle/resolution pointing to the latest run for display
+        meta.update({"hook": hook, "angle": angle, "resolution": resolution, "prompt": full_prompt})
+        with open(meta_path, "w", encoding="utf-8") as f:
             json.dump(meta, f, ensure_ascii=False, indent=2)
 
         return {
@@ -224,19 +234,26 @@ class ConceptAdService:
             self._download_image(img["url"], remix_dir / filename)
             image_files.append(filename)
 
-        meta = {
+        meta_path = remix_dir / "meta.json"
+        meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {
             "type": "remix",
             "reference": ref_file.name,
+            "avatar_id": (avatar_data or {}).get("id", ""),
+            "avatar_name": (avatar_data or {}).get("name", ""),
+            "generations": [],
+        }
+        meta["generations"].append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "instructions": instructions,
             "aspect_ratio": aspect_ratio,
             "resolution": resolution,
             "prompt": full_prompt,
             "reference_ads_used": len(ref_ad_urls),
             "product_images_used": len(product_urls),
-            "avatar_id": (avatar_data or {}).get("id", ""),
-            "avatar_name": (avatar_data or {}).get("name", ""),
-        }
-        with open(remix_dir / "meta.json", "w", encoding="utf-8") as f:
+            "images": image_files,
+        })
+        meta.update({"instructions": instructions, "aspect_ratio": aspect_ratio, "resolution": resolution, "prompt": full_prompt})
+        with open(meta_path, "w", encoding="utf-8") as f:
             json.dump(meta, f, ensure_ascii=False, indent=2)
 
         return {

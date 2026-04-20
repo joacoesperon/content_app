@@ -367,3 +367,10 @@ Guía paso a paso adaptada del Prompt 18:
 10. `MetaAdsHistory.tsx`
 11. Wiring App.tsx + Sidebar.tsx
 12. `META-APP-SETUP.md`
+
+---
+
+## Preguntas / notas pendientes
+
+1. que es "Incluir reference ads como guía de estilo" en remix mode de concept ads?
+2. tengo un problema no tecnico sino mas subjetivo y es que siento que el copy de los ads y de todas las tools es siempre los mismos 5 argumentos, estos es normal, deberia ser asi? que crees que puede estar causando esto? siento que el brand-dna la pasarlo en todos lados influencia mucho en las IAs y hace que siempre tengan los mismo argumentos, como crees que lo podemos arreglar? porque brand-dna debe ser simplemente es estilo, la voz , la imagen que quiere la marca, pero no debe decir los argumentos, eso debe pensarlo la IA. o no? nose quiza me estoy equivocando, no quiero que me des la razon absolutamente ni que me digas que nada que ver, quiero que lo pienses a ver como lo podemos solucionar o que crees de esto.

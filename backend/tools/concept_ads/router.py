@@ -209,6 +209,7 @@ RULES:
 - Each concept must have a SPECIFIC hook — not generic, but something this exact avatar would stop scrolling for
 - The angle must be emotionally or logically distinct from the other concepts
 - prompt_additions must be a COMPLETE, STANDALONE image generation prompt (see instructions below)
+- CRITICAL: ALL visible text, overlays, headlines, subtitles, and copy shown inside the image MUST be written in English, regardless of the language used in hook, angle, or avatar descriptions
 
 PROMPT_ADDITIONS INSTRUCTIONS — this field is sent directly to an AI image model. It must be self-contained and rich enough to generate the image without any other context. Include ALL of the following:
 1. The visual scene: environment, setting, time of day, background
@@ -316,14 +317,19 @@ async def _run_concepts(
 ):
     job = jobs[job_id]
     job.status = "running"
-    await queue.put({"type": "status", "status": "running"})
+
+    async def emit(msg: dict):
+        job.messages.append(msg)
+        await queue.put(msg)
+
+    await emit({"type": "status", "status": "running"})
 
     for i, concept in enumerate(req.concepts):
         c = concept.model_dump()
         avatar = avatars_map.get(c["avatar_id"], {"id": c["avatar_id"], "name": c["avatar_id"], "description": "", "pain_points": [], "language_sample": ""})
         fmt = formats_map.get(c["format_id"], {"id": c["format_id"], "name": c["format_id"], "visual_rules": "", "copy_guidance": ""})
 
-        await queue.put({
+        await emit({
             "type": "progress",
             "concept_index": c["concept_index"],
             "avatar_id": c["avatar_id"],
@@ -346,7 +352,7 @@ async def _run_concepts(
             )
             job.completed += 1
 
-            await queue.put({
+            await emit({
                 "type": "concept_done",
                 "concept_index": c["concept_index"],
                 "avatar_id": c["avatar_id"],
@@ -358,14 +364,15 @@ async def _run_concepts(
 
         except Exception as e:
             job.errors += 1
-            await queue.put({
+            await emit({
                 "type": "concept_error",
                 "concept_index": c["concept_index"],
                 "error": str(e),
             })
 
     job.status = "completed"
-    await queue.put({"type": "status", "status": "completed"})
+    await emit({"type": "status", "status": "completed"})
+    job_queues.pop(job_id, None)
 
 
 @router.get("/jobs/{job_id}", response_model=ConceptJobStatus)
@@ -378,11 +385,27 @@ async def get_job(job_id: str):
 @router.websocket("/ws/{job_id}")
 async def websocket_progress(websocket: WebSocket, job_id: str):
     await websocket.accept()
-    queue = job_queues.get(job_id)
-    if not queue:
+
+    job = jobs.get(job_id)
+    if not job:
         await websocket.send_json({"type": "error", "message": "Job not found"})
         await websocket.close()
         return
+
+    # Replay history so reconnecting clients catch up
+    for msg in job.messages:
+        await websocket.send_json(msg)
+
+    # If already done, close immediately
+    if job.status in ("completed", "failed"):
+        await websocket.close()
+        return
+
+    queue = job_queues.get(job_id)
+    if not queue:
+        await websocket.close()
+        return
+
     try:
         while True:
             msg = await queue.get()
@@ -390,9 +413,7 @@ async def websocket_progress(websocket: WebSocket, job_id: str):
             if msg.get("type") == "status" and msg.get("status") in ("completed", "failed"):
                 break
     except WebSocketDisconnect:
-        pass
-    finally:
-        job_queues.pop(job_id, None)
+        pass  # job keeps running — queue cleaned up by _run_concepts when done
 
 
 # ─── Prepare existing output as remix reference ───────────────────────────────
@@ -476,8 +497,13 @@ async def _run_remix(
 ):
     job = jobs[job_id]
     job.status = "running"
-    await queue.put({"type": "status", "status": "running"})
-    await queue.put({"type": "progress", "message": "Uploading reference and generating remix...", "total": 1, "index": 1})
+
+    async def emit(msg: dict):
+        job.messages.append(msg)
+        await queue.put(msg)
+
+    await emit({"type": "status", "status": "running"})
+    await emit({"type": "progress", "message": "Uploading reference and generating remix...", "total": 1, "index": 1})
 
     try:
         result = await asyncio.to_thread(
@@ -494,7 +520,7 @@ async def _run_remix(
             avatar_data=avatar_data,
         )
         job.completed = 1
-        await queue.put({
+        await emit({
             "type": "concept_done",
             "concept_index": 0,
             "avatar_id": "remix",
@@ -505,10 +531,11 @@ async def _run_remix(
         })
     except Exception as e:
         job.errors = 1
-        await queue.put({"type": "concept_error", "concept_index": 0, "error": str(e)})
+        await emit({"type": "concept_error", "concept_index": 0, "error": str(e)})
 
     job.status = "completed"
-    await queue.put({"type": "status", "status": "completed"})
+    await emit({"type": "status", "status": "completed"})
+    job_queues.pop(job_id, None)
 
 
 # ─── Outputs History ──────────────────────────────────────────────────────────
