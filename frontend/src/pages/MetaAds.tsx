@@ -388,17 +388,24 @@ export default function MetaAds() {
           { n: 3, label: 'Launch' },
         ].map((s, i) => {
           const current = step === 'done' ? 4 : step;
-          const active = current >= s.n;
+          const completed = current > s.n;
+          const active = current === s.n;
           return (
             <div key={s.n} className="flex items-center gap-2">
               <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  active ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
+                  completed
+                    ? 'bg-green-500 text-white'
+                    : active
+                    ? 'bg-accent text-accent-foreground'
+                    : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {s.n}
+                {completed ? <CheckCircle2 size={14} /> : s.n}
               </div>
-              <span className={active ? 'text-foreground' : 'text-muted-foreground'}>{s.label}</span>
+              <span className={completed || active ? 'text-foreground' : 'text-muted-foreground'}>
+                {s.label}
+              </span>
               {i < 2 && <div className="w-8 h-px bg-border" />}
             </div>
           );

@@ -201,199 +201,39 @@ Upload ads — Drag, drop, configure, launch
 
 ---
 
-# Plan de implementación — Meta Ads Bulk Uploader
+# Estado de implementación — Meta Ads Bulk Uploader
 
 Adaptación del guide de 20 prompts a nuestro stack: FastAPI + Python + JSON storage + React/Vite/shadcn/ui.
-Sin Next.js, sin PostgreSQL, sin Drizzle. Mismo comportamiento, distinto stack.
 
 ---
 
-## Fase 3 — Backend (`backend/tools/meta_ads/`)
+## ✅ Fase 3 — Backend (COMPLETO)
 
-### 3.1 — Estructura de archivos y registro
-- Crear `backend/tools/meta_ads/__init__.py` y `tool.py` (MetaAdsTool con id="meta_ads")
-- Registrar en el sistema existente de tools (auto-discovery ya funciona)
+- `backend/tools/meta_ads/__init__.py` + `tool.py` — registro automático, icono "megaphone"
+- `schemas.py` — MetaSettings, UploadBatch, Creative (Pydantic)
+- `storage.py` — JSON storage en `brand/meta-ads/`, CRUD completo de batches y creatives
+- `meta_client.py` — cliente Meta API v22.0: accounts, pages, campaigns, ad sets, upload imagen/video, create creative (asset_feed_spec + object_story_spec), create ad, manejo de errores Meta, conversión WebP→JPEG con Pillow
+- `router.py` — 13 endpoints: settings, accounts, pages, campaigns, adsets, batches CRUD, upload, creatives, launch
 
-### 3.2 — Schemas Pydantic (`schemas.py`)
-- `MetaSettings`: access_token, ad_account_id, ad_account_name, page_id, page_name
-- `UploadBatch`: id, name, campaign_id/name, ad_set_id/name, primary_texts[], headlines[], descriptions[], cta_type, url, display_link, launch_as_paused, enhancements_enabled, status, ads_created, ads_errored, error_log[]
-- `Creative`: id, batch_id, filename, ad_name, file_type (image/video), mime_type, file_path, thumbnail_path, meta_ad_id, meta_creative_id, status, error_message
+## ✅ Fase 4 — Frontend (COMPLETO)
 
-### 3.3 — Storage JSON (`storage.py`)
-- `brand/meta-ads/settings.json` — token + cuenta seleccionada
-- `brand/meta-ads/batches/{id}/batch.json` — metadata del batch
-- `brand/meta-ads/batches/{id}/creatives.json` — lista de creativos
-- `brand/meta-ads/uploads/{batch_id}/` — archivos subidos
-- CRUD helpers: load_settings/save_settings, create_batch, update_batch, list_batches, get_batch, create_creative, update_creative, list_creatives
+- `api.ts` — todas las funciones Meta: fetchMetaSettings, saveMetaSettings, fetchMetaAccounts, fetchMetaPages, fetchMetaCampaigns, fetchMetaAdSets, createMetaAdSet, createMetaBatch, updateMetaBatch, fetchMetaBatches, fetchMetaBatch, uploadMetaCreatives, renameMetaCreative, uploadMetaCreativeThumbnail, launchMetaBatch
+- `MetaAdsSettings.tsx` — token con máscara, fetch automático de accounts/pages al guardar, selects de ad account y page
+- `MetaAds.tsx` — wizard 3 pasos: dropzone upload → ad copy con variaciones (hasta 5 por campo) → campaign/adset/launch. Guard de configuración. Modal para clonar ad set. Pantalla de resultado.
+- `MetaAdsHistory.tsx` — lista de batches con status badge, ads creados/errores, timestamps, empty state
+- `App.tsx` — rutas `/tools/meta_ads`, `/tools/meta_ads/settings`, `/tools/meta_ads/history`
+- Sidebar — automático vía useTools() + icono megaphone ya registrado
 
-### 3.4 — Meta API client (`meta_client.py`)
-Equivalente a `meta-api.ts` del guide (Prompts 5, 6, 15, 16):
-- `meta_get(endpoint, token, params)` / `meta_post(endpoint, token, body)`
-- `get_ad_accounts(token)` → `/me/adaccounts`
-- `get_pages(token)` → `/me/accounts`
-- `get_campaigns(ad_account_id, token)` → con id, name, status
-- `get_ad_sets(campaign_id, token)`
-- `get_ad_set_details(ad_set_id, token)` — para clonar settings
-- `create_ad_set(...)` — copia settings de un ad set existente
-- `upload_image(ad_account_id, token, file_bytes, filename)` → retorna image_hash (auto-convierte WebP→JPEG con Pillow)
-- `upload_video(ad_account_id, token, file_bytes, filename)` → retorna video_id
-- `create_ad_creative(...)` — soporta asset_feed_spec (múltiples variaciones) y object_story_spec (variación única), imagen y video
-- `create_ad(ad_account_id, token, name, ad_set_id, creative_id, status)`
-- Manejo de errores: extraer `error_user_msg` > `message` de respuestas Meta
+## ✅ Fase 5 — META-APP-SETUP.md (COMPLETO)
 
-### 3.5 — Router (`router.py`)
-Endpoints REST equivalentes a los de Next.js:
-
-```
-# Settings
-GET    /api/tools/meta_ads/settings
-POST   /api/tools/meta_ads/settings
-GET    /api/tools/meta_ads/accounts          # llama Meta API
-GET    /api/tools/meta_ads/pages             # llama Meta API
-
-# Meta API proxies
-GET    /api/tools/meta_ads/campaigns
-GET    /api/tools/meta_ads/adsets?campaign_id=X
-POST   /api/tools/meta_ads/adsets            # crear/clonar ad set
-
-# Batches
-POST   /api/tools/meta_ads/batches           # crear batch
-GET    /api/tools/meta_ads/batches           # listar todos (para History)
-GET    /api/tools/meta_ads/batches/{id}
-PUT    /api/tools/meta_ads/batches/{id}      # guardar copy, campaign, adset, opciones
-
-# File upload
-POST   /api/tools/meta_ads/upload            # multipart: batch_id + files → guarda a disco + crea creatives
-PUT    /api/tools/meta_ads/creatives/{id}    # renombrar ad_name
-POST   /api/tools/meta_ads/creatives/{id}/thumbnail  # subir thumbnail para video
-
-# Launch
-POST   /api/tools/meta_ads/launch/{batch_id} # sube a Meta y crea ads
-```
-
-### 3.6 — Dependencias Python
-- `Pillow` para conversión WebP→JPEG (probablemente ya instalado; verificar requirements.txt)
-- `python-multipart` ya está instalado (para file uploads)
+- Guía en `META-APP-SETUP.md`: 7 pasos desde crear la app hasta pegar el token
+- Tabla de troubleshooting con errores comunes
+- Advertencia sobre Live mode (el error #1)
 
 ---
 
-## Fase 4 — Frontend (`frontend/src/pages/MetaAds.tsx`)
+## Notas / pendientes futuros
 
-Wizard de 3 pasos + página Settings + página History. Todo con shadcn/ui.
-
-### 4.1 — Funciones API (`api.ts`)
-Agregar:
-- `fetchMetaSettings` / `saveMetaSettings`
-- `fetchMetaAccounts` / `fetchMetaPages`
-- `fetchMetaCampaigns` / `fetchMetaAdSets` / `createMetaAdSet`
-- `createBatch` / `updateBatch` / `fetchBatches` / `fetchBatch`
-- `uploadCreatives(batchId, files[])` — multipart
-- `updateCreativeName` / `uploadCreativeThumbnail`
-- `launchBatch(batchId)`
-
-### 4.2 — Página Settings (`MetaAdsSettings.tsx`)
-- Input password para access token (muestra últimos 8 chars si ya hay token)
-- Al guardar token → fetch accounts + pages automáticamente
-- Select de ad account (nombre + ID + currency)
-- Select de Facebook page
-- Botón "Guardar"
-- Equivalente al Prompt 4 del guide
-
-### 4.3 — Wizard de upload (`MetaAds.tsx`) — 3 pasos
-
-**Step 1 — Upload Creatives** (Prompt 8)
-- Input "Batch Name" (default: "Batch {fecha}")
-- Dropzone drag & drop para imágenes y videos
-- Lista de archivos seleccionados con icono, nombre, tamaño, botón eliminar
-- Botón "Subir" → crea batch + sube archivos → avanza al paso 2
-
-**Step 2 — Ad Copy & URL** (Prompt 9)
-- Lista de creativos subidos con ad_name editable, botón "+ Thumb" para videos
-- Sección Primary Text (hasta 5 variaciones con textarea)
-- Sección Headlines (hasta 5 variaciones)
-- Sección Descriptions (hasta 5 variaciones)
-- URL, Display link, CTA dropdown (los 16 tipos del guide)
-- Validación antes de avanzar
-
-**Step 3 — Campaign & Launch** (Prompt 10 + 11)
-- Dropdown Campaign → fetch al entrar al paso
-- Dropdown Ad Set + opción "Crear nuevo ad set" (clonar settings de uno existente)
-- Checkbox "Launch as paused" (default ON)
-- Checkbox "Enable creative enhancements" (default OFF)
-- Summary card con resumen del batch
-- Botón "Lanzar" → POST /launch → progress → resultado (verde/amarillo/rojo)
-- Botón "Upload Another Batch" al terminar
-
-### 4.4 — Página History (`MetaAdsHistory.tsx`) (Prompt 12)
-- Lista de batches ordenados por fecha descendente
-- Card por batch: nombre, campaign → ad set, timestamp, ads creados (verde), errores (rojo), badge de status
-- Empty state con link al wizard
-
-### 4.5 — Guard de configuración (Prompt 14)
-- Verificar settings al cargar el wizard
-- Si no hay token/ad account configurado → mostrar "Setup Required" con link a Settings
-
-### 4.6 — Wiring en App.tsx y Sidebar.tsx
-- Agregar rutas `/tools/meta_ads`, `/tools/meta_ads/settings`, `/tools/meta_ads/history`
-- Megaphone icon ya está en Sidebar
-- Agregar sub-navegación dentro de la page (o tabs Upload / History / Settings)
+- El copy de los ads tiende a repetir siempre los mismos 5 argumentos. Posible causa: brand-dna.md está mezclando estilo visual con argumentos de venta. Separar "voz/estilo" de "claim/argumento" en brand-dna podría darle más libertad a la IA para generar ángulos distintos.
 
 ---
-
-## Fase 5 — META-APP-SETUP.md
-
-Guía paso a paso adaptada del Prompt 18:
-1. Crear app en developers.facebook.com (tipo Business)
-2. Conectar a Business Manager
-3. Agregar use case "Create & manage ads"
-4. Crear System User token con permisos necesarios
-5. Agregar Privacy Policy URL
-6. **Publicar la app** (Live mode — sin esto no crea ads)
-7. Dónde pegar el token en nuestra app
-
----
-
-## Orden de ejecución sugerido
-
-1. `storage.py` + `schemas.py` (base de datos JSON)
-2. `meta_client.py` (cliente Meta API — independiente)
-3. `router.py` (endpoints)
-4. `tool.py` + `__init__.py` (registro)
-5. `api.ts` (funciones frontend)
-6. `MetaAdsSettings.tsx` (Settings — más simple, buen warmup)
-7. `MetaAds.tsx` Step 1 (file upload)
-8. `MetaAds.tsx` Step 2 (ad copy)
-9. `MetaAds.tsx` Step 3 (campaign + launch)
-10. `MetaAdsHistory.tsx`
-11. Wiring App.tsx + Sidebar.tsx
-12. `META-APP-SETUP.md`
-
----
-
-## Preguntas / notas pendientes
-
-1. que es "Incluir reference ads como guía de estilo" en remix mode de concept ads?
-2. tengo un problema no tecnico sino mas subjetivo y es que siento que el copy de los ads y de todas las tools es siempre los mismos 5 argumentos, estos es normal, deberia ser asi? que crees que puede estar causando esto? siento que el brand-dna la pasarlo en todos lados influencia mucho en las IAs y hace que siempre tengan los mismo argumentos, como crees que lo podemos arreglar? porque brand-dna debe ser simplemente es estilo, la voz , la imagen que quiere la marca, pero no debe decir los argumentos, eso debe pensarlo la IA. o no? nose quiza me estoy equivocando, no quiero que me des la razon absolutamente ni que me digas que nada que ver, quiero que lo pienses a ver como lo podemos solucionar o que crees de esto.
-
----
-
-
-Explore existing tool conventions (concept_ads, static_ads, main.py)
-
-Create backend/tools/meta_ads/schemas.py + storage.py
-
-Create backend/tools/meta_ads/meta_client.py
-
-Create backend/tools/meta_ads/router.py
-
-Create backend/tools/meta_ads/tool.py + __init__.py
-
-Add Meta Ads API functions to frontend api.ts
-
-Create MetaAdsSettings.tsx
-
-Create MetaAds.tsx wizard with 3 steps
-
-Create MetaAdsHistory.tsx
-
-Wire routes in App.tsx and Sidebar.tsx
