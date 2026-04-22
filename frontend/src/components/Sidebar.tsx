@@ -8,6 +8,7 @@ import {
   Palette,
   Users,
   Megaphone,
+  Bot,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,7 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
   palette: <Palette size={18} />,
   users: <Users size={18} />,
   megaphone: <Megaphone size={18} />,
+  bot: <Bot size={18} />,
 };
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>

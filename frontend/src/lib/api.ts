@@ -413,6 +413,52 @@ export async function deleteConceptOutput(folder: string) {
   return res.json();
 }
 
+// ─── Scout ────────────────────────────────────────────────────────────────────
+
+export async function runScout(
+  prompt: string,
+  onEvent: (event: Record<string, unknown>) => void,
+): Promise<void> {
+  const response = await fetch(`${BASE}/api/tools/scout/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Error ejecutando Scout');
+  }
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const data = JSON.parse(line.slice(6));
+          onEvent(data);
+        } catch {
+          // skip malformed lines
+        }
+      }
+    }
+  }
+}
+
+export async function fetchScoutHistory(): Promise<{ filename: string; content: string }[]> {
+  const res = await fetch(`${BASE}/api/tools/scout/history`);
+  return res.json();
+}
+
+
 // ─── Meta Ads ─────────────────────────────────────────────────────────────────
 
 const META = `${BASE}/api/tools/meta_ads`;

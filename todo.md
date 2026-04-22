@@ -1,3 +1,43 @@
+# Plan — Sistema de Generación de Contenido Orgánico
+
+## Arquitectura
+Scout es el único agente. Hace research + genera los briefs (captions + visual prompts).
+Los carruseles y reels son TOOLS con revisión humana, no agentes autónomos.
+La publicación en Instagram es siempre aprobada manualmente hasta que el sistema esté validado.
+
+## Estado actual
+- [x] Scout (agente) — investiga ángulos trending, elige avatar de la semana, genera 7 briefs (caption + brief visual + hashtags). Output: brand/scout-output/YYYY-MM-DD.md
+
+## Fase 1 — Carousels Tool [ ]
+Tool nueva en content_app (junto a static_ads, concept_ads, scout).
+Flujo:
+  1. Lista los archivos de Scout (brand/scout-output/) — el usuario elige cuáles briefs materializar
+  2. Para cada brief seleccionado: genera slides de carrusel via FAL (imagen por slide: hook + contenido + CTA)
+  3. Preview de las imágenes generadas para revisión
+  4. Botón "Publicar en Instagram" que sube el carrusel vía Instagram Graph API
+  5. Guarda cada carrusel publicado en brand/carousel-output/YYYY-MM-DD/
+
+Stack: backend/tools/carousels/ (FastAPI + FAL + Instagram API), frontend/src/pages/Carousels.tsx
+
+Nota sobre Scout: si al construir la carousel tool el output de Scout no se adapta bien al formato multi-slide, recién ahí separamos el research del content creation en dos pasos. No antes.
+
+## Fase 2 — Scout scheduling [ ]
+Cron que ejecuta Scout automáticamente cada lunes a las 6am.
+Solo implementar después de validar que la calidad del output de Scout es consistente.
+
+## Fase 3 — Reels Tool [ ]
+Mismo patrón que Carousels Tool pero para video.
+Depende de que exista una video-generation tool (actualmente no existe).
+Implementar después de que Fase 1 esté validada en producción.
+
+## Lo que NO hay en el plan (decisión consciente)
+- No hay "carousel agent" separado de Scout — Scout hace el research Y los briefs en una pasada
+- No hay "reels agent" — es una tool con humano en el loop
+- No hay publicación autónoma programada — todo pasa por aprobación manual hasta Fase 2+
+- No hay multi-agente hasta que Scout falle en algo concreto y medible
+
+---
+
 # TODO — Content App
 
 Meta Ads Bulk Uploader — Claude Code Prompts
@@ -198,37 +238,6 @@ PUBLISH THE APP — This is the #1 mistake. Development mode cannot create ads.
 Deploy — Import the GitHub repo into Replit or run locally with PostgreSQL
 Settings page — Paste your token, select your ad account and page
 Upload ads — Drag, drop, configure, launch
-
----
-
-# Estado de implementación — Meta Ads Bulk Uploader
-
-Adaptación del guide de 20 prompts a nuestro stack: FastAPI + Python + JSON storage + React/Vite/shadcn/ui.
-
----
-
-## ✅ Fase 3 — Backend (COMPLETO)
-
-- `backend/tools/meta_ads/__init__.py` + `tool.py` — registro automático, icono "megaphone"
-- `schemas.py` — MetaSettings, UploadBatch, Creative (Pydantic)
-- `storage.py` — JSON storage en `brand/meta-ads/`, CRUD completo de batches y creatives
-- `meta_client.py` — cliente Meta API v22.0: accounts, pages, campaigns, ad sets, upload imagen/video, create creative (asset_feed_spec + object_story_spec), create ad, manejo de errores Meta, conversión WebP→JPEG con Pillow
-- `router.py` — 13 endpoints: settings, accounts, pages, campaigns, adsets, batches CRUD, upload, creatives, launch
-
-## ✅ Fase 4 — Frontend (COMPLETO)
-
-- `api.ts` — todas las funciones Meta: fetchMetaSettings, saveMetaSettings, fetchMetaAccounts, fetchMetaPages, fetchMetaCampaigns, fetchMetaAdSets, createMetaAdSet, createMetaBatch, updateMetaBatch, fetchMetaBatches, fetchMetaBatch, uploadMetaCreatives, renameMetaCreative, uploadMetaCreativeThumbnail, launchMetaBatch
-- `MetaAdsSettings.tsx` — token con máscara, fetch automático de accounts/pages al guardar, selects de ad account y page
-- `MetaAds.tsx` — wizard 3 pasos: dropzone upload → ad copy con variaciones (hasta 5 por campo) → campaign/adset/launch. Guard de configuración. Modal para clonar ad set. Pantalla de resultado.
-- `MetaAdsHistory.tsx` — lista de batches con status badge, ads creados/errores, timestamps, empty state
-- `App.tsx` — rutas `/tools/meta_ads`, `/tools/meta_ads/settings`, `/tools/meta_ads/history`
-- Sidebar — automático vía useTools() + icono megaphone ya registrado
-
-## ✅ Fase 5 — META-APP-SETUP.md (COMPLETO)
-
-- Guía en `META-APP-SETUP.md`: 7 pasos desde crear la app hasta pegar el token
-- Tabla de troubleshooting con errores comunes
-- Advertencia sobre Live mode (el error #1)
 
 ---
 

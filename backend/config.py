@@ -13,8 +13,11 @@ SKILLS_DIR = PROJECT_ROOT / "skills"
 TEMPLATES_FILE = SKILLS_DIR / "references" / "template-prompts.md"
 
 FAL_KEY = os.environ.get("FAL_KEY", "")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 # Ensure brand directories exist
 BRAND_DIR.mkdir(exist_ok=True)
 (BRAND_DIR / "product-images").mkdir(exist_ok=True)
 (BRAND_DIR / "outputs").mkdir(exist_ok=True)
+(BRAND_DIR / "scout-output").mkdir(exist_ok=True)
+
