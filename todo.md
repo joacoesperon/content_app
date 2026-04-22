@@ -330,5 +330,5 @@ Upload ads — Drag, drop, configure, launch
 ## Notas / pendientes futuros
 
 - El copy de los ads tiende a repetir siempre los mismos 5 argumentos. Posible causa: brand-dna.md está mezclando estilo visual con argumentos de venta. Separar "voz/estilo" de "claim/argumento" en brand-dna podría darle más libertad a la IA para generar ángulos distintos.
-
+- revisar settings de meta app, el token esta a la vista, es seguro eso? porque no se hace con .env?
 ---
