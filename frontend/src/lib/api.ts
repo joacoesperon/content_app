@@ -181,6 +181,24 @@ export async function updateBrandDnaRaw(jsonStr: string) {
   return res.json();
 }
 
+export async function fetchContentMix() {
+  const res = await fetch(`${BASE}/api/tools/brand/content-mix`);
+  return res.json() as Promise<{ content: string }>;
+}
+
+export async function updateContentMix(content: string) {
+  const res = await fetch(`${BASE}/api/tools/brand/content-mix`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail ?? 'Save error');
+  }
+  return res.json();
+}
+
 // ─── Brand Products ───────────────────────────────────────────────────────────
 
 export async function fetchBrandProducts() {

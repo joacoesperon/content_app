@@ -28,6 +28,8 @@ import {
   uploadReferenceAd,
   updateReferenceAdLabel,
   deleteReferenceAd,
+  fetchContentMix,
+  updateContentMix,
 } from '../lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -618,6 +620,63 @@ function PlainTextEditor({ onSwitchToStructured: _onSwitchToStructured }: { onSw
   );
 }
 
+function ContentMixSection() {
+  const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    fetchContentMix().then((r) => setContent(r.content ?? ''));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateContentMix(content);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="overflow-hidden py-0">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/40 transition-colors"
+      >
+        <div>
+          <span className="font-semibold text-foreground">Content Mix</span>
+          <span className="ml-2 text-xs text-muted-foreground">Weekly post distribution plan for Scout</span>
+        </div>
+        {open ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+      </button>
+      {open && (
+        <>
+          <Separator />
+          <CardContent className="space-y-3 pt-4 pb-5">
+            <p className="text-xs text-muted-foreground">
+              Scout reads this file to decide the category and tone of each of the 7 weekly posts.
+              Edit to adjust the mix (e.g. more educational, fewer product posts).
+            </p>
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={20}
+              className="font-mono text-xs"
+            />
+            <div className="flex justify-end">
+              <Button onClick={handleSave} disabled={saving}>
+                <Save size={14} />
+                {saving ? 'Saving…' : 'Save changes'}
+              </Button>
+            </div>
+          </CardContent>
+        </>
+      )}
+    </Card>
+  );
+}
+
 export default function Brand() {
   const [dna, setDna] = useState<Record<string, unknown> | null>(null);
   const [saving, setSaving] = useState<Section | null>(null);
@@ -752,6 +811,8 @@ export default function Brand() {
               className="font-mono text-sm"
             />
           </SectionCard>
+
+          <ContentMixSection />
 
           <div>
             <h3 className="text-base font-semibold text-foreground mb-3">Reference Images</h3>

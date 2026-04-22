@@ -11,6 +11,10 @@ def _md_path(brand_dir: Path) -> Path:
     return brand_dir / "brand-dna.md"
 
 
+def _style_md_path(brand_dir: Path) -> Path:
+    return brand_dir / "brand-style.md"
+
+
 def load_dna(brand_dir: Path) -> dict:
     path = _dna_path(brand_dir)
     if not path.exists():
@@ -110,6 +114,57 @@ IMAGE GENERATION PROMPT MODIFIER
 {modifier}
 """
     _md_path(brand_dir).write_text(md, encoding="utf-8")
+    _regenerate_style_md(brand_dir, data)
+
+
+def _regenerate_style_md(brand_dir: Path, data: dict) -> None:
+    """Generate brand-style.md — voice/visual/photography only, no sales arguments.
+    Used by Scout so it has brand aesthetic context without product positioning bias."""
+    ov = data.get("overview", {})
+    vs = data.get("visual_system", {})
+    ph = data.get("photography_direction", {})
+    modifier = data.get("image_prompt_modifier", "")
+
+    voice = ", ".join(ov.get("voice_adjectives", []))
+
+    md = f"""BRAND STYLE GUIDE
+=================
+(Voice, visual identity, and image generation context only.
+Does NOT include product details, pricing, or sales arguments.)
+
+BRAND VOICE
+Name: {ov.get('name', '')}
+Voice Adjectives: {voice}
+
+VISUAL SYSTEM
+Primary Font: {vs.get('primary_font', '')}
+Primary Color: {vs.get('primary_color', '')}
+Secondary Color: {vs.get('secondary_color', '')}
+Accent Color: {vs.get('accent_color', '')}
+Background Colors: {vs.get('background_colors', '')}
+Text Colors: {vs.get('text_colors', '')}
+CTA Color and Style: {vs.get('cta_style', '')}
+
+PHOTOGRAPHY DIRECTION
+Lighting: {ph.get('lighting', '')}
+Color Grading: {ph.get('color_grading', '')}
+Composition: {ph.get('composition', '')}
+Subject Matter: {ph.get('subject_matter', '')}
+Mood: {ph.get('mood', '')}
+"""
+    _style_md_path(brand_dir).write_text(md, encoding="utf-8")
+
+
+def load_content_mix(brand_dir: Path) -> str:
+    path = brand_dir / "content-mix.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def save_content_mix(brand_dir: Path, content: str) -> None:
+    path = brand_dir / "content-mix.md"
+    path.write_text(content, encoding="utf-8")
 
 
 def list_media(brand_dir: Path, media_type: str, product_id: str = "") -> list[dict]:

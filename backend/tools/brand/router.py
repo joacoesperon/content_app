@@ -191,6 +191,20 @@ async def delete_media(media_type: str, filename: str, product_id: str = ""):
     return {"deleted": filename}
 
 
+# ─── Content Mix ─────────────────────────────────────────────────────────────
+
+@router.get("/content-mix")
+async def get_content_mix():
+    return {"content": service.load_content_mix(BRAND_DIR)}
+
+
+@router.put("/content-mix")
+async def update_content_mix(body: dict):
+    content = body.get("content", "")
+    service.save_content_mix(BRAND_DIR, content)
+    return {"ok": True}
+
+
 # ─── Reference Ads Library ────────────────────────────────────────────────────
 
 REF_ADS_DIR = BRAND_DIR / "reference-ads"

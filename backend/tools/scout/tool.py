@@ -32,9 +32,12 @@ class ScoutTool(BaseTool):
         avatars_file = BRAND_DIR / "data" / "avatars.json"
         if not avatars_file.exists():
             return {"ready": False, "reason": "avatars.json no encontrado"}
-        brand_dna = BRAND_DIR / "brand-dna.md"
-        if not brand_dna.exists():
-            return {"ready": False, "reason": "brand-dna.md no encontrado"}
+        brand_style = BRAND_DIR / "brand-style.md"
+        if not brand_style.exists():
+            return {"ready": False, "reason": "brand-style.md not found — save Brand DNA once to generate it"}
+        content_mix = BRAND_DIR / "content-mix.md"
+        if not content_mix.exists():
+            return {"ready": False, "reason": "content-mix.md not found — create it in the Brand tool"}
         return {"ready": True}
 
 
