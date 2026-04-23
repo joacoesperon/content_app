@@ -8,6 +8,7 @@ import Brand from './pages/Brand';
 import Avatars from './pages/Avatars';
 import Scout from './pages/Scout';
 import MetaAds from './pages/MetaAds';
+import MetaAdsLayout from './pages/MetaAdsLayout';
 import MetaAdsSettings from './pages/MetaAdsSettings';
 import MetaAdsHistory from './pages/MetaAdsHistory';
 import { JobProvider } from './context/JobContext';
@@ -24,9 +25,11 @@ export default function App() {
             <Route path="/tools/brand" element={<Brand />} />
             <Route path="/tools/avatars" element={<Avatars />} />
             <Route path="/tools/scout" element={<Scout />} />
-            <Route path="/tools/meta_ads" element={<MetaAds />} />
-            <Route path="/tools/meta_ads/settings" element={<MetaAdsSettings />} />
-            <Route path="/tools/meta_ads/history" element={<MetaAdsHistory />} />
+            <Route path="/tools/meta_ads" element={<MetaAdsLayout />}>
+              <Route index element={<MetaAds />} />
+              <Route path="settings" element={<MetaAdsSettings />} />
+              <Route path="history" element={<MetaAdsHistory />} />
+            </Route>
             <Route path="/gallery" element={<Gallery />} />
           </Route>
         </Routes>

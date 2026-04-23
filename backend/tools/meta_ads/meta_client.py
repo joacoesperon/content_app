@@ -23,14 +23,38 @@ class MetaAPIError(Exception):
     pass
 
 
+CONVERTIBLE_IMAGE_EXTS = {".webp", ".bmp", ".tif", ".tiff"}
+CONVERTIBLE_IMAGE_MIME_TYPES = {
+    "image/webp",
+    "image/bmp",
+    "image/x-ms-bmp",
+    "image/tiff",
+}
+
+
+def _stringify_error_data(error_data: Any) -> str:
+    if error_data in (None, "", {}, []):
+        return ""
+    if isinstance(error_data, str):
+        return error_data
+    try:
+        return json.dumps(error_data, ensure_ascii=False)
+    except TypeError:
+        return str(error_data)
+
+
 def _extract_error(data: dict) -> str:
     err = data.get("error") or {}
-    return (
+    message = (
         err.get("error_user_msg")
         or err.get("message")
         or json.dumps(err)
         or "Unknown Meta API error"
     )
+    details = _stringify_error_data(err.get("error_data"))
+    if details and details not in message:
+        return f"{message} ({details})"
+    return message
 
 
 def _handle(resp: requests.Response) -> dict:
@@ -93,7 +117,11 @@ def get_campaigns(ad_account_id: str, token: str) -> list[dict]:
     data = meta_get(
         f"/{ad_account_id}/campaigns",
         token,
-        {"fields": "id,name,status,objective", "limit": 500},
+        {
+            "fields": "id,name,status,objective",
+            "effective_status": '["ACTIVE","PAUSED","ARCHIVED","IN_PROCESS","WITH_ISSUES","IN_DRAFT"]',
+            "limit": 500,
+        },
     )
     return data.get("data", [])
 
@@ -156,18 +184,22 @@ def create_ad_set(
 
 # ─── Uploads ─────────────────────────────────────────────────────────────────
 
-def _webp_to_jpeg(file_bytes: bytes) -> tuple[bytes, str]:
-    """Convert WebP bytes to JPEG; pass-through for other formats."""
+def _convert_to_jpeg(file_bytes: bytes) -> tuple[bytes, str]:
+    """Convert an image buffer to JPEG bytes for Meta-compatible upload."""
     try:
         from PIL import Image
-    except ImportError:
-        return file_bytes, "image/webp"
-    img = Image.open(io.BytesIO(file_bytes))
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
-    out = io.BytesIO()
-    img.save(out, format="JPEG", quality=92)
-    return out.getvalue(), "image/jpeg"
+    except ImportError as exc:
+        raise MetaAPIError("Pillow is required to convert this image to JPEG") from exc
+
+    try:
+        img = Image.open(io.BytesIO(file_bytes))
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        out = io.BytesIO()
+        img.save(out, format="JPEG", quality=92)
+        return out.getvalue(), "image/jpeg"
+    except Exception as exc:
+        raise MetaAPIError("Could not convert image to JPEG before Meta upload") from exc
 
 
 def upload_image(
@@ -177,12 +209,16 @@ def upload_image(
     filename: str,
     mime_type: str,
 ) -> str:
-    """Upload image, return image_hash. Converts WebP→JPEG automatically."""
+    """Upload image, return image_hash. Converts WebP/BMP/TIFF to JPEG automatically."""
     send_bytes = file_bytes
     send_mime = mime_type
     send_name = filename
-    if mime_type == "image/webp" or filename.lower().endswith(".webp"):
-        send_bytes, send_mime = _webp_to_jpeg(file_bytes)
+    lower_name = filename.lower()
+    should_convert = mime_type in CONVERTIBLE_IMAGE_MIME_TYPES or any(
+        lower_name.endswith(ext) for ext in CONVERTIBLE_IMAGE_EXTS
+    )
+    if should_convert:
+        send_bytes, send_mime = _convert_to_jpeg(file_bytes)
         send_name = filename.rsplit(".", 1)[0] + ".jpg"
 
     files = {"filename": (send_name, send_bytes, send_mime)}

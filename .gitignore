@@ -4,6 +4,5 @@ __pycache__/
 *.pyc
 node_modules/
 frontend/dist/
-brand/outputs/
-brand/concept-outputs/
-brand/reference-images/
+outputs/
+brand/meta-ads/settings.json

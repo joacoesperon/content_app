@@ -4,12 +4,15 @@ Synchronous methods designed to be called via asyncio.to_thread().
 """
 
 import json
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 import fal_client
 import requests
+
+from backend.config import OUTPUTS_DIR
 
 TEXT_TO_IMAGE_MODEL = "fal-ai/nano-banana-2"
 IMAGE_EDIT_MODEL = "fal-ai/nano-banana-2/edit"
@@ -25,7 +28,7 @@ COST_PER_IMAGE = {
 class ConceptAdService:
     def __init__(self, brand_dir: Path):
         self.brand_dir = brand_dir
-        self.outputs_dir = brand_dir / "concept-outputs"
+        self.outputs_dir = OUTPUTS_DIR / "concept_ads"
         self.outputs_dir.mkdir(exist_ok=True)
 
     def generate_concept(
@@ -92,9 +95,10 @@ class ConceptAdService:
         elapsed = time.time() - start
         images = result.get("images", [])
 
-        # Number from existing files to avoid overwriting
+        # Use max existing version to avoid overwriting even if files were deleted
         existing = list(concept_dir.glob(f"image_v*.{output_format}"))
-        next_v = len(existing) + 1
+        versions = [int(m.group(1)) for f in existing if (m := re.search(r'v(\d+)', f.stem))]
+        next_v = max(versions, default=0) + 1
         image_files = []
         for j, img in enumerate(images):
             filename = f"image_v{next_v + j}.{output_format}"
@@ -227,7 +231,8 @@ class ConceptAdService:
         images = result.get("images", [])
 
         existing = list(remix_dir.glob(f"image_v*.{output_format}"))
-        next_v = len(existing) + 1
+        versions = [int(m.group(1)) for f in existing if (m := re.search(r'v(\d+)', f.stem))]
+        next_v = max(versions, default=0) + 1
         image_files = []
         for j, img in enumerate(images):
             filename = f"image_v{next_v + j}.{output_format}"

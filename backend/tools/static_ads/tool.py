@@ -30,7 +30,7 @@ class StaticAdsTool(BaseTool):
     async def health_check(self) -> dict:
         has_key = bool(FAL_KEY and FAL_KEY != "tu-key-aqui")
         has_dna = (BRAND_DIR / "brand-dna.md").exists()
-        has_prompts = (BRAND_DIR / "prompts.json").exists()
+        has_prompts = (BRAND_DIR / "data" / "static-ads-prompts.json").exists()
 
         return {
             "ready": has_key and has_dna and has_prompts,

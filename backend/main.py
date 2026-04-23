@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.config import BRAND_DIR
+from backend.config import BRAND_DIR, OUTPUTS_DIR
 from backend.core.registry import ToolRegistry
 
 app = FastAPI(title="Jess Trading Content App")
@@ -15,8 +15,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve brand files (outputs, images, etc.)
+# Serve brand assets (product images, reference ads, etc.)
 app.mount("/files", StaticFiles(directory=str(BRAND_DIR)), name="brand_files")
+# Serve tool outputs (generated images, scout briefs, etc.)
+app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="tool_outputs")
 
 # Discover and register all tools
 registry = ToolRegistry()

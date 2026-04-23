@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronDown,
   FileVideo,
   Image as ImageIcon,
   Loader2,
@@ -11,7 +12,6 @@ import {
   Settings as SettingsIcon,
   Trash2,
   Upload,
-  X,
 } from 'lucide-react';
 import {
   createMetaAdSet,
@@ -38,45 +38,44 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 const CTA_OPTIONS: { value: string; label: string }[] = [
-  { value: 'SHOP_NOW', label: 'Shop Now' },
   { value: 'LEARN_MORE', label: 'Learn More' },
+  { value: 'SHOP_NOW', label: 'Shop Now' },
   { value: 'SIGN_UP', label: 'Sign Up' },
   { value: 'SUBSCRIBE', label: 'Subscribe' },
-  { value: 'DOWNLOAD', label: 'Download' },
   { value: 'GET_OFFER', label: 'Get Offer' },
-  { value: 'GET_QUOTE', label: 'Get Quote' },
-  { value: 'CONTACT_US', label: 'Contact Us' },
-  { value: 'BOOK_TRAVEL', label: 'Book Now' },
-  { value: 'APPLY_NOW', label: 'Apply Now' },
   { value: 'ORDER_NOW', label: 'Order Now' },
-  { value: 'SEE_MORE', label: 'See More' },
+  { value: 'BOOK_NOW', label: 'Book Now' },
+  { value: 'CONTACT_US', label: 'Contact Us' },
+  { value: 'DOWNLOAD', label: 'Download' },
+  { value: 'GET_QUOTE', label: 'Get Quote' },
+  { value: 'APPLY_NOW', label: 'Apply Now' },
+  { value: 'BUY_NOW', label: 'Buy Now' },
   { value: 'WATCH_MORE', label: 'Watch More' },
-  { value: 'LISTEN_NOW', label: 'Listen Now' },
-  { value: 'INSTALL_MOBILE_APP', label: 'Install Now' },
-  { value: 'NO_BUTTON', label: 'No Button' },
+  { value: 'SEE_MENU', label: 'See Menu' },
+  { value: 'SEND_MESSAGE', label: 'Send Message' },
+  { value: 'GET_STARTED', label: 'Get Started' },
+];
+
+const AD_SET_MODES = [
+  {
+    value: 'single' as const,
+    label: 'Single ad set',
+    desc: 'All ads in one ad set. Best for broad testing — Meta distributes spend across creatives.',
+  },
+  {
+    value: 'per_creative' as const,
+    label: 'Per creative',
+    desc: 'One ad per creative. Each gets its own budget and supports multiple text variations that Meta rotates.',
+  },
 ];
 
 type Step = 1 | 2 | 3 | 'done';
+type AdSetMode = 'single' | 'per_creative';
 
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
@@ -111,9 +110,15 @@ export default function MetaAds() {
 
   // Step 3 local state
   const [campaigns, setCampaigns] = useState<MetaCampaign[]>([]);
+  const [fetchingCampaigns, setFetchingCampaigns] = useState(false);
   const [adSets, setAdSets] = useState<MetaAdSet[]>([]);
   const [campaignId, setCampaignId] = useState('');
   const [adSetId, setAdSetId] = useState('');
+  const [adSetMode, setAdSetMode] = useState<AdSetMode>('single');
+  const [useExistingAdSet, setUseExistingAdSet] = useState(false);
+  const [cloneSourceId, setCloneSourceId] = useState('');
+  const [cloneName, setCloneName] = useState('');
+  const [cloning, setCloning] = useState(false);
   const [launchAsPaused, setLaunchAsPaused] = useState(true);
   const [enhancementsEnabled, setEnhancementsEnabled] = useState(false);
   const [launching, setLaunching] = useState(false);
@@ -123,12 +128,6 @@ export default function MetaAds() {
     ads_errored: number;
     error_log: string[];
   } | null>(null);
-
-  // Clone ad set modal
-  const [showCloneModal, setShowCloneModal] = useState(false);
-  const [cloneSourceId, setCloneSourceId] = useState('');
-  const [cloneName, setCloneName] = useState('');
-  const [cloning, setCloning] = useState(false);
 
   // Thumbnail upload
   const thumbInputRef = useRef<HTMLInputElement>(null);
@@ -143,9 +142,11 @@ export default function MetaAds() {
   // Fetch campaigns when entering Step 3
   useEffect(() => {
     if (step !== 3) return;
+    setFetchingCampaigns(true);
     fetchMetaCampaigns()
       .then(setCampaigns)
-      .catch((e) => setError((e as Error).message));
+      .catch((e) => setError((e as Error).message))
+      .finally(() => setFetchingCampaigns(false));
   }, [step]);
 
   useEffect(() => {
@@ -262,7 +263,7 @@ export default function MetaAds() {
     }
   }
 
-  // ─── Step 3: ad set clone ───────────────────────────────────────────────────
+  // ─── Step 3: inline ad set create ───────────────────────────────────────────
   async function handleCloneAdSet() {
     if (!cloneSourceId || !cloneName.trim() || !campaignId) return;
     setCloning(true);
@@ -276,7 +277,7 @@ export default function MetaAds() {
       const refreshed = await fetchMetaAdSets(campaignId);
       setAdSets(refreshed);
       setAdSetId(created.id);
-      setShowCloneModal(false);
+      setUseExistingAdSet(true);
       setCloneSourceId('');
       setCloneName('');
     } catch (e) {
@@ -330,6 +331,10 @@ export default function MetaAds() {
     setDisplayLink('');
     setCampaignId('');
     setAdSetId('');
+    setAdSetMode('single');
+    setUseExistingAdSet(false);
+    setCloneSourceId('');
+    setCloneName('');
     setLaunchAsPaused(true);
     setEnhancementsEnabled(false);
     setLaunchResult(null);
@@ -347,8 +352,7 @@ export default function MetaAds() {
   if (!configured) {
     return (
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Meta Ads</h1>
-        <Alert className="mt-6">
+        <Alert className="mt-2">
           <SettingsIcon size={16} />
           <AlertDescription className="flex items-center justify-between gap-4">
             <span>Setup required. Configure your Meta API credentials to continue.</span>
@@ -363,29 +367,12 @@ export default function MetaAds() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Meta Ads</h1>
-          <p className="text-muted-foreground text-sm">Bulk upload and launch Meta ads.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/tools/meta_ads/history">History</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/tools/meta_ads/settings">
-              <SettingsIcon size={14} /> Settings
-            </Link>
-          </Button>
-        </div>
-      </div>
-
       {/* Stepper */}
       <div className="flex items-center gap-2 text-sm">
         {[
-          { n: 1, label: 'Upload' },
-          { n: 2, label: 'Ad Copy' },
-          { n: 3, label: 'Launch' },
+          { n: 1, label: 'Upload Creatives' },
+          { n: 2, label: 'Ad Copy & URL' },
+          { n: 3, label: 'Campaign & Launch' },
         ].map((s, i) => {
           const current = step === 'done' ? 4 : step;
           const completed = current > s.n;
@@ -435,7 +422,10 @@ export default function MetaAds() {
               />
             </div>
 
-            <Dropzone onFiles={addFiles} />
+            <div className="space-y-1">
+              <Label>Creatives</Label>
+              <Dropzone onFiles={addFiles} />
+            </div>
 
             {files.length > 0 && (
               <div className="space-y-2">
@@ -513,7 +503,7 @@ export default function MetaAds() {
                       size="sm"
                       onClick={() => handleClickThumb(c.id)}
                     >
-                      {c.thumbnail_path ? 'Replace thumb' : '+ Thumb'}
+                      {c.thumbnail_path ? '✓ Thumb' : '+ Thumb'}
                     </Button>
                   )}
                 </div>
@@ -558,11 +548,11 @@ export default function MetaAds() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Destination</CardTitle>
+              <CardTitle>Destination & CTA</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Destination URL</Label>
+                <Label>Destination URL (Website URL)</Label>
                 <Input
                   placeholder="https://example.com/landing"
                   value={url}
@@ -579,18 +569,12 @@ export default function MetaAds() {
               </div>
               <div className="space-y-2">
                 <Label>Call to Action</Label>
-                <Select value={ctaType} onValueChange={setCtaType}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CTA_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ComboInput
+                  value={ctaType}
+                  onChange={setCtaType}
+                  options={CTA_OPTIONS}
+                  placeholder="LEARN_MORE"
+                />
               </div>
             </CardContent>
           </Card>
@@ -609,106 +593,216 @@ export default function MetaAds() {
       {/* ─── Step 3: Campaign & Launch ─── */}
       {step === 3 && batch && (
         <div className="space-y-6">
+          {/* Campaign */}
           <Card>
             <CardHeader>
-              <CardTitle>Campaign & Ad Set</CardTitle>
+              <CardTitle>Campaign</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Campaign</Label>
-                <Select
-                  value={campaignId}
-                  onValueChange={(v: string) => {
-                    setCampaignId(v);
-                    setAdSetId('');
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a campaign" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {campaigns.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name} <span className="text-muted-foreground ml-2">({c.status})</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <CardContent className="space-y-2">
+              <NativeSelect
+                value={campaignId}
+                onChange={(v) => { setCampaignId(v); setAdSetId(''); setUseExistingAdSet(false); }}
+                placeholder={fetchingCampaigns ? 'Loading campaigns…' : 'Select a campaign'}
+                options={campaigns.map((c) => ({ id: c.id, name: `${c.name} (${c.status})` }))}
+              />
+              {!fetchingCampaigns && campaigns.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No campaigns found. Verify the ad account configured in{' '}
+                  <Link to="/tools/meta_ads/settings" className="underline hover:text-foreground">
+                    Settings
+                  </Link>{' '}
+                  matches the account where you created the campaign.
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Ad Set</Label>
-                  {campaignId && adSets.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setCloneName(`${batchName} — ad set`);
-                        setShowCloneModal(true);
-                      }}
-                    >
-                      <Plus size={14} className="mr-1" /> Create new (clone)
-                    </Button>
-                  )}
-                </div>
-                <Select
-                  value={adSetId}
-                  onValueChange={setAdSetId}
-                  disabled={!campaignId}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={campaignId ? 'Select an ad set' : 'Pick a campaign first'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {adSets.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.name} <span className="text-muted-foreground ml-2">({a.status})</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="paused"
-                  checked={launchAsPaused}
-                  onCheckedChange={(c: boolean | 'indeterminate') => setLaunchAsPaused(c === true)}
-                />
-                <Label htmlFor="paused" className="cursor-pointer">
-                  Launch as paused (recommended)
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="enh"
-                  checked={enhancementsEnabled}
-                  onCheckedChange={(c: boolean | 'indeterminate') => setEnhancementsEnabled(c === true)}
-                />
-                <Label htmlFor="enh" className="cursor-pointer">
-                  Enable standard creative enhancements
-                </Label>
+          {/* Ad Set Mode */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Ad Set Mode</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                {AD_SET_MODES.map((opt) => (
+                  <div
+                    key={opt.value}
+                    onClick={() => setAdSetMode(opt.value)}
+                    className={cn(
+                      'rounded-lg border-2 p-4 cursor-pointer transition-colors',
+                      adSetMode === opt.value
+                        ? 'border-accent bg-accent/5'
+                        : 'border-border hover:border-accent/30',
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div
+                        className={cn(
+                          'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
+                          adSetMode === opt.value ? 'border-accent' : 'border-muted-foreground',
+                        )}
+                      >
+                        {adSetMode === opt.value && (
+                          <div className="w-2 h-2 rounded-full bg-accent" />
+                        )}
+                      </div>
+                      <span className="font-medium text-sm">{opt.label}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground pl-6">{opt.desc}</p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
+          {/* Ad Set */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Ad Set</CardTitle>
+                {campaignId && adSets.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setUseExistingAdSet(!useExistingAdSet);
+                      if (!useExistingAdSet) {
+                        setCloneSourceId('');
+                        setCloneName('');
+                      }
+                    }}
+                  >
+                    {useExistingAdSet ? (
+                      <><Plus size={14} className="mr-1" /> Create new ad set</>
+                    ) : (
+                      'Use existing ad set'
+                    )}
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!campaignId ? (
+                <p className="text-sm text-muted-foreground">Pick a campaign first.</p>
+              ) : useExistingAdSet ? (
+                <div className="space-y-2">
+                  <NativeSelect
+                    value={adSetId}
+                    onChange={setAdSetId}
+                    placeholder="Select an ad set"
+                    options={adSets.map((a) => ({ id: a.id, name: `${a.name} (${a.status})` }))}
+                  />
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Create a new ad set by copying targeting &amp; budget from an existing one.
+                  </p>
+                  <div className="space-y-2">
+                    <Label>Copy settings from</Label>
+                    <NativeSelect
+                      value={cloneSourceId}
+                      onChange={setCloneSourceId}
+                      placeholder={adSets.length === 0 ? 'No ad sets found' : 'Select an ad set'}
+                      options={adSets.map((a) => ({ id: a.id, name: a.name }))}
+                      disabled={adSets.length === 0}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>New ad set name</Label>
+                    <Input
+                      value={cloneName}
+                      onChange={(e) => setCloneName(e.target.value)}
+                      placeholder={`${batchName} — ad set`}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleCloneAdSet}
+                    disabled={!cloneSourceId || !cloneName.trim() || cloning}
+                    size="sm"
+                  >
+                    {cloning && <Loader2 size={14} className="animate-spin mr-1.5" />}
+                    Create Ad Set
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Launch Options */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Launch Options</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="paused"
+                  checked={launchAsPaused}
+                  onCheckedChange={(c: boolean | 'indeterminate') => setLaunchAsPaused(c === true)}
+                  className="mt-0.5"
+                />
+                <div>
+                  <Label htmlFor="paused" className="cursor-pointer font-medium">
+                    Launch as paused
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Review in Ads Manager before activating
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="enh"
+                  checked={enhancementsEnabled}
+                  onCheckedChange={(c: boolean | 'indeterminate') => setEnhancementsEnabled(c === true)}
+                  className="mt-0.5"
+                />
+                <div>
+                  <Label htmlFor="enh" className="cursor-pointer font-medium">
+                    Enable creative enhancements
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Meta AI auto-adjusts your creative
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Summary */}
           <Card>
             <CardHeader>
               <CardTitle>Summary</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm space-y-1">
-              <div><span className="text-muted-foreground">Batch:</span> {batch.name}</div>
-              <div><span className="text-muted-foreground">Ads to create:</span> {creatives.length}</div>
+            <CardContent className="text-sm space-y-1.5">
               <div>
-                <span className="text-muted-foreground">Copy variations:</span>{' '}
+                <span className="text-muted-foreground">Ad set mode:</span>{' '}
+                {AD_SET_MODES.find((m) => m.value === adSetMode)?.label}
+              </div>
+              <div>
+                <span className="text-muted-foreground">Creatives:</span> {creatives.length}
+              </div>
+              <div>
+                <span className="text-muted-foreground">Text variations:</span>{' '}
                 {primaryTexts.filter((t) => t.trim()).length} primary ·{' '}
                 {headlines.filter((t) => t.trim()).length} headlines ·{' '}
                 {descriptions.filter((t) => t.trim()).length} descriptions
               </div>
-              <div><span className="text-muted-foreground">URL:</span> {url}</div>
-              <div><span className="text-muted-foreground">CTA:</span> {ctaType}</div>
-              <div><span className="text-muted-foreground">Status at launch:</span> {launchAsPaused ? 'Paused' : 'Active'}</div>
+              <div>
+                <span className="text-muted-foreground">CTA:</span> {ctaType}
+              </div>
+              <div>
+                <span className="text-muted-foreground">URL:</span> {url}
+              </div>
+              <div>
+                <span className="text-muted-foreground">Enhancements:</span>{' '}
+                {enhancementsEnabled ? 'Enabled' : 'Disabled'}
+              </div>
+              <div>
+                <span className="text-muted-foreground">Launch Status:</span>{' '}
+                {launchAsPaused ? 'Paused' : 'Active'}
+              </div>
             </CardContent>
           </Card>
 
@@ -736,7 +830,8 @@ export default function MetaAds() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {launchResult.status === 'completed' && launchResult.ads_errored === 0 ? (
+              {(launchResult.status === 'complete' || launchResult.status === 'completed') &&
+              launchResult.ads_errored === 0 ? (
                 <>
                   <CheckCircle2 size={18} className="text-green-500" /> All ads launched
                 </>
@@ -779,55 +874,29 @@ export default function MetaAds() {
           </CardContent>
         </Card>
       )}
-
-      {/* Clone Ad Set Modal */}
-      <Dialog open={showCloneModal} onOpenChange={(o: boolean) => setShowCloneModal(o)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create new ad set</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Clones budget, targeting, and optimization settings from an existing ad set. The new ad set is created paused.
-            </p>
-            <div className="space-y-2">
-              <Label>Source ad set</Label>
-              <Select value={cloneSourceId} onValueChange={setCloneSourceId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pick an ad set to clone from" />
-                </SelectTrigger>
-                <SelectContent>
-                  {adSets.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>New ad set name</Label>
-              <Input value={cloneName} onChange={(e) => setCloneName(e.target.value)} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCloneModal(false)} disabled={cloning}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCloneAdSet}
-              disabled={!cloneSourceId || !cloneName.trim() || cloning}
-            >
-              {cloning && <Loader2 size={16} className="animate-spin mr-2" />} Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
 // ─── Subcomponents ─────────────────────────────────────────────────────────────
+
+function X({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
 
 function Dropzone({ onFiles }: { onFiles: (files: FileList | File[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -872,6 +941,97 @@ function Dropzone({ onFiles }: { onFiles: (files: FileList | File[]) => void }) 
           e.target.value = '';
         }}
       />
+    </div>
+  );
+}
+
+function ComboInput({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState('');
+
+  const filtered = open
+    ? options.filter(
+        (o) =>
+          !filter ||
+          o.label.toLowerCase().includes(filter.toLowerCase()) ||
+          o.value.toLowerCase().includes(filter.toLowerCase()),
+      )
+    : [];
+
+  return (
+    <div className="relative">
+      <Input
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setFilter(e.target.value); }}
+        onFocus={() => { setFilter(''); setOpen(true); }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder={placeholder}
+      />
+      {open && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-52 overflow-y-auto rounded-md border border-border bg-popover shadow-md">
+          {filtered.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-muted-foreground">Custom value will be used as-is.</div>
+          ) : (
+            filtered.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                className="w-full flex items-center justify-between gap-4 px-3 py-2 text-sm text-left hover:bg-muted"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onChange(o.value);
+                  setFilter('');
+                  setOpen(false);
+                }}
+              >
+                <span>{o.label}</span>
+                <span className="text-xs text-muted-foreground shrink-0">{o.value}</span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NativeSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { id: string; name: string }[];
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className="w-full h-10 rounded-md border border-input bg-background px-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
+      >
+        {placeholder && <option value="">{placeholder}</option>}
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>{o.name}</option>
+        ))}
+      </select>
+      <ChevronDown size={16} className="absolute right-3 top-3 text-muted-foreground pointer-events-none" />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import json
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from backend.config import BRAND_DIR, ANTHROPIC_API_KEY
+from backend.config import BRAND_DIR, ANTHROPIC_API_KEY, OUTPUTS_DIR
 from backend.tools.scout import service
 from backend.tools.scout.schemas import ScoutRunRequest, ScoutOutputFile
 
@@ -27,7 +27,7 @@ async def run(body: ScoutRunRequest):
 
 @router.get("/history", response_model=list[ScoutOutputFile])
 async def get_history():
-    output_dir = BRAND_DIR / "scout-output"
+    output_dir = OUTPUTS_DIR / "scout"
     if not output_dir.exists():
         return []
     files = sorted(output_dir.glob("*.md"), reverse=True)[:20]

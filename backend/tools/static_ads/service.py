@@ -5,12 +5,15 @@ Synchronous methods designed to be called via asyncio.to_thread().
 
 import json
 import os
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 import fal_client
 import requests
+
+from backend.config import OUTPUTS_DIR
 
 TEXT_TO_IMAGE_MODEL = "fal-ai/nano-banana-2"
 
@@ -25,7 +28,7 @@ COST_PER_IMAGE = {
 class StaticAdService:
     def __init__(self, brand_dir: Path):
         self.brand_dir = brand_dir
-        self.outputs_dir = brand_dir / "outputs"
+        self.outputs_dir = OUTPUTS_DIR / "static_ads"
         self.outputs_dir.mkdir(exist_ok=True)
 
     def generate_single(
@@ -60,11 +63,12 @@ class StaticAdService:
 
         elapsed = time.time() - start
 
-        # Download images — continue numbering from existing files to avoid overwriting
+        # Download images — use max existing version to avoid overwriting even if files were deleted
         images = result.get("images", [])
         image_files = []
         existing = list(template_dir.glob(f"{name}_v*.{output_format}"))
-        next_v = len(existing) + 1
+        versions = [int(m.group(1)) for f in existing if (m := re.search(r'_v(\d+)', f.stem))]
+        next_v = max(versions, default=0) + 1
         for j, img in enumerate(images):
             filename = f"{name}_v{next_v + j}.{output_format}"
             filepath = template_dir / filename

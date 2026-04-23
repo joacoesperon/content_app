@@ -10,6 +10,8 @@ from typing import AsyncIterator
 
 import anthropic
 
+from backend.config import OUTPUTS_DIR
+
 SYSTEM_PROMPT = """You are Scout, the organic content strategist for JessTrading.
 
 Your job: research what's resonating in the algo trading / gold trading niche RIGHT NOW, then produce 7 Instagram post briefs following the brand's weekly content plan.
@@ -21,7 +23,7 @@ Call get_current_time BEFORE anything else. You do not know today's date from me
 1. read_brand_file("brand-style.md") — brand voice, visual system, image modifier. NO product details or sales arguments.
 2. read_brand_file("data/avatars.json") — customer profiles. CRITICAL: the "ad_angles" field in each avatar contains outdated examples — IGNORE IT COMPLETELY. Use only: name, description, pain_points, desires, language_sample.
 3. read_brand_file("content-mix.md") — weekly post distribution plan. Follow it strictly.
-4. read_brand_file("scout-state.json") — which avatar was used last time. If file doesn't exist, continue normally.
+4. read_brand_file("data/scout-state.json") — which avatar was used last time. If file doesn't exist, continue normally.
 
 ## Step 2 — Research what traders are ACTUALLY talking about this week
 
@@ -102,7 +104,7 @@ Bad example 3 (incomplete, no layout, Spanish):
 
 ## Step 5 — Save outputs
 1. write_output_file with the complete content (PLAN + all 7 posts)
-2. write_brand_file("scout-state.json") with: {"last_avatar": "...", "last_angles": [...], "last_run": "YYYY-MM-DD"}
+2. write_brand_file("data/scout-state.json") with: {"last_avatar": "...", "last_angles": [...], "last_run": "YYYY-MM-DD"}
 3. Confirm what was saved and where"""
 
 TOOLS = [
@@ -152,7 +154,7 @@ TOOLS = [
             "properties": {
                 "filename": {
                     "type": "string",
-                    "description": "Nombre del archivo relativo al directorio de marca, ej: 'brand-dna.md' o 'data/avatars.json'",
+                    "description": "Nombre del archivo relativo al directorio de marca, ej: 'brand-dna.md', 'data/avatars.json', 'data/scout-state.json'",
                 }
             },
             "required": ["filename"],
@@ -160,7 +162,7 @@ TOOLS = [
     },
     {
         "name": "write_output_file",
-        "description": "Guarda el batch de contenido generado como archivo markdown con fecha en la carpeta scout-output",
+        "description": "Guarda el batch de contenido generado como archivo markdown con fecha en la carpeta outputs/scout",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -249,7 +251,7 @@ def _read_brand_file(filename: str, brand_dir: Path) -> str:
 
 def _write_output_file(content: str, brand_dir: Path) -> str:
     try:
-        output_dir = brand_dir / "scout-output"
+        output_dir = OUTPUTS_DIR / "scout"
         output_dir.mkdir(parents=True, exist_ok=True)
         date_str = datetime.now().strftime("%Y-%m-%d")
         filename = f"{date_str}.md"
@@ -260,7 +262,7 @@ def _write_output_file(content: str, brand_dir: Path) -> str:
         path = output_dir / filename
         header = f"# Scout Output — {date_str}\n\n"
         path.write_text(header + content, encoding="utf-8")
-        return f"scout-output/{filename}"
+        return filename
     except Exception as e:
         return f"Error de escritura: {e}"
 
@@ -322,7 +324,7 @@ async def run_scout_stream(
 
             output_content = None
             if output_file:
-                full_path = brand_dir / output_file
+                full_path = OUTPUTS_DIR / "scout" / output_file
                 if full_path.exists():
                     output_content = full_path.read_text(encoding="utf-8")
 

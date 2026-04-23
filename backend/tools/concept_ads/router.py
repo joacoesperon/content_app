@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
 
-from backend.config import BRAND_DIR
+from backend.config import BRAND_DIR, OUTPUTS_DIR
 from backend.tools.concept_ads.schemas import (
     BuildPromptRequest,
     ConceptItem,
@@ -424,7 +424,7 @@ async def prepare_reference(body: dict):
     relative = body.get("relative_path", "")
     if not relative:
         raise HTTPException(status_code=422, detail="relative_path is required")
-    full_path = BRAND_DIR / relative
+    full_path = OUTPUTS_DIR / "concept_ads" / relative
     if not full_path.exists() or not full_path.is_file():
         raise HTTPException(status_code=404, detail="File not found")
     return {"path": str(full_path), "filename": full_path.name}
@@ -543,7 +543,7 @@ async def _run_remix(
 @router.get("/outputs")
 async def list_outputs():
     """List all generated concept output folders."""
-    outputs_dir = BRAND_DIR / "concept-outputs"
+    outputs_dir = OUTPUTS_DIR / "concept_ads"
     if not outputs_dir.exists():
         return []
 
@@ -572,7 +572,7 @@ async def list_outputs():
 @router.delete("/outputs/{folder}")
 async def delete_output(folder: str):
     """Delete a concept output folder and all its images."""
-    outputs_dir = BRAND_DIR / "concept-outputs"
+    outputs_dir = OUTPUTS_DIR / "concept_ads"
     folder_path = outputs_dir / folder
     if not folder_path.exists() or not folder_path.is_dir():
         raise HTTPException(status_code=404, detail=f"Output folder '{folder}' not found")

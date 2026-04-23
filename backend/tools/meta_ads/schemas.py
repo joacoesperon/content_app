@@ -39,7 +39,7 @@ class UploadBatch(BaseModel):
     display_link: str = ""
     launch_as_paused: bool = True
     enhancements_enabled: bool = False
-    status: str = "draft"  # draft | launching | completed | failed
+    status: str = "draft"  # draft | uploading | complete | error
     ads_created: int = 0
     ads_errored: int = 0
     error_log: list[str] = Field(default_factory=list)
@@ -75,11 +75,13 @@ class Creative(BaseModel):
     file_type: str  # "image" | "video"
     mime_type: str
     file_path: str
+    file_size: int = 0
     thumbnail_path: str = ""
     meta_ad_id: str = ""
     meta_creative_id: str = ""
-    status: str = "pending"  # pending | uploading | ready | errored
+    status: str = "pending"  # pending | uploading | created | error
     error_message: str = ""
+    created_at: str = ""
 
 
 class UpdateCreativeRequest(BaseModel):

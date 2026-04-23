@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { fetchMetaBatches, type MetaBatch } from '../lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
-  if (status === 'complete') return 'default';
-  if (status === 'error') return 'destructive';
-  if (status === 'uploading') return 'secondary';
+  if (status === 'complete' || status === 'completed') return 'default';
+  if (status === 'error' || status === 'failed') return 'destructive';
+  if (status === 'uploading' || status === 'launching') return 'secondary';
   return 'outline';
 }
 
 function statusLabel(status: string): string {
-  if (status === 'complete') return 'Complete';
-  if (status === 'error') return 'Error';
-  if (status === 'uploading') return 'Uploading…';
+  if (status === 'complete' || status === 'completed') return 'Complete';
+  if (status === 'error' || status === 'failed') return 'Error';
+  if (status === 'uploading' || status === 'launching') return 'Uploading…';
   return 'Draft';
 }
 
@@ -25,7 +25,13 @@ export default function MetaAdsHistory() {
 
   useEffect(() => {
     fetchMetaBatches()
-      .then((data) => setBatches([...data].reverse()))
+      .then((data) =>
+        setBatches(
+          [...data]
+            .reverse()
+            .filter((b) => b.status !== 'draft'),
+        ),
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,18 +45,6 @@ export default function MetaAdsHistory() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">History</h1>
-          <p className="text-muted-foreground text-sm">All Meta Ads upload batches.</p>
-        </div>
-        <Link
-          to="/tools/meta_ads"
-          className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-        >
-          <Upload size={14} /> New batch
-        </Link>
-      </div>
 
       {batches.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from backend.config import BRAND_DIR, TEMPLATES_FILE
+from backend.config import BRAND_DIR, OUTPUTS_DIR, TEMPLATES_FILE
 from backend.tools.static_ads.schemas import (
     GenerateRequest,
     GenerateJobStatus,
@@ -77,7 +77,7 @@ async def list_templates():
 @router.get("/prompts", response_model=list[PromptInfo])
 async def list_prompts():
     """List generated prompts from prompts.json."""
-    prompts_file = BRAND_DIR / "prompts.json"
+    prompts_file = BRAND_DIR / "data" / "static-ads-prompts.json"
     if not prompts_file.exists():
         return []
     data = json.loads(prompts_file.read_text(encoding="utf-8"))
@@ -92,7 +92,7 @@ async def start_generation(req: GenerateRequest):
     job_queues[job_id] = queue
 
     # Load prompts
-    prompts_file = BRAND_DIR / "prompts.json"
+    prompts_file = BRAND_DIR / "data" / "static-ads-prompts.json"
     if not prompts_file.exists():
         return {"error": "prompts.json not found. Run Phase 2 first."}
 
@@ -265,7 +265,7 @@ async def websocket_progress(websocket: WebSocket, job_id: str):
 @router.get("/outputs", response_model=list[OutputFolder])
 async def list_outputs():
     """List all generated output folders with their images."""
-    outputs_dir = BRAND_DIR / "outputs"
+    outputs_dir = OUTPUTS_DIR / "static_ads"
     if not outputs_dir.exists():
         return []
 

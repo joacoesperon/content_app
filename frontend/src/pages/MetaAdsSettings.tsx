@@ -117,12 +117,6 @@ export default function MetaAdsSettings() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Meta Ads Settings</h1>
-        <p className="text-muted-foreground">
-          Configure your Meta (Facebook/Instagram) API credentials to start uploading ads.
-        </p>
-      </div>
 
       {error && (
         <Alert variant="destructive">

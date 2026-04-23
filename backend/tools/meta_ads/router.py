@@ -2,6 +2,7 @@
 from __future__ import annotations
 import mimetypes
 from pathlib import Path
+import re
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
@@ -37,6 +38,15 @@ def _mask_token(token: str) -> str:
     if len(token) <= 8:
         return "•" * len(token)
     return "•" * (len(token) - 8) + token[-8:]
+
+
+def _sanitize_filename(filename: str) -> str:
+    name = Path(filename).name
+    suffix = Path(name).suffix
+    stem = name[: -len(suffix)] if suffix else name
+    clean_stem = re.sub(r"[^A-Za-z0-9]+", "_", stem).strip("_") or "file"
+    clean_suffix = re.sub(r"[^A-Za-z0-9.]+", "", suffix.lower())
+    return f"{clean_stem}{clean_suffix}"
 
 
 # ─── Settings ─────────────────────────────────────────────────────────────────
@@ -157,6 +167,11 @@ async def update_batch(batch_id: str, body: UpdateBatchRequest):
 # ─── File Upload ─────────────────────────────────────────────────────────────
 
 def _classify(filename: str, content_type: Optional[str]) -> tuple[str, str]:
+    if content_type:
+        if content_type.startswith("image/"):
+            return "image", content_type
+        if content_type.startswith("video/"):
+            return "video", content_type
     ext = Path(filename).suffix.lower()
     if ext in IMAGE_EXTS:
         return "image", content_type or mimetypes.guess_type(filename)[0] or "image/jpeg"
@@ -180,7 +195,7 @@ async def upload_creatives(
     for upload in files:
         original = upload.filename or "file"
         file_type, mime_type = _classify(original, upload.content_type)
-        safe_name = Path(original).name
+        safe_name = _sanitize_filename(original)
         dest = upload_dir / safe_name
         # Avoid collisions
         counter = 1
@@ -201,6 +216,7 @@ async def upload_creatives(
             file_type=file_type,
             mime_type=mime_type,
             file_path=str(dest),
+            file_size=len(data),
         )
         created.append(creative)
 
@@ -258,12 +274,19 @@ async def launch_batch(batch_id: str):
         raise HTTPException(status_code=422, detail="Batch is missing ad set selection")
     if not batch.get("url"):
         raise HTTPException(status_code=422, detail="Batch is missing destination URL")
+    primary_texts = [text.strip() for text in batch.get("primary_texts", []) if text.strip()]
+    headlines = [text.strip() for text in batch.get("headlines", []) if text.strip()]
+    descriptions = [text.strip() for text in batch.get("descriptions", []) if text.strip()]
+    if not primary_texts:
+        raise HTTPException(status_code=422, detail="Batch is missing primary text")
+    if not headlines:
+        raise HTTPException(status_code=422, detail="Batch is missing headline")
 
     creatives = storage.list_creatives(batch_id)
     if not creatives:
         raise HTTPException(status_code=422, detail="Batch has no creatives")
 
-    storage.update_batch(batch_id, {"status": "launching", "ads_created": 0, "ads_errored": 0, "error_log": []})
+    storage.update_batch(batch_id, {"status": "uploading", "ads_created": 0, "ads_errored": 0, "error_log": []})
 
     token = s["access_token"]
     ad_account_id = s["ad_account_id"]
@@ -290,9 +313,9 @@ async def launch_batch(batch_id: str):
                     name=creative["ad_name"],
                     page_id=page_id,
                     image_hash=image_hash,
-                    primary_texts=batch.get("primary_texts", []),
-                    headlines=batch.get("headlines", []),
-                    descriptions=batch.get("descriptions", []),
+                    primary_texts=primary_texts,
+                    headlines=headlines,
+                    descriptions=descriptions,
                     url=batch["url"],
                     display_link=batch.get("display_link", ""),
                     cta_type=batch.get("cta_type", "SHOP_NOW"),
@@ -322,9 +345,9 @@ async def launch_batch(batch_id: str):
                     video_id=video_id,
                     thumbnail_url=None,
                     thumbnail_hash=thumbnail_hash,
-                    primary_texts=batch.get("primary_texts", []),
-                    headlines=batch.get("headlines", []),
-                    descriptions=batch.get("descriptions", []),
+                    primary_texts=primary_texts,
+                    headlines=headlines,
+                    descriptions=descriptions,
                     url=batch["url"],
                     cta_type=batch.get("cta_type", "SHOP_NOW"),
                     enhancements_enabled=batch.get("enhancements_enabled", False),
@@ -339,18 +362,18 @@ async def launch_batch(batch_id: str):
                 status=status,
             )
             storage.update_creative(batch_id, cid, {
-                "status": "ready",
+                "status": "created",
                 "meta_ad_id": ad_id,
                 "meta_creative_id": creative_id,
             })
             created_count += 1
         except Exception as e:
             msg = str(e)
-            storage.update_creative(batch_id, cid, {"status": "errored", "error_message": msg})
+            storage.update_creative(batch_id, cid, {"status": "error", "error_message": msg})
             error_log.append(f"{creative['ad_name']}: {msg}")
             errored_count += 1
 
-    final_status = "completed" if errored_count == 0 else ("failed" if created_count == 0 else "completed")
+    final_status = "complete" if created_count > 0 else "error"
     storage.update_batch(batch_id, {
         "status": final_status,
         "ads_created": created_count,

@@ -6,16 +6,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from backend.config import BRAND_DIR
+from backend.config import BRAND_DIR, OUTPUTS_DIR
 
-META_DIR = BRAND_DIR / "meta-ads"
-SETTINGS_FILE = META_DIR / "settings.json"
-BATCHES_DIR = META_DIR / "batches"
-UPLOADS_DIR = META_DIR / "uploads"
+SETTINGS_FILE = BRAND_DIR / "meta-ads" / "settings.json"
+BATCHES_DIR = OUTPUTS_DIR / "meta_ads" / "batches"
+UPLOADS_DIR = OUTPUTS_DIR / "meta_ads" / "uploads"
 
 
 def _ensure_dirs():
-    META_DIR.mkdir(parents=True, exist_ok=True)
+    SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
     BATCHES_DIR.mkdir(parents=True, exist_ok=True)
     UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -32,6 +31,10 @@ def _read_json(path: Path, default):
 def _write_json(path: Path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _iso_now() -> str:
+    return datetime.utcnow().isoformat() + "Z"
 
 
 # ─── Settings ─────────────────────────────────────────────────────────────────
@@ -77,7 +80,7 @@ def create_batch(name: str) -> dict:
     batch = {
         "id": batch_id,
         "name": name,
-        "created_at": datetime.utcnow().isoformat() + "Z",
+        "created_at": _iso_now(),
         "campaign_id": "",
         "campaign_name": "",
         "ad_set_id": "",
@@ -148,6 +151,7 @@ def create_creative(
     file_type: str,
     mime_type: str,
     file_path: str,
+    file_size: int,
 ) -> dict:
     creative_id = str(uuid.uuid4())[:12]
     creative = {
@@ -158,11 +162,13 @@ def create_creative(
         "file_type": file_type,
         "mime_type": mime_type,
         "file_path": file_path,
+        "file_size": file_size,
         "thumbnail_path": "",
         "meta_ad_id": "",
         "meta_creative_id": "",
         "status": "pending",
         "error_message": "",
+        "created_at": _iso_now(),
     }
     creatives = list_creatives(batch_id)
     creatives.append(creative)

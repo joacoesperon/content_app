@@ -45,11 +45,11 @@ export function getWebSocketUrl(jobId: string) {
 }
 
 export function getImageUrl(folder: string, filename: string) {
-  return `${BASE}/files/outputs/${folder}/${filename}`;
+  return `${BASE}/outputs/static_ads/${folder}/${filename}`;
 }
 
 export function getConceptImageUrl(folder: string, filename: string) {
-  return `${BASE}/files/concept-outputs/${folder}/${filename}`;
+  return `${BASE}/outputs/concept_ads/${folder}/${filename}`;
 }
 
 export function getConceptWsUrl(jobId: string) {
@@ -561,11 +561,13 @@ export interface MetaCreative {
   file_type: 'image' | 'video';
   mime_type: string;
   file_path: string;
+  file_size: number;
   thumbnail_path: string;
   meta_ad_id: string;
   meta_creative_id: string;
   status: string;
   error_message: string;
+  created_at: string;
 }
 
 export async function fetchMetaSettings(): Promise<MetaSettings> {
