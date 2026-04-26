@@ -11,6 +11,9 @@ import {
   LayoutList,
   Pencil,
   Check,
+  Sparkles,
+  Star,
+  Loader2,
 } from 'lucide-react';
 import {
   fetchBrandDna,
@@ -30,7 +33,17 @@ import {
   deleteReferenceAd,
   fetchContentMix,
   updateContentMix,
+  fetchReelsMix,
+  updateReelsMix,
+  fetchMascot,
+  updateMascot,
+  fetchMascotRefs,
+  uploadMascotRef,
+  patchMascotRef,
+  deleteMascotRef,
+  generateMascotImage,
 } from '../lib/api';
+import type { Mascot, MascotRef, MascotTone } from '../lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -677,6 +690,347 @@ function ContentMixSection() {
   );
 }
 
+function ReelsMixSection() {
+  const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    fetchReelsMix().then((r) => setContent(r.content ?? ''));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateReelsMix(content);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="overflow-hidden py-0">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/40 transition-colors"
+      >
+        <div>
+          <span className="font-semibold text-foreground">Reels Mix</span>
+          <span className="ml-2 text-xs text-muted-foreground">Weekly reel distribution plan for Director</span>
+        </div>
+        {open ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+      </button>
+      {open && (
+        <>
+          <Separator />
+          <CardContent className="space-y-3 pt-4 pb-5">
+            <p className="text-xs text-muted-foreground">
+              Director reads this file to decide the categories, levers, and structure of the weekly reels.
+            </p>
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={20}
+              className="font-mono text-xs"
+            />
+            <div className="flex justify-end">
+              <Button onClick={handleSave} disabled={saving}>
+                <Save size={14} />
+                {saving ? 'Saving…' : 'Save changes'}
+              </Button>
+            </div>
+          </CardContent>
+        </>
+      )}
+    </Card>
+  );
+}
+
+
+function MascotSection() {
+  const [open, setOpen] = useState(false);
+  const [mascot, setMascot] = useState<Mascot | null>(null);
+  const [refs, setRefs] = useState<MascotRef[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadTag, setUploadTag] = useState('neutral');
+  const [uploadIsBase, setUploadIsBase] = useState(false);
+
+  const load = () => {
+    fetchMascot().then(setMascot);
+    fetchMascotRefs().then(setRefs);
+  };
+
+  useEffect(() => {
+    if (open && !mascot) load();
+  }, [open]);
+
+  const setField = <K extends keyof Mascot>(field: K, value: Mascot[K]) => {
+    if (!mascot) return;
+    setMascot({ ...mascot, [field]: value });
+  };
+
+  const updateTone = (idx: number, patch: Partial<MascotTone>) => {
+    if (!mascot) return;
+    const tones = [...mascot.tones];
+    tones[idx] = { ...tones[idx], ...patch };
+    setMascot({ ...mascot, tones });
+  };
+
+  const addTone = () => {
+    if (!mascot) return;
+    setMascot({
+      ...mascot,
+      tones: [...mascot.tones, { id: '', label: '', use_when: '' }],
+    });
+  };
+
+  const removeTone = (idx: number) => {
+    if (!mascot) return;
+    setMascot({ ...mascot, tones: mascot.tones.filter((_, i) => i !== idx) });
+  };
+
+  const handleSave = async () => {
+    if (!mascot) return;
+    setSaving(true);
+    try {
+      const { references: _ref, ...rest } = mascot;
+      await updateMascot(rest);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpload = async (file: File) => {
+    await uploadMascotRef(file, uploadTag, uploadIsBase);
+    fetchMascotRefs().then(setRefs);
+  };
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      await generateMascotImage({
+        description: mascot?.visual_description,
+        filename: 'base.png',
+        tag: 'neutral',
+        is_base: refs.length === 0,
+      });
+      fetchMascotRefs().then(setRefs);
+    } catch (e) {
+      alert(`Generation error: ${e instanceof Error ? e.message : e}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleSetBase = async (filename: string) => {
+    await patchMascotRef(filename, { is_base: true });
+    fetchMascotRefs().then(setRefs);
+  };
+
+  const handleUpdateTag = async (filename: string, tag: string) => {
+    await patchMascotRef(filename, { tag });
+    fetchMascotRefs().then(setRefs);
+  };
+
+  const handleDelete = async (filename: string) => {
+    if (!confirm(`Delete ${filename}?`)) return;
+    await deleteMascotRef(filename);
+    fetchMascotRefs().then(setRefs);
+  };
+
+  return (
+    <Card className="overflow-hidden py-0">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/40 transition-colors"
+      >
+        <div>
+          <span className="font-semibold text-foreground">Mascot</span>
+          <span className="ml-2 text-xs text-muted-foreground">Character used in Reels (JT — the candle)</span>
+        </div>
+        {open ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+      </button>
+      {open && (
+        <>
+          <Separator />
+          <CardContent className="space-y-5 pt-4 pb-5">
+            {!mascot ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 size={14} className="animate-spin" /> Loading…
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Name</Label>
+                  <Input value={mascot.name} onChange={(e) => setField('name', e.target.value)} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Visual description</Label>
+                  <Textarea
+                    value={mascot.visual_description}
+                    onChange={(e) => setField('visual_description', e.target.value)}
+                    rows={5}
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Expressions (comma-separated)</Label>
+                  <Input
+                    value={mascot.expressions.join(', ')}
+                    onChange={(e) => setField('expressions', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Catchphrases (one per line)</Label>
+                  <Textarea
+                    value={mascot.catchphrases.join('\n')}
+                    onChange={(e) => setField('catchphrases', e.target.value.split('\n').filter((l) => l.trim()))}
+                    rows={4}
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">Tones</Label>
+                    <Button variant="outline" size="sm" onClick={addTone}>
+                      <Plus size={13} className="mr-1" /> Add tone
+                    </Button>
+                  </div>
+                  {mascot.tones.map((tone, idx) => (
+                    <Card key={idx} className="p-3 space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="id (e.g. deadpan)" value={tone.id} onChange={(e) => updateTone(idx, { id: e.target.value })} />
+                        <Input placeholder="label" value={tone.label} onChange={(e) => updateTone(idx, { label: e.target.value })} />
+                      </div>
+                      <Input placeholder="use_when" value={tone.use_when} onChange={(e) => updateTone(idx, { use_when: e.target.value })} />
+                      <div className="flex justify-end">
+                        <Button variant="ghost" size="sm" onClick={() => removeTone(idx)} className="text-red-500">
+                          <Trash2 size={13} />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="flex justify-end">
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save size={14} />
+                    {saving ? 'Saving…' : 'Save mascot'}
+                  </Button>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Reference images</Label>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={handleGenerate} disabled={generating}>
+                        {generating ? <Loader2 size={13} className="animate-spin mr-1" /> : <Sparkles size={13} className="mr-1" />}
+                        Generate base with AI
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-muted-foreground bg-muted/40 rounded p-2 space-y-1">
+                    <p><strong>How references work:</strong> at minimum, you need ONE image marked as "base" (the canonical look of the mascot). Reels Tool uses this image as the primary reference when generating each scene with nano-banana-pro/edit.</p>
+                    <p>Optionally, you can add variants <em>tagged by expression</em> (e.g. tag a "smug" image, a "panicked" one, etc.). When Director writes a scene with that expression, the matching ref becomes the primary instead of the base. <strong>You don't need front/profile/back angles — just expression variants.</strong></p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Label className="text-xs text-muted-foreground">Upload tag:</Label>
+                    <Input
+                      value={uploadTag}
+                      onChange={(e) => setUploadTag(e.target.value)}
+                      placeholder="e.g. neutral, smug, panicked"
+                      className="h-8 text-xs w-48"
+                    />
+                    <label
+                      className="flex items-center gap-1 text-xs cursor-pointer"
+                      title="Mark this image as the canonical fallback used when no expression-tagged ref matches what Director asks for"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={uploadIsBase}
+                        onChange={(e) => setUploadIsBase(e.target.checked)}
+                      />
+                      Mark as base (fallback ref)
+                    </label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleUpload(f);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                    />
+                    <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                      <Upload size={13} className="mr-1" /> Upload
+                    </Button>
+                  </div>
+
+                  {refs.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No reference images yet. Generate one with AI or upload your own.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {refs.map((r) => (
+                        <Card key={r.filename} className="p-2 space-y-2">
+                          <div className="rounded overflow-hidden border border-border bg-black aspect-square">
+                            <img src={r.url} alt={r.filename} className="w-full h-full object-contain" />
+                          </div>
+                          <Input
+                            value={r.tag}
+                            onChange={(e) => {
+                              const newTag = e.target.value;
+                              setRefs((prev) => prev.map((p) => (p.filename === r.filename ? { ...p, tag: newTag } : p)));
+                            }}
+                            onBlur={(e) => handleUpdateTag(r.filename, e.target.value)}
+                            placeholder="tag"
+                            className="h-7 text-xs"
+                          />
+                          <div className="flex items-center justify-between">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2"
+                              onClick={() => handleSetBase(r.filename)}
+                              title={r.is_base ? 'This is the base (canonical fallback ref)' : 'Set as base — this image becomes the canonical fallback used when Director asks for an expression with no matching tag'}
+                            >
+                              <Star size={12} className={r.is_base ? 'fill-yellow-400 text-yellow-400' : ''} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-red-500"
+                              onClick={() => handleDelete(r.filename)}
+                            >
+                              <Trash2 size={12} />
+                            </Button>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </>
+      )}
+    </Card>
+  );
+}
+
+
 export default function Brand() {
   const [dna, setDna] = useState<Record<string, unknown> | null>(null);
   const [saving, setSaving] = useState<Section | null>(null);
@@ -813,6 +1167,10 @@ export default function Brand() {
           </SectionCard>
 
           <ContentMixSection />
+
+          <ReelsMixSection />
+
+          <MascotSection />
 
           <div>
             <h3 className="text-base font-semibold text-foreground mb-3">Reference Images</h3>

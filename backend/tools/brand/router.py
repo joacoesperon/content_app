@@ -205,6 +205,133 @@ async def update_content_mix(body: dict):
     return {"ok": True}
 
 
+# ─── Reels Mix ────────────────────────────────────────────────────────────────
+
+@router.get("/reels-mix")
+async def get_reels_mix():
+    return {"content": service.load_reels_mix(BRAND_DIR)}
+
+
+@router.put("/reels-mix")
+async def update_reels_mix(body: dict):
+    content = body.get("content", "")
+    service.save_reels_mix(BRAND_DIR, content)
+    return {"ok": True}
+
+
+# ─── Mascot ───────────────────────────────────────────────────────────────────
+
+@router.get("/mascot")
+async def get_mascot():
+    return service.load_mascot(BRAND_DIR)
+
+
+@router.put("/mascot")
+async def update_mascot(body: dict):
+    """Replace the entire mascot.json (except 'references' which is managed via /mascot/refs)."""
+    current = service.load_mascot(BRAND_DIR)
+    body.pop("references", None)
+    current.update(body)
+    service.save_mascot(BRAND_DIR, current)
+    return current
+
+
+@router.get("/mascot/refs")
+async def list_mascot_refs():
+    return service.list_mascot_refs(BRAND_DIR)
+
+
+@router.post("/mascot/refs")
+async def upload_mascot_ref(
+    tag: str = "",
+    is_base: bool = False,
+    file: UploadFile = File(...),
+):
+    mdir = BRAND_DIR / "mascot"
+    mdir.mkdir(parents=True, exist_ok=True)
+    safe_name = Path(file.filename).name if file.filename else "ref.png"
+    dest = mdir / safe_name
+    with open(dest, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    service.add_mascot_ref(BRAND_DIR, safe_name, tag=tag, is_base=is_base)
+    return {
+        "filename": safe_name,
+        "url": f"/files/mascot/{safe_name}",
+        "tag": tag,
+        "is_base": is_base,
+    }
+
+
+@router.patch("/mascot/refs/{filename}")
+async def patch_mascot_ref(filename: str, body: dict):
+    service.update_mascot_ref(
+        BRAND_DIR,
+        filename,
+        tag=body.get("tag"),
+        is_base=body.get("is_base"),
+    )
+    refs = service.list_mascot_refs(BRAND_DIR)
+    return next((r for r in refs if r["filename"] == filename), {})
+
+
+@router.delete("/mascot/refs/{filename}")
+async def delete_mascot_ref(filename: str):
+    service.delete_mascot_ref(BRAND_DIR, filename)
+    return {"deleted": filename}
+
+
+@router.post("/mascot/generate")
+async def generate_mascot_image(body: dict):
+    """One-click generate a base mascot image with nano-banana from visual_description."""
+    import fal_client
+    import requests
+
+    description = body.get("description") or service.load_mascot(BRAND_DIR).get("visual_description", "")
+    if not description:
+        raise HTTPException(status_code=400, detail="No visual_description available")
+    aspect_ratio = body.get("aspect_ratio", "1:1")
+    filename = body.get("filename", "base.png")
+    tag = body.get("tag", "neutral")
+    set_as_base = body.get("is_base", True)
+
+    prompt = (
+        f"{description} "
+        f"Show the FULL character (entire candle body, top wick to bottom wick visible), "
+        f"centered in frame, isolated on a clean white background, "
+        f"facing the camera straight-on, neutral friendly expression."
+    )
+    try:
+        result = fal_client.subscribe(
+            "fal-ai/nano-banana-2",
+            arguments={
+                "prompt": prompt,
+                "num_images": 1,
+                "aspect_ratio": aspect_ratio,
+                "output_format": "png",
+                "resolution": "2K",
+            },
+            with_logs=False,
+        )
+        url = result["images"][0]["url"]
+        png = requests.get(url, timeout=60).content
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"FAL generation failed: {e}")
+
+    mdir = BRAND_DIR / "mascot"
+    mdir.mkdir(parents=True, exist_ok=True)
+    safe = Path(filename).name
+    if not safe.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+        safe = safe + ".png"
+    (mdir / safe).write_bytes(png)
+    service.add_mascot_ref(BRAND_DIR, safe, tag=tag, is_base=set_as_base)
+    return {
+        "filename": safe,
+        "url": f"/files/mascot/{safe}",
+        "tag": tag,
+        "is_base": set_as_base,
+    }
+
+
 # ─── Reference Ads Library ────────────────────────────────────────────────────
 
 REF_ADS_DIR = BRAND_DIR / "reference-ads"

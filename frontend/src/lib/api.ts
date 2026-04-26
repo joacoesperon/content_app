@@ -199,6 +199,121 @@ export async function updateContentMix(content: string) {
   return res.json();
 }
 
+
+// ─── Reels Mix ────────────────────────────────────────────────────────────────
+
+export async function fetchReelsMix() {
+  const res = await fetch(`${BASE}/api/tools/brand/reels-mix`);
+  return res.json() as Promise<{ content: string }>;
+}
+
+export async function updateReelsMix(content: string) {
+  const res = await fetch(`${BASE}/api/tools/brand/reels-mix`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail ?? 'Save error');
+  }
+  return res.json();
+}
+
+
+// ─── Mascot ───────────────────────────────────────────────────────────────────
+
+export interface MascotTone {
+  id: string;
+  label: string;
+  use_when: string;
+}
+
+export interface MascotRef {
+  filename: string;
+  url: string;
+  tag: string;
+  is_base: boolean;
+}
+
+export interface Mascot {
+  name: string;
+  visual_description: string;
+  tones: MascotTone[];
+  expressions: string[];
+  catchphrases: string[];
+  references: { filename: string; tag: string; is_base: boolean }[];
+}
+
+export async function fetchMascot(): Promise<Mascot> {
+  const res = await fetch(`${BASE}/api/tools/brand/mascot`);
+  return res.json();
+}
+
+export async function updateMascot(data: Partial<Mascot>): Promise<Mascot> {
+  const res = await fetch(`${BASE}/api/tools/brand/mascot`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Save error');
+  return res.json();
+}
+
+export async function fetchMascotRefs(): Promise<MascotRef[]> {
+  const res = await fetch(`${BASE}/api/tools/brand/mascot/refs`);
+  return res.json();
+}
+
+export async function uploadMascotRef(file: File, tag = '', isBase = false): Promise<MascotRef> {
+  const params = new URLSearchParams({ tag, is_base: String(isBase) });
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch(`${BASE}/api/tools/brand/mascot/refs?${params}`, {
+    method: 'POST',
+    body: fd,
+  });
+  if (!res.ok) throw new Error('Upload error');
+  return res.json();
+}
+
+export async function patchMascotRef(filename: string, patch: { tag?: string; is_base?: boolean }) {
+  const res = await fetch(`${BASE}/api/tools/brand/mascot/refs/${encodeURIComponent(filename)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error('Update error');
+  return res.json();
+}
+
+export async function deleteMascotRef(filename: string) {
+  const res = await fetch(`${BASE}/api/tools/brand/mascot/refs/${encodeURIComponent(filename)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Delete error');
+}
+
+export async function generateMascotImage(opts: {
+  description?: string;
+  filename?: string;
+  tag?: string;
+  is_base?: boolean;
+  aspect_ratio?: string;
+}): Promise<MascotRef> {
+  const res = await fetch(`${BASE}/api/tools/brand/mascot/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(opts),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Generation error');
+  }
+  return res.json();
+}
+
+
 // ─── Brand Products ───────────────────────────────────────────────────────────
 
 export async function fetchBrandProducts() {
@@ -474,6 +589,387 @@ export async function runScout(
 export async function fetchScoutHistory(): Promise<{ filename: string; content: string }[]> {
   const res = await fetch(`${BASE}/api/tools/scout/history`);
   return res.json();
+}
+
+
+// ─── Director ─────────────────────────────────────────────────────────────────
+
+export async function runDirector(
+  prompt: string,
+  onEvent: (event: Record<string, unknown>) => void,
+): Promise<void> {
+  const response = await fetch(`${BASE}/api/tools/director/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Error running Director');
+  }
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const data = JSON.parse(line.slice(6));
+          onEvent(data);
+        } catch {
+          // skip malformed lines
+        }
+      }
+    }
+  }
+}
+
+export async function fetchDirectorHistory(): Promise<{ filename: string; content: string }[]> {
+  const res = await fetch(`${BASE}/api/tools/director/history`);
+  return res.json();
+}
+
+
+// ─── Reels ────────────────────────────────────────────────────────────────────
+
+const REELS = `${BASE}/api/tools/reels`;
+
+export interface SceneBriefData {
+  number: number;
+  setting: string;
+  expression: string;
+  tone_id: string;
+  dialogue: string;
+  animation_hint: string;
+}
+
+export interface ReelBrief {
+  number: number;
+  category: string;
+  avatar: string;
+  lever: string;
+  concept: string;
+  total_length: string;
+  voice_direction: string;
+  scenes: SceneBriefData[];
+  hashtags: string;
+  rationale: string;
+  slug: string;
+}
+
+export interface SceneVersion {
+  version: number;
+  image_filename: string | null;
+  image_url: string | null;
+  video_filename: string | null;
+  video_url: string | null;
+  setting: string;
+  expression: string;
+  tone_id: string;
+  dialogue: string;
+  animation_hint: string;
+  image_prompt_used: string;
+  video_prompt_used: string;
+  refs_used: string[];
+  aspect_ratio: string;
+  generated_at: string;
+}
+
+export interface SceneInfo {
+  scene_number: number;
+  versions: SceneVersion[];
+  favorite_version: number | null;
+}
+
+export interface ReelOutput {
+  folder: string;
+  date: string;
+  reel_slug: string;
+  reel_number: number | null;
+  category: string;
+  avatar: string;
+  lever: string;
+  concept: string;
+  voice_direction: string;
+  hashtags: string;
+  scenes: SceneInfo[];
+  final_url: string | null;
+}
+
+export interface ReelsPricing {
+  image_per_scene: number;
+  video_per_scene: number;
+  estimated_per_reel_3_scenes: number;
+  estimated_per_reel_4_scenes: number;
+}
+
+export async function fetchDirectorFiles(): Promise<{ filename: string; reels_count: number }[]> {
+  const res = await fetch(`${REELS}/director-files`);
+  if (!res.ok) throw new Error('Error loading director files');
+  return res.json();
+}
+
+export async function fetchDirectorFileReels(filename: string): Promise<ReelBrief[]> {
+  const res = await fetch(`${REELS}/director-files/${encodeURIComponent(filename)}`);
+  if (!res.ok) throw new Error('Error loading reels');
+  return res.json();
+}
+
+export async function fetchReelsPricing(): Promise<ReelsPricing> {
+  const res = await fetch(`${REELS}/pricing`);
+  if (!res.ok) throw new Error('Error loading pricing');
+  return res.json();
+}
+
+export async function generateReelScene(payload: {
+  filename: string;
+  reel_number: number;
+  scene_number: number;
+  setting: string;
+  expression: string;
+  tone_id: string;
+  dialogue: string;
+  animation_hint: string;
+  aspect_ratio: string;
+  extra_image_prompt?: string;
+}): Promise<{
+  scene_number: number;
+  new_version: SceneVersion;
+  all_versions: SceneVersion[];
+  favorite_version: number | null;
+}> {
+  const res = await fetch(`${REELS}/generate-scene`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Generation error');
+  }
+  return res.json();
+}
+
+export async function fetchReelOutputs(): Promise<ReelOutput[]> {
+  const res = await fetch(`${REELS}/outputs`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function fetchReelOutput(date: string, slug: string): Promise<ReelOutput | null> {
+  const res = await fetch(`${REELS}/outputs/${encodeURIComponent(date)}/${encodeURIComponent(slug)}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function setReelFavorite(
+  date: string,
+  reelSlug: string,
+  sceneNumber: number,
+  version: number | null,
+): Promise<SceneInfo> {
+  const res = await fetch(`${REELS}/set-favorite`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, reel_slug: reelSlug, scene_number: sceneNumber, version }),
+  });
+  if (!res.ok) throw new Error('Set favorite error');
+  return res.json();
+}
+
+export async function renderReelFinal(date: string, reelSlug: string): Promise<{ final_url: string; final_filename: string }> {
+  const res = await fetch(`${REELS}/render-final`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, reel_slug: reelSlug }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Render error');
+  }
+  return res.json();
+}
+
+export async function deleteReelOutput(date: string, slug: string): Promise<void> {
+  const res = await fetch(`${REELS}/outputs/${encodeURIComponent(date)}/${encodeURIComponent(slug)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Delete error');
+}
+
+
+// ─── Carousels ────────────────────────────────────────────────────────────────
+
+const CAR = `${BASE}/api/tools/carousels`;
+
+export interface SlideBrief {
+  number: number;
+  label: string;
+  prompt: string;
+}
+
+export interface PostBrief {
+  number: number;
+  category: string;
+  avatar: string;
+  lever: string;
+  caption: string;
+  slides: SlideBrief[];
+  hashtags: string;
+  rationale: string;
+  slug: string;
+}
+
+export interface SlideVersion {
+  version: number;
+  filename: string;
+  url: string;
+  prompt_used: string;
+  apply_modifier: boolean;
+  resolution: string;
+  aspect_ratio: string;
+  seed: number | null;
+  thinking_level: 'minimal' | 'high' | null;
+  generated_at: string;
+}
+
+export interface SlideInfo {
+  slide_number: number;
+  label: string;
+  versions: SlideVersion[];
+  favorite_version: number | null;
+}
+
+export interface GenerateSlideResponse {
+  slide_number: number;
+  label: string;
+  new_version: SlideVersion;
+  all_versions: SlideVersion[];
+  favorite_version: number | null;
+}
+
+export interface CarouselOutput {
+  folder: string;
+  date: string;
+  post_slug: string;
+  post_number: number | null;
+  category: string;
+  avatar: string;
+  lever: string;
+  caption: string;
+  hashtags: string;
+  slides: SlideInfo[];
+}
+
+export interface PricingInfo {
+  base_per_image: number;
+  resolution_multipliers: Record<string, number>;
+  thinking_high_extra: number;
+  thinking_minimal_extra: number;
+  web_search_extra: number;
+}
+
+export async function fetchScoutFiles(): Promise<{ filename: string; posts_count: number }[]> {
+  const res = await fetch(`${CAR}/scout-files`);
+  if (!res.ok) throw new Error('Error cargando archivos de Scout');
+  return res.json();
+}
+
+export async function fetchScoutFilePosts(filename: string): Promise<PostBrief[]> {
+  const res = await fetch(`${CAR}/scout-files/${encodeURIComponent(filename)}`);
+  if (!res.ok) throw new Error('Error cargando posts');
+  return res.json();
+}
+
+export async function fetchBrandModifier(): Promise<string> {
+  const res = await fetch(`${CAR}/modifier`);
+  if (!res.ok) return '';
+  const data = await res.json();
+  return data.modifier ?? '';
+}
+
+export async function fetchPricing(): Promise<PricingInfo> {
+  const res = await fetch(`${CAR}/pricing`);
+  if (!res.ok) throw new Error('Error cargando pricing');
+  return res.json();
+}
+
+export async function generateCarouselSlide(payload: {
+  filename: string;
+  post_number: number;
+  slide_number: number;
+  prompt: string;
+  apply_modifier: boolean;
+  resolution: string;
+  aspect_ratio: string;
+  seed?: number | null;
+  thinking_level?: 'minimal' | 'high' | null;
+}): Promise<GenerateSlideResponse> {
+  const res = await fetch(`${CAR}/generate-slide`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Error generando slide');
+  }
+  return res.json();
+}
+
+export async function fetchCarouselOutputs(): Promise<CarouselOutput[]> {
+  const res = await fetch(`${CAR}/outputs`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function fetchCarouselOutput(
+  date: string,
+  slug: string,
+): Promise<CarouselOutput | null> {
+  const res = await fetch(
+    `${CAR}/outputs/${encodeURIComponent(date)}/${encodeURIComponent(slug)}`,
+  );
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function setCarouselFavorite(
+  date: string,
+  postSlug: string,
+  slideNumber: number,
+  version: number | null,
+): Promise<SlideInfo> {
+  const res = await fetch(`${CAR}/set-favorite`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, post_slug: postSlug, slide_number: slideNumber, version }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Error marcando favorita');
+  }
+  return res.json();
+}
+
+export function getCarouselZipUrl(date: string, slug: string): string {
+  return `${CAR}/outputs/${encodeURIComponent(date)}/${encodeURIComponent(slug)}/zip`;
+}
+
+export async function deleteCarouselOutput(date: string, slug: string): Promise<void> {
+  const res = await fetch(
+    `${CAR}/outputs/${encodeURIComponent(date)}/${encodeURIComponent(slug)}`,
+    { method: 'DELETE' },
+  );
+  if (!res.ok) throw new Error('Error borrando carousel');
 }
 
 

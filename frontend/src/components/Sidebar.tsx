@@ -9,6 +9,9 @@ import {
   Users,
   Megaphone,
   Bot,
+  Layers,
+  Clapperboard,
+  Film,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -20,6 +23,9 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
   users: <Users size={18} />,
   megaphone: <Megaphone size={18} />,
   bot: <Bot size={18} />,
+  layers: <Layers size={18} />,
+  clapperboard: <Clapperboard size={18} />,
+  film: <Film size={18} />,
 };
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>

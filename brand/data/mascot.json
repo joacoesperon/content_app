@@ -1,0 +1,52 @@
+{
+  "name": "JT (the JessTrading Candle)",
+  "visual_description": "3D Pixar-style mascot character. The ENTIRE BODY is a single tall rectangular green trading candle — the candle IS the whole character, not a candle head sitting on a separate body. Saturated green color (#00C853). Thin black wicks protrude from the top and the bottom of the rectangular body. A friendly cartoon face is placed on the FRONT FACE of the candle rectangle: large round expressive eyes and a small mouth that animates with speech. No arms, no legs, no neck, no separate torso — just the rectangular candle with eyes and a mouth. Soft warm Pixar-style lighting, subtle rim light, gentle drop shadow on the ground. Clean and stylized like a Pixar short film character.",
+  "tones": [
+    {
+      "id": "deadpan",
+      "label": "Deadpan-sarcastic",
+      "use_when": "Calling out trader self-sabotage, ironic observations, eye-roll moments, unimpressed reactions to obvious mistakes"
+    },
+    {
+      "id": "warm",
+      "label": "Warm-pedagogical",
+      "use_when": "Explaining how the bot works, teaching a concept, reassuring, breaking down a market idea calmly"
+    },
+    {
+      "id": "panicked",
+      "label": "Panicked-comedic",
+      "use_when": "Reacting to red candles, drawdowns, when the manual trader is losing — exaggerated worry, shaky voice"
+    },
+    {
+      "id": "smug",
+      "label": "Smug-confident",
+      "use_when": "The bot just won, contrast moment vs manual trader, victory beats, 'I told you so' energy"
+    },
+    {
+      "id": "confidential",
+      "label": "Confidential-low",
+      "use_when": "Insider tip, conspiratorial moment, calling out an industry truth, leaning into the camera as if telling a secret"
+    }
+  ],
+  "expressions": [
+    "neutral",
+    "happy",
+    "smug",
+    "panicked",
+    "confused"
+  ],
+  "catchphrases": [
+    "I trade while you sleep.",
+    "The market doesn't care about your feelings. I do though.",
+    "You think this is volatility? Cute.",
+    "Stop trying to time the market. You're not me.",
+    "Rules executed. No therapy needed."
+  ],
+  "references": [
+    {
+      "filename": "base.png",
+      "tag": "neutral",
+      "is_base": false
+    }
+  ]
+}

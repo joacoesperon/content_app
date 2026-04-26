@@ -8,7 +8,7 @@ from typing import Optional
 
 from backend.config import BRAND_DIR, OUTPUTS_DIR
 
-SETTINGS_FILE = BRAND_DIR / "meta-ads" / "settings.json"
+SETTINGS_FILE = BRAND_DIR / "data" / "meta-ads-settings.json"
 BATCHES_DIR = OUTPUTS_DIR / "meta_ads" / "batches"
 UPLOADS_DIR = OUTPUTS_DIR / "meta_ads" / "uploads"
 

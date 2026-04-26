@@ -23,4 +23,5 @@ OUTPUTS_DIR.mkdir(exist_ok=True)
 (OUTPUTS_DIR / "concept_ads").mkdir(exist_ok=True)
 (OUTPUTS_DIR / "scout").mkdir(exist_ok=True)
 (OUTPUTS_DIR / "meta_ads").mkdir(exist_ok=True)
+(OUTPUTS_DIR / "carousels").mkdir(exist_ok=True)
 

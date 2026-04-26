@@ -29,7 +29,7 @@ Call get_current_time BEFORE anything else. You do not know today's date from me
 
 **Primary source: reddit_search.** Real traders talk on Reddit — not in press-release news. This is where you find real pains, memes, viral threads, contrarian takes. Run 2–3 reddit_search calls against relevant subs:
 - r/Daytrading, r/algotrading, r/Forex, r/wallstreetbets, r/Trading, r/options
-- Queries should be broad and current: "gold", "xauusd", "algo", "bot", "consistent losses", "discipline", "AI trading"
+- Queries should be broad and current: "trading", "investing", "mone online", "gold", "algo trading", "algo", "bot", "consistent losses", "discipline", "AI trading"
 - Sort by "hot" or "top" with timeframe "week" — you want what's resonating NOW, not evergreen posts
 - Look for: high-upvote threads, recurring complaints, questions asked repeatedly, memes/jokes
 
@@ -148,13 +148,13 @@ TOOLS = [
     },
     {
         "name": "read_brand_file",
-        "description": "Lee un archivo del directorio de marca. Usá para: brand-dna.md, data/avatars.json, scout-state.json",
+        "description": "Lee un archivo del directorio de marca. Usá para: brand-style.md, data/avatars.json, content-mix.md, data/scout-state.json",
         "input_schema": {
             "type": "object",
             "properties": {
                 "filename": {
                     "type": "string",
-                    "description": "Nombre del archivo relativo al directorio de marca, ej: 'brand-dna.md', 'data/avatars.json', 'data/scout-state.json'",
+                    "description": "Nombre del archivo relativo al directorio de marca, ej: 'brand-style.md', 'data/avatars.json', 'content-mix.md', 'data/scout-state.json'",
                 }
             },
             "required": ["filename"],
@@ -208,6 +208,8 @@ def _get_current_time() -> str:
 
 def _reddit_search(subreddit: str, query: str, sort: str = "top", timeframe: str = "week") -> str:
     try:
+        import ssl, certifi
+        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
         sub = subreddit.strip().lstrip("r/").strip("/")
         params = {
             "q": query,
@@ -218,7 +220,7 @@ def _reddit_search(subreddit: str, query: str, sort: str = "top", timeframe: str
         }
         url = f"https://www.reddit.com/r/{urllib.parse.quote(sub)}/search.json?{urllib.parse.urlencode(params)}"
         req = urllib.request.Request(url, headers={"User-Agent": "JessTrading-Scout/1.0"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=15, context=ssl_ctx) as resp:
             data = json.loads(resp.read().decode("utf-8"))
         children = data.get("data", {}).get("children", [])
         if not children:

@@ -14,6 +14,7 @@ export default defineConfig({
     proxy: {
       '/api': { target: 'http://localhost:8000', ws: true },
       '/files': 'http://localhost:8000',
+      '/outputs': 'http://localhost:8000',
     },
   },
 })
