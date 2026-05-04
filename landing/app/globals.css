@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: #010101;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: radial-gradient(ellipse at top, #101010 0%, #050505 50%, #010101 100%);
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(41, 121, 255, 0.4);
+  color: #ffffff;
+}

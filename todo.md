@@ -212,4 +212,11 @@ No sobreescribir output del mismo día (sufija -1, -2) · Endpoints `/brand/cont
 **Reels stack (2026-04-26):**
 `brand/data/mascot.json` con visual_description + 5 tones + 5 expressions + catchphrases · `brand/reels-mix.md` con distribución 3 reels/semana + reglas duras · `brand/mascot/` directorio para refs de la vela con tags por expresión · Endpoints `/brand/mascot`, `/brand/mascot/refs`, `/brand/mascot/generate`, `/brand/reels-mix` con UI completa en Brand Tool (MascotSection + ReelsMixSection) · Director agent con system prompt de 200+ líneas, mismas tools que Scout pero con state separado · Reels Tool con pipeline `nano-banana-pro/edit + veo3-fast i2v + ffmpeg` · `ReelJobsProvider` global agregado a App.tsx.
 
---- hacer reels tool, b - nuevo agente
+---
+
+## 📋 Próximos pasos
+
+1. crear la primer campaña de meta
+2. revisar si puedo seleccionar la campaña en la meta ads tool (ya con eso quedaria lista, quedaria ver si funciona toda completa)
+3. descargar devuelta el nano banana + claude code SKILL.md y reescribirlo para que se entienda lo que se tiene que hacer en static ads
+4. hacer scout + carrousel tool + para hacer reels
