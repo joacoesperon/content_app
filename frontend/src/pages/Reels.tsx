@@ -21,13 +21,17 @@ import {
   deleteReelOutput,
   fetchDirectorFileReels,
   fetchDirectorFiles,
+  fetchMascotRefs,
   fetchReelOutput,
   fetchReelOutputs,
   fetchReelsPricing,
+  previewReelImagePrompt,
+  previewReelVideoPrompt,
   renderReelFinal,
   setReelFavorite,
 } from '../lib/api';
 import type {
+  MascotRef,
   ReelBrief,
   ReelOutput,
   ReelsPricing,
@@ -75,6 +79,12 @@ interface SceneFormState {
   animationHint: string;
   aspectRatio: string;
   extraImagePrompt: string;
+  refFilename: string;  // which mascot ref to use as the edit base (empty = auto-resolve)
+  // prompt overrides (E1)
+  imagePromptOverride: string;  // empty = use auto-built; non-empty = override sent to nano-banana
+  videoPromptOverride: string;  // empty = use auto-built; non-empty = override sent to Veo
+  // toggle for the auto_fix Veo flag (E2)
+  autoFix: boolean;
   // originals (so we can reset)
   originalSetting: string;
   originalExpression: string;
@@ -98,6 +108,10 @@ function initialSceneState(s: ReelBrief['scenes'][number]): SceneFormState {
     animationHint: s.animation_hint,
     aspectRatio: '9:16',
     extraImagePrompt: '',
+    refFilename: '',
+    imagePromptOverride: '',
+    videoPromptOverride: '',
+    autoFix: true,
     originalSetting: s.setting,
     originalExpression: s.expression,
     originalToneId: s.tone_id,
@@ -110,19 +124,98 @@ function initialSceneState(s: ReelBrief['scenes'][number]): SceneFormState {
   };
 }
 
+// ─── Prompt preview / edit (E1) ──────────────────────────────────────────────
+
+function PromptPreview({
+  label,
+  override,
+  buildPreview,
+  onChange,
+  deps,
+}: {
+  label: string;
+  override: string;
+  buildPreview: () => Promise<string>;
+  onChange: (next: string) => void;
+  deps: unknown[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [autoBuilt, setAutoBuilt] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+
+  // Refresh the auto-built prompt whenever the inputs change (or the panel opens).
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoading(true);
+    buildPreview()
+      .then((p) => { if (!cancelled) setAutoBuilt(p); })
+      .catch(() => { if (!cancelled) setAutoBuilt(''); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, ...deps]);
+
+  const effective = override || autoBuilt;
+  const isEdited = override.length > 0 && override !== autoBuilt;
+
+  return (
+    <details
+      className="text-xs"
+      open={open}
+      onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
+    >
+      <summary className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-2">
+        <span>{label}</span>
+        {isEdited && <span className="text-yellow-500">· edited</span>}
+        {loading && <Loader2 size={11} className="animate-spin" />}
+      </summary>
+      <div className="mt-2 space-y-1">
+        <Textarea
+          value={effective}
+          onChange={(e) => onChange(e.target.value)}
+          rows={6}
+          className="text-xs font-mono"
+          placeholder="Auto-built prompt will appear here once the panel opens."
+        />
+        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+          {isEdited ? (
+            <button
+              onClick={() => onChange('')}
+              className="flex items-center gap-1 hover:text-foreground underline"
+            >
+              <RotateCcw size={10} /> Reset to default
+            </button>
+          ) : (
+            <span className="italic">Default — sent as-is unless you edit it.</span>
+          )}
+        </div>
+      </div>
+    </details>
+  );
+}
+
 // ─── Scene card ──────────────────────────────────────────────────────────────
 
 function SceneCard({
   scene,
-  isGenerating,
+  imageJobInFlight,
+  videoJobInFlight,
+  mascotRefs,
+  defaultRefFilename,
   onChange,
-  onGenerate,
+  onGenerateImage,
+  onAnimate,
   onToggleFavorite,
 }: {
   scene: SceneFormState;
-  isGenerating: boolean;
+  imageJobInFlight: boolean;
+  videoJobInFlight: boolean;
+  mascotRefs: MascotRef[];
+  defaultRefFilename: string;
   onChange: (patch: Partial<SceneFormState>) => void;
-  onGenerate: () => void;
+  onGenerateImage: () => void;
+  onAnimate: (version: number) => void;
   onToggleFavorite: (v: number | null) => void;
 }) {
   const currentIdx = scene.versions.findIndex((v) => v.version === scene.currentVersion);
@@ -130,6 +223,8 @@ function SceneCard({
   const canPrev = currentIdx > 0;
   const canNext = currentIdx >= 0 && currentIdx < scene.versions.length - 1;
   const isFavorite = currentVersion?.version === scene.favoriteVersion;
+  const hasVideo = !!currentVersion?.video_url;
+  const hasImage = !!currentVersion?.image_url;
 
   const fieldChanged = (orig: string, current: string) => orig !== current;
   const hasEdits =
@@ -220,7 +315,12 @@ function SceneCard({
       </div>
 
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Dialogue (≤16 words)</Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Dialogue (18-25 words){' '}
+          <span className="text-[10px] opacity-70">
+            · {scene.dialogue.trim().split(/\s+/).filter(Boolean).length} words
+          </span>
+        </Label>
         <Input
           value={scene.dialogue}
           onChange={(e) => onChange({ dialogue: e.target.value })}
@@ -239,6 +339,40 @@ function SceneCard({
         />
       </div>
 
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">Mascot reference (sent to nano-banana/edit)</Label>
+        <select
+          value={scene.refFilename}
+          onChange={(e) => onChange({ refFilename: e.target.value })}
+          className="w-full h-8 text-xs rounded-md border border-border bg-background px-2"
+        >
+          <option value="">
+            Auto: {defaultRefFilename || '(none)'}
+          </option>
+          {mascotRefs.map((r) => (
+            <option key={r.filename} value={r.filename}>
+              {r.filename}{r.tag ? ` (${r.tag})` : ''}{r.is_base ? ' ★' : ''}
+            </option>
+          ))}
+        </select>
+        {(() => {
+          const selectedFilename = scene.refFilename || defaultRefFilename;
+          const selected = mascotRefs.find((r) => r.filename === selectedFilename);
+          if (!selected) return null;
+          return (
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <img
+                src={selected.url}
+                alt={selected.filename}
+                className="w-10 h-10 object-contain rounded border border-border bg-black"
+              />
+              <span className="font-mono">{selected.filename}</span>
+              {scene.refFilename === '' && <span className="text-[10px]">(auto)</span>}
+            </div>
+          );
+        })()}
+      </div>
+
       <details className="text-xs">
         <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
           Extra image prompt (optional)
@@ -248,37 +382,120 @@ function SceneCard({
           onChange={(e) => onChange({ extraImagePrompt: e.target.value })}
           rows={2}
           className="text-xs mt-2"
-          placeholder="Additional direction for nano-banana-pro/edit"
+          placeholder="Additional direction for nano-banana/edit"
         />
       </details>
 
-      <Button onClick={onGenerate} disabled={isGenerating} size="sm" className="w-full">
-        {isGenerating ? (
-          <>
-            <Loader2 size={14} className="animate-spin mr-2" />
-            Generating (~2-3 min)...
-          </>
-        ) : scene.versions.length > 0 ? (
-          <>
-            <RefreshCw size={14} className="mr-2" /> Regenerate (~$1.30)
-          </>
-        ) : (
-          <>
-            <Sparkles size={14} className="mr-2" /> Generate (~$1.30)
-          </>
-        )}
-      </Button>
+      <PromptPreview
+        label="Show image prompt (sent to nano-banana)"
+        override={scene.imagePromptOverride}
+        onChange={(v) => onChange({ imagePromptOverride: v })}
+        buildPreview={() =>
+          previewReelImagePrompt({
+            setting: scene.setting,
+            expression: scene.expression,
+            extra_image_prompt: scene.extraImagePrompt,
+          }).then((r) => r.prompt)
+        }
+        deps={[scene.setting, scene.expression, scene.extraImagePrompt]}
+      />
+
+      <PromptPreview
+        label="Show video prompt (sent to Veo i2v)"
+        override={scene.videoPromptOverride}
+        onChange={(v) => onChange({ videoPromptOverride: v })}
+        buildPreview={() =>
+          previewReelVideoPrompt({
+            dialogue: scene.dialogue,
+            animation_hint: scene.animationHint,
+            tone_id: scene.toneId,
+          }).then((r) => r.prompt)
+        }
+        deps={[scene.dialogue, scene.animationHint, scene.toneId]}
+      />
+
+      <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+        <input
+          type="checkbox"
+          checked={scene.autoFix}
+          onChange={(e) => onChange({ autoFix: e.target.checked })}
+          className="h-3 w-3"
+        />
+        <span>Veo auto_fix (rewrites prompt to dodge moderation; turn off if you want exact prompt)</span>
+      </label>
+
+      <div className="grid grid-cols-2 gap-2">
+        <Button onClick={onGenerateImage} disabled={imageJobInFlight} size="sm" variant={hasImage ? 'outline' : 'default'}>
+          {imageJobInFlight ? (
+            <>
+              <Loader2 size={14} className="animate-spin mr-2" />
+              Image…
+            </>
+          ) : scene.versions.length > 0 ? (
+            <>
+              <RefreshCw size={14} className="mr-2" /> Regen image (~$0.10)
+            </>
+          ) : (
+            <>
+              <Sparkles size={14} className="mr-2" /> Generate image (~$0.10)
+            </>
+          )}
+        </Button>
+        <Button
+          onClick={() => currentVersion && onAnimate(currentVersion.version)}
+          disabled={videoJobInFlight || !hasImage}
+          size="sm"
+          variant={!hasVideo && hasImage ? 'default' : 'outline'}
+          title={!hasImage ? 'Generate an image first' : hasVideo ? 'Re-animate this version (replaces the video)' : 'Animate the current image (Veo i2v)'}
+        >
+          {videoJobInFlight ? (
+            <>
+              <Loader2 size={14} className="animate-spin mr-2" />
+              Animating…
+            </>
+          ) : hasVideo ? (
+            <>
+              <RefreshCw size={14} className="mr-2" /> Re-animate (~$1.20)
+            </>
+          ) : (
+            <>
+              <Video size={14} className="mr-2" /> Animate (~$1.20)
+            </>
+          )}
+        </Button>
+      </div>
 
       {scene.error && <p className="text-xs text-red-500">{scene.error}</p>}
 
-      {currentVersion?.video_url && (
+      {currentVersion && (currentVersion.image_url || currentVersion.video_url) && (
         <div className="space-y-2">
-          <video
-            src={currentVersion.video_url}
-            controls
-            playsInline
-            className="w-full rounded border border-border bg-black"
-          />
+          {currentVersion.video_url ? (
+            <video
+              src={currentVersion.video_url}
+              controls
+              playsInline
+              className="w-full rounded border border-border bg-black"
+            />
+          ) : currentVersion.image_url ? (
+            <>
+              <a
+                href={currentVersion.image_url}
+                target="_blank"
+                rel="noreferrer"
+                className="block rounded border border-border bg-black overflow-hidden"
+                title="Open full size in new tab"
+              >
+                <img
+                  src={currentVersion.image_url}
+                  alt={`Scene ${scene.number} v${currentVersion.version}`}
+                  className="w-full h-auto block"
+                />
+              </a>
+              <p className="text-[10px] text-muted-foreground italic">
+                Image only. Click <strong>Animate</strong> when you're happy with it.
+              </p>
+            </>
+          ) : null}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
@@ -314,13 +531,19 @@ function SceneCard({
               >
                 <Star size={14} className={isFavorite ? 'fill-yellow-400 text-yellow-400' : ''} />
               </Button>
-              {currentVersion.video_url && (
+              {currentVersion.video_url ? (
                 <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                   <a href={currentVersion.video_url} download={`scene_${scene.number}_v${currentVersion.version}.mp4`}>
                     <Download size={14} />
                   </a>
                 </Button>
-              )}
+              ) : currentVersion.image_url ? (
+                <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                  <a href={currentVersion.image_url} download={`scene_${scene.number}_v${currentVersion.version}.png`}>
+                    <Download size={14} />
+                  </a>
+                </Button>
+              ) : null}
             </div>
           </div>
 
@@ -356,8 +579,24 @@ function ReelEditor({
   const [hashtags, setHashtags] = useState(reel.hashtags);
   const [finalUrl, setFinalUrl] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
+  const [mascotRefs, setMascotRefs] = useState<MascotRef[]>([]);
 
   const date = dateFromFilename(filename);
+
+  useEffect(() => {
+    fetchMascotRefs().then(setMascotRefs).catch(() => setMascotRefs([]));
+  }, []);
+
+  // Compute the default ref for a given expression (mirror of backend resolve_ref logic)
+  const resolveDefaultRef = (expression: string): string => {
+    if (mascotRefs.length === 0) return '';
+    const expr = (expression || '').trim().toLowerCase();
+    const exprMatch = mascotRefs.find((r) => (r.tag || '').trim().toLowerCase() === expr);
+    if (exprMatch) return exprMatch.filename;
+    const baseMatch = mascotRefs.find((r) => r.is_base);
+    if (baseMatch) return baseMatch.filename;
+    return mascotRefs[0].filename;
+  };
 
   useEffect(() => {
     setScenes(reel.scenes.map(initialSceneState));
@@ -388,29 +627,37 @@ function ReelEditor({
     });
   }, [date, reel.slug]);
 
-  // Watch global jobs context — pick up results that completed while this view was unmounted
+  // Watch global jobs context — pick up results/errors that completed while this view was unmounted
   useEffect(() => {
     setScenes((prev) =>
       prev.map((s) => {
-        const key = jobs.jobKey(filename, reel.slug, s.number);
-        const job = jobs.jobs[key];
-        if (!job) return s;
+        const imageKey = jobs.jobKey(filename, reel.slug, s.number, 'image');
+        const videoKey = jobs.jobKey(filename, reel.slug, s.number, 'video');
+        const imageJob = jobs.jobs[imageKey];
+        const videoJob = jobs.jobs[videoKey];
         let next = s;
-        if (job.lastError && s.error !== job.lastError) {
-          next = { ...next, error: job.lastError };
+        // Propagate the most recent error from either job kind
+        const latestError = videoJob?.lastError || imageJob?.lastError;
+        if (latestError && s.error !== latestError) {
+          next = { ...next, error: latestError };
         }
-        const result = job.lastResult;
-        if (result) {
-          const alreadyHave = s.versions.some((v) => v.version === result.new_version.version);
-          if (!alreadyHave) {
-            next = {
-              ...next,
-              versions: result.all_versions,
-              currentVersion: result.new_version.version,
-              favoriteVersion: result.favorite_version,
-              error: null,
-            };
-          }
+        // Merge any results not already in our local versions
+        for (const job of [imageJob, videoJob]) {
+          const result = job?.lastResult;
+          if (!result) continue;
+          const incoming = result.new_version;
+          const matching = s.versions.find((v) => v.version === incoming.version);
+          const alreadyHasIt =
+            matching &&
+            (!incoming.video_filename || matching.video_filename === incoming.video_filename);
+          if (alreadyHasIt) continue;
+          next = {
+            ...next,
+            versions: result.all_versions,
+            currentVersion: incoming.version,
+            favoriteVersion: result.favorite_version,
+            error: null,
+          };
         }
         return next;
       }),
@@ -422,23 +669,22 @@ function ReelEditor({
     setScenes((prev) => prev.map((s) => (s.number === number ? { ...s, ...patch } : s)));
   };
 
-  const generateScene = async (number: number) => {
+  const generateImage = async (number: number) => {
     const scene = scenes.find((s) => s.number === number);
     if (!scene) return;
     updateScene(number, { error: null });
 
-    await jobs.startGenerate(
+    await jobs.startGenerateImage(
       {
         filename,
         reel_number: reel.number,
         scene_number: number,
         setting: scene.setting,
         expression: scene.expression,
-        tone_id: scene.toneId,
-        dialogue: scene.dialogue,
-        animation_hint: scene.animationHint,
         aspect_ratio: scene.aspectRatio,
         extra_image_prompt: scene.extraImagePrompt || undefined,
+        ref_filename: scene.refFilename || null,
+        prompt_override: scene.imagePromptOverride || null,
         reel_slug: reel.slug,
       },
       (res) => {
@@ -459,16 +705,71 @@ function ReelEditor({
     );
   };
 
-  const generateAll = async () => {
+  const animateScene = async (number: number, version: number) => {
+    const scene = scenes.find((s) => s.number === number);
+    if (!scene) return;
+    updateScene(number, { error: null });
+
+    await jobs.startAnimate(
+      {
+        filename,
+        reel_number: reel.number,
+        scene_number: number,
+        version,
+        dialogue: scene.dialogue,
+        animation_hint: scene.animationHint,
+        tone_id: scene.toneId,
+        aspect_ratio: scene.aspectRatio,
+        prompt_override: scene.videoPromptOverride || null,
+        auto_fix: scene.autoFix,
+        reel_slug: reel.slug,
+      },
+      (res) => {
+        setScenes((prev) =>
+          prev.map((s) =>
+            s.number === number
+              ? {
+                  ...s,
+                  versions: res.all_versions,
+                  currentVersion: res.new_version.version,
+                  favoriteVersion: res.favorite_version,
+                  error: null,
+                }
+              : s,
+          ),
+        );
+      },
+    );
+  };
+
+  const generateAllImages = async () => {
     const missing = scenes.filter((s) => s.versions.length === 0);
     if (missing.length === 0) {
-      toast.info('All scenes already generated. Regenerate individually if you want.');
+      toast.info('All scenes already have at least one image. Regenerate individually if you want.');
       return;
     }
-    const cost = missing.length * (pricing ? pricing.image_per_scene + pricing.video_per_scene : 1.3);
-    if (!confirm(`Generate ${missing.length} scenes for ~${fmtMoney(cost)}? This takes ~2-3 min per scene.`)) return;
+    const cost = missing.length * (pricing?.image_per_scene ?? 0.10);
+    if (!confirm(`Generate ${missing.length} scene images for ~${fmtMoney(cost)}? Each takes ~15-30s.`)) return;
     for (const s of missing) {
-      await generateScene(s.number);
+      await generateImage(s.number);
+    }
+  };
+
+  const animateAllPending = async () => {
+    const pending = scenes
+      .map((s) => {
+        const cur = s.versions.find((v) => v.version === s.currentVersion);
+        return cur && cur.image_url && !cur.video_url ? { sceneNumber: s.number, version: cur.version } : null;
+      })
+      .filter((x): x is { sceneNumber: number; version: number } => x !== null);
+    if (pending.length === 0) {
+      toast.info('No image-only versions waiting to be animated.');
+      return;
+    }
+    const cost = pending.length * (pricing?.video_per_scene ?? 1.20);
+    if (!confirm(`Animate ${pending.length} scenes for ~${fmtMoney(cost)}? Each takes ~2-3 min (Veo).`)) return;
+    for (const p of pending) {
+      await animateScene(p.sceneNumber, p.version);
     }
   };
 
@@ -502,11 +803,20 @@ function ReelEditor({
     toast.success('Caption + hashtags copied');
   };
 
-  const allGenerated = scenes.every((s) => s.versions.length > 0);
+  const allHaveVideo = scenes.every((s) =>
+    s.versions.some((v) => v.video_url),
+  );
   const someGenerated = scenes.some((s) => s.versions.length > 0);
-  const pendingCost = pricing
-    ? scenes.filter((s) => s.versions.length === 0).length * (pricing.image_per_scene + pricing.video_per_scene)
+  const missingImagesCost = pricing
+    ? scenes.filter((s) => s.versions.length === 0).length * pricing.image_per_scene
     : 0;
+  const animatableScenes = scenes.filter((s) => {
+    const cur = s.versions.find((v) => v.version === s.currentVersion);
+    return cur && cur.image_url && !cur.video_url;
+  });
+  const animatableCount = animatableScenes.length;
+  const pendingAnimateCost = pricing ? animatableCount * pricing.video_per_scene : 0;
+  const scenesWithVideo = scenes.filter((s) => s.versions.some((v) => v.video_url)).length;
 
   return (
     <div className="space-y-4">
@@ -558,9 +868,9 @@ function ReelEditor({
             Copy concept + hashtags
           </Button>
           {someGenerated && (
-            <Button size="sm" variant="outline" onClick={renderFinal} disabled={rendering || !allGenerated}>
+            <Button size="sm" variant="outline" onClick={renderFinal} disabled={rendering || !allHaveVideo}>
               {rendering ? <Loader2 size={14} className="animate-spin mr-2" /> : <Video size={14} className="mr-2" />}
-              {rendering ? 'Rendering...' : allGenerated ? 'Render final video' : `Render (${scenes.filter((s) => s.versions.length > 0).length}/${scenes.length})`}
+              {rendering ? 'Rendering...' : allHaveVideo ? 'Render final video' : `Render (${scenesWithVideo}/${scenes.length} animated)`}
             </Button>
           )}
           {finalUrl && (
@@ -580,24 +890,35 @@ function ReelEditor({
         )}
       </Card>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-sm font-medium">{scenes.length} scenes</span>
-        <Button size="sm" onClick={generateAll}>
-          <Sparkles size={14} className="mr-2" />
-          Generate all missing (~{fmtMoney(pendingCost)})
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={generateAllImages}>
+            <Sparkles size={14} className="mr-2" />
+            Generate all images (~{fmtMoney(missingImagesCost)})
+          </Button>
+          <Button size="sm" onClick={animateAllPending} disabled={animatableCount === 0}>
+            <Video size={14} className="mr-2" />
+            Animate all ({animatableCount}) (~{fmtMoney(pendingAnimateCost)})
+          </Button>
+        </div>
       </div>
 
       <div className={`grid gap-4 ${scenes.length === 1 ? 'grid-cols-1 max-w-md' : 'grid-cols-1 lg:grid-cols-2'}`}>
         {scenes.map((s) => {
-          const key = jobs.jobKey(filename, reel.slug, s.number);
+          const imageKey = jobs.jobKey(filename, reel.slug, s.number, 'image');
+          const videoKey = jobs.jobKey(filename, reel.slug, s.number, 'video');
           return (
             <SceneCard
               key={s.number}
               scene={s}
-              isGenerating={jobs.isGenerating(key)}
+              imageJobInFlight={jobs.isGenerating(imageKey)}
+              videoJobInFlight={jobs.isGenerating(videoKey)}
+              mascotRefs={mascotRefs}
+              defaultRefFilename={resolveDefaultRef(s.expression)}
               onChange={(patch) => updateScene(s.number, patch)}
-              onGenerate={() => generateScene(s.number)}
+              onGenerateImage={() => generateImage(s.number)}
+              onAnimate={(v) => animateScene(s.number, v)}
               onToggleFavorite={(v) => toggleFavorite(s.number, v)}
             />
           );

@@ -46,6 +46,7 @@ class Reel:
     concept: str
     total_length: str
     voice_direction: str = ""
+    caption: str = ""
     scenes: list[Scene] = field(default_factory=list)
     hashtags: str = ""
     rationale: str = ""
@@ -66,7 +67,7 @@ REEL_HEADER_RE = re.compile(
 )
 
 SCENE_HEADER_RE = re.compile(
-    r"^####\s+Scene\s+(\d+)\b.*$",
+    r"^#{3,4}\s+Scene\s+(\d+)\b.*$",
     re.MULTILINE,
 )
 
@@ -92,6 +93,7 @@ def parse_director_file(path: Path) -> list[Reel]:
             concept=_extract_field(body, "Concept"),
             total_length=_extract_field(body, "Total length"),
             voice_direction=_extract_field(body, r"Voice direction(?:\s*\(overall\))?"),
+            caption=_extract_field(body, "Caption"),
             scenes=_extract_scenes(body),
             hashtags=_extract_field(body, "Hashtags"),
             rationale=_extract_field(body, "Rationale"),

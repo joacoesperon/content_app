@@ -313,6 +313,26 @@ export async function generateMascotImage(opts: {
   return res.json();
 }
 
+export async function editMascotRef(opts: {
+  source_filename: string;
+  prompt: string;
+  new_filename?: string;
+  tag?: string;
+  is_base?: boolean;
+  aspect_ratio?: string;
+}): Promise<MascotRef> {
+  const res = await fetch(`${BASE}/api/tools/brand/mascot/edit-ref`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(opts),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Remix error');
+  }
+  return res.json();
+}
+
 
 // ─── Brand Products ───────────────────────────────────────────────────────────
 
@@ -657,6 +677,7 @@ export interface ReelBrief {
   avatar: string;
   lever: string;
   concept: string;
+  caption: string;
   total_length: string;
   voice_direction: string;
   scenes: SceneBriefData[];
@@ -698,6 +719,7 @@ export interface ReelOutput {
   avatar: string;
   lever: string;
   concept: string;
+  caption: string;
   voice_direction: string;
   hashtags: string;
   scenes: SceneInfo[];
@@ -729,32 +751,85 @@ export async function fetchReelsPricing(): Promise<ReelsPricing> {
   return res.json();
 }
 
-export async function generateReelScene(payload: {
+export interface ReelSceneResult {
+  scene_number: number;
+  new_version: SceneVersion;
+  all_versions: SceneVersion[];
+  favorite_version: number | null;
+}
+
+export async function generateReelSceneImage(payload: {
   filename: string;
   reel_number: number;
   scene_number: number;
   setting: string;
   expression: string;
-  tone_id: string;
-  dialogue: string;
-  animation_hint: string;
   aspect_ratio: string;
   extra_image_prompt?: string;
-}): Promise<{
-  scene_number: number;
-  new_version: SceneVersion;
-  all_versions: SceneVersion[];
-  favorite_version: number | null;
-}> {
-  const res = await fetch(`${REELS}/generate-scene`, {
+  ref_filename?: string | null;
+  prompt_override?: string | null;
+}): Promise<ReelSceneResult> {
+  const res = await fetch(`${REELS}/generate-scene-image`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail ?? 'Generation error');
+    throw new Error(err.detail ?? 'Image generation error');
   }
+  return res.json();
+}
+
+export async function animateReelScene(payload: {
+  filename: string;
+  reel_number: number;
+  scene_number: number;
+  version: number;
+  dialogue: string;
+  animation_hint: string;
+  tone_id: string;
+  aspect_ratio: string;
+  prompt_override?: string | null;
+  auto_fix?: boolean;
+}): Promise<ReelSceneResult> {
+  const res = await fetch(`${REELS}/animate-scene`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Animation error');
+  }
+  return res.json();
+}
+
+export async function previewReelImagePrompt(payload: {
+  setting: string;
+  expression: string;
+  extra_image_prompt?: string;
+}): Promise<{ prompt: string }> {
+  const res = await fetch(`${REELS}/preview-image-prompt`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Preview error');
+  return res.json();
+}
+
+export async function previewReelVideoPrompt(payload: {
+  dialogue: string;
+  animation_hint: string;
+  tone_id: string;
+}): Promise<{ prompt: string }> {
+  const res = await fetch(`${REELS}/preview-video-prompt`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Preview error');
   return res.json();
 }
 

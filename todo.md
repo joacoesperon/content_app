@@ -1,33 +1,3 @@
-Add cute Pixar-style arms and legs to this candle character.
-
-Arms: two short chubby cartoon arms coming out of the sides
-of the candle, just below the face. Same saturated green
-color as the body. Each arm ends in a small rounded white
-cartoon hand (Pixar / Mickey Mouse style, three or four soft
-chunky fingers).
-
-Legs: two short stubby cartoon legs at the bottom of the
-candle, just above the bottom wick. Same green color as the
-body. Each leg ends in a small rounded white cartoon shoe
-(oval-shaped, soft, Funko Pop style).
-
-Pose: arms hang relaxed at the sides, legs stand straight
-and slightly apart, neutral friendly stance. Proportions are
-short and chunky — arms about 1/4 of the body height, legs
-about 1/5.
-
-Keep EVERYTHING ELSE exactly the same: same rectangular
-green candle body, same friendly face with the same eyes and
-smile, same black wicks on top and bottom, same Pixar 3D
-rendering, same soft warm lighting and shadow, same clean
-white background, same straight-on framing.
-
----
-
-podes hacer en la mascot section en la brand tool una interfaz pequeña para poder remixear fotos con nano banana 2 edit, porque en la pagina de fal no me funciona, nose porque
-
----
-
 # Plan — Sistema de Generación de Contenido Orgánico
 
 > **Última actualización:** 2026-04-26

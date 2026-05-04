@@ -52,12 +52,13 @@ from backend.tools.reels.parser import Reel, parse_director_file
 REELS_DIR = OUTPUTS_DIR / "reels"
 DIRECTOR_DIR = OUTPUTS_DIR / "director"
 
-IMAGE_EDIT_MODEL = "fal-ai/nano-banana-pro/edit"
-VIDEO_MODEL = "fal-ai/veo3-fast/image-to-video"
+IMAGE_EDIT_MODEL = "fal-ai/nano-banana-2/edit"
+VIDEO_MODEL = "fal-ai/veo3.1/fast/image-to-video"
+VEO_VALID_ASPECTS = {"auto", "16:9", "9:16"}
 
 # ─── Pricing (approximate, kept in sync with FAL docs) ───────────────────────
 
-IMAGE_PER_SCENE = 0.10  # nano-banana-pro/edit ~$0.10
+IMAGE_PER_SCENE = 0.08  # nano-banana-2/edit at 1K resolution = $0.08
 VIDEO_PER_SCENE = 1.20  # Veo 3.1 Fast 8s ~$1.20 each
 PER_REEL_3 = (IMAGE_PER_SCENE + VIDEO_PER_SCENE) * 3
 PER_REEL_4 = (IMAGE_PER_SCENE + VIDEO_PER_SCENE) * 4
@@ -93,20 +94,27 @@ def load_reels(filename: str) -> list[Reel]:
 
 # ─── Mascot reference resolution ─────────────────────────────────────────────
 
-def resolve_refs(expression: str) -> tuple[Path, list[Path]]:
+def resolve_ref(expression: str, override_filename: Optional[str] = None) -> Path:
     """
-    Pick mascot reference images for a given expression.
+    Pick a SINGLE mascot reference image to use as the base for /edit.
 
-    Returns (primary_ref_path, additional_ref_paths).
-    Primary = ref tagged with the expression, else the base, else the first.
-    Additionals = base (if not already primary) + any other refs (limited).
+    Priority:
+      1. If `override_filename` is given and exists on disk, use that.
+      2. Else, if a ref is tagged with the requested expression, use it.
+      3. Else, use the favorite (is_base=True).
+      4. Else, use the alphabetically first ref.
     """
     refs = list_mascot_refs(BRAND_DIR)
     if not refs:
         raise RuntimeError("No mascot references uploaded. Add at least one in Brand Tool → Mascot.")
 
     mdir = BRAND_DIR / "mascot"
-    by_filename = {r["filename"]: r for r in refs}
+
+    if override_filename:
+        target = mdir / override_filename
+        if target.exists() and any(r["filename"] == override_filename for r in refs):
+            return target
+        # fall through if invalid
 
     expr = (expression or "").strip().lower()
     expr_match = next(
@@ -114,31 +122,33 @@ def resolve_refs(expression: str) -> tuple[Path, list[Path]]:
         None,
     )
     base_match = next((r for r in refs if r.get("is_base")), None)
-
-    primary = expr_match or base_match or refs[0]
-    primary_path = mdir / primary["filename"]
-
-    additional: list[Path] = []
-    for r in refs:
-        if r["filename"] == primary["filename"]:
-            continue
-        if r.get("is_base") or (r.get("tag") or "").strip().lower() == expr:
-            additional.append(mdir / r["filename"])
-    # limit to 3 extra refs
-    additional = additional[:3]
-    _ = by_filename  # quiet linter
-    return primary_path, additional
+    chosen = expr_match or base_match or refs[0]
+    return mdir / chosen["filename"]
 
 
 # ─── FAL pipeline ─────────────────────────────────────────────────────────────
 
-def _build_image_prompt(scene_setting: str, expression: str, mascot_desc: str, extra: str = "") -> str:
-    bits = []
-    if mascot_desc:
-        bits.append(mascot_desc.strip())
-    bits.append(f"The character's expression is {expression}." if expression else "")
-    bits.append(f"Scene: {scene_setting.strip()}." if scene_setting else "")
-    bits.append("9:16 vertical aspect ratio, cinematic framing, soft Pixar-style lighting, the character is clearly visible and the focal point of the frame.")
+def _build_image_prompt(scene_setting: str, expression: str, extra: str = "") -> str:
+    """
+    For nano-banana-2/edit, the character comes from the reference image.
+    The prompt should describe ONLY the scene + expression — never redescribe
+    the character's body (or contradict the reference).
+    """
+    bits = [
+        "Use the character from the reference image. Preserve every visual feature "
+        "of the character exactly as shown — body shape, color, proportions, face, "
+        "any limbs or accessories present in the reference. Do not add or remove features."
+    ]
+    if expression:
+        bits.append(f"The character's expression in this scene is {expression}.")
+    if scene_setting:
+        bits.append(f"Place the character into this scene: {scene_setting.strip()}")
+    bits.append(
+        "Cinematic framing. The character is clearly visible and the focal point of the frame. "
+        "By default, the character faces the camera with mouth and face visible (ready for lip-sync). "
+        "Soft Pixar-style lighting consistent with the scene's described mood. "
+        "Diegetic in-scene text (sticky notes, screens, signs) is allowed if part of the setting."
+    )
     if extra.strip():
         bits.append(extra.strip())
     return " ".join(b for b in bits if b)
@@ -156,23 +166,41 @@ def _build_video_prompt(dialogue: str, animation_hint: str, tone_id: str, tones_
         bits.append(f"The character speaks the line: \"{dialogue.strip()}\"")
     if tone_desc:
         bits.append(f"Voice tone: {tone_desc}")
-    bits.append("The character's mouth animates with the speech. Subtle natural body movement. The character remains the focal point. 9:16 vertical.")
+    bits.append(
+        "Lip-sync is critical: the character's mouth movements must clearly match the spoken dialogue. "
+        "Subtle natural body movement. The character remains the focal point. "
+        "Do NOT add subtitles, captions, lower-third text, watermarks, or any text overlay on top of the video. "
+        "Existing in-scene text already in the starting image (signs, screens, sticky notes) must be preserved. "
+        "9:16 vertical."
+    )
     return " ".join(bits)
+
+
+VEO_NEGATIVE_PROMPT = (
+    "subtitles, captions, on-screen text overlay, lower thirds, hardcoded text, "
+    "watermark, logo overlay, burned-in text, closed captions, title cards"
+)
+
+
+# ─── Preview helpers (return the prompt text without calling FAL) ────────────
+
+def preview_image_prompt(setting: str, expression: str, extra: str = "") -> str:
+    return _build_image_prompt(setting, expression, extra)
+
+
+def preview_video_prompt(dialogue: str, animation_hint: str, tone_id: str) -> str:
+    _, tones = get_mascot_context()
+    return _build_video_prompt(dialogue, animation_hint, tone_id, tones)
 
 
 def generate_scene_image(
     primary_ref: Path,
-    additional_refs: list[Path],
     image_prompt: str,
     aspect_ratio: str,
 ) -> tuple[bytes, list[str]]:
-    """Call nano-banana-pro/edit with the mascot refs + scene prompt. Returns (png_bytes, ref_filenames_used)."""
+    """Call nano-banana/edit with a SINGLE mascot ref + scene prompt. Returns (png_bytes, ref_filenames_used)."""
     primary_url = fal_client.upload_file(str(primary_ref))
-    refs_used = [primary_ref.name]
     image_urls = [primary_url]
-    for ref in additional_refs:
-        image_urls.append(fal_client.upload_file(str(ref)))
-        refs_used.append(ref.name)
 
     result = fal_client.subscribe(
         IMAGE_EDIT_MODEL,
@@ -182,26 +210,37 @@ def generate_scene_image(
             "num_images": 1,
             "aspect_ratio": aspect_ratio,
             "output_format": "png",
+            "resolution": "1K",
         },
         with_logs=False,
     )
     images = result.get("images", [])
     if not images:
-        raise RuntimeError("FAL nano-banana-pro/edit returned no images")
+        raise RuntimeError(f"FAL {IMAGE_EDIT_MODEL} returned no images")
     url = images[0]["url"]
     png = requests.get(url, timeout=60).content
-    return png, refs_used
+    return png, [primary_ref.name]
 
 
-def generate_scene_video(scene_image_path: Path, video_prompt: str, aspect_ratio: str = "9:16") -> bytes:
-    """Call veo3-fast image-to-video with the generated scene image as start frame."""
+def generate_scene_video(
+    scene_image_path: Path,
+    video_prompt: str,
+    aspect_ratio: str = "9:16",
+    auto_fix: bool = True,
+) -> bytes:
+    """Call veo3.1 fast image-to-video with the generated scene image as start frame."""
     image_url = fal_client.upload_file(str(scene_image_path))
+    # Veo 3.1 Fast only accepts auto / 16:9 / 9:16. Default odd values to 9:16 (reel format).
+    veo_aspect = aspect_ratio if aspect_ratio in VEO_VALID_ASPECTS else "9:16"
     arguments = {
         "image_url": image_url,
         "prompt": video_prompt,
+        "negative_prompt": VEO_NEGATIVE_PROMPT,
         "duration": "8s",
-        "aspect_ratio": aspect_ratio,
+        "aspect_ratio": veo_aspect,
+        "resolution": "720p",
         "generate_audio": True,
+        "auto_fix": auto_fix,
     }
     result = fal_client.subscribe(VIDEO_MODEL, arguments=arguments, with_logs=False)
     video = result.get("video") or (result.get("videos", [{}])[0] if result.get("videos") else None)
@@ -248,6 +287,7 @@ def _load_or_init_meta(reel_dir: Path, reel: Optional[Reel] = None) -> dict:
         "avatar": reel.avatar,
         "lever": reel.lever,
         "concept": reel.concept,
+        "caption": getattr(reel, "caption", ""),
         "voice_direction": reel.voice_direction,
         "hashtags": reel.hashtags,
         "rationale": reel.rationale,
@@ -272,22 +312,18 @@ def _scene_url(date: str, reel_slug: str, filename: str) -> str:
     return f"/outputs/reels/{date}/{reel_slug}/{filename}"
 
 
-def save_generated_scene(
+def save_image_only_version(
     filename: str,
     reel: Reel,
     scene_number: int,
     image_bytes: bytes,
-    video_bytes: bytes,
     image_prompt_used: str,
-    video_prompt_used: str,
     refs_used: list[str],
     setting: str,
     expression: str,
-    tone_id: str,
-    dialogue: str,
-    animation_hint: str,
     aspect_ratio: str,
 ) -> dict:
+    """Create a NEW version with image only (no video yet)."""
     reel_dir = _reel_dir(filename, reel)
     meta = _load_or_init_meta(reel_dir, reel)
     key = str(scene_number)
@@ -295,24 +331,22 @@ def save_generated_scene(
 
     ver = _next_version(scene_entry)
     img_name = f"scene_{scene_number:02d}_v{ver}.png"
-    vid_name = f"scene_{scene_number:02d}_v{ver}.mp4"
     (reel_dir / img_name).write_bytes(image_bytes)
-    (reel_dir / vid_name).write_bytes(video_bytes)
 
     date_str = _date_from_filename(filename)
     new_version = {
         "version": ver,
         "image_filename": img_name,
         "image_url": _scene_url(date_str, reel.slug, img_name),
-        "video_filename": vid_name,
-        "video_url": _scene_url(date_str, reel.slug, vid_name),
+        "video_filename": None,
+        "video_url": None,
         "setting": setting,
         "expression": expression,
-        "tone_id": tone_id,
-        "dialogue": dialogue,
-        "animation_hint": animation_hint,
+        "tone_id": "",
+        "dialogue": "",
+        "animation_hint": "",
         "image_prompt_used": image_prompt_used,
-        "video_prompt_used": video_prompt_used,
+        "video_prompt_used": "",
         "refs_used": refs_used,
         "aspect_ratio": aspect_ratio,
         "generated_at": datetime.utcnow().isoformat() + "Z",
@@ -320,10 +354,54 @@ def save_generated_scene(
     scene_entry["versions"].append(new_version)
     meta["scenes"][key] = scene_entry
     _save_meta(reel_dir, meta)
-
     return {
         "scene_number": scene_number,
         "new_version": new_version,
+        "all_versions": scene_entry["versions"],
+        "favorite_version": scene_entry.get("favorite_version"),
+    }
+
+
+def add_video_to_version(
+    date: str,
+    reel_slug: str,
+    scene_number: int,
+    version: int,
+    video_bytes: bytes,
+    video_prompt_used: str,
+    tone_id: str,
+    dialogue: str,
+    animation_hint: str,
+) -> dict:
+    """Attach (or replace) a video on an existing image-only version."""
+    reel_dir = _target_dir(date, reel_slug)
+    if not reel_dir.exists():
+        raise FileNotFoundError(f"Reel folder not found: {date}/{reel_slug}")
+    meta = _load_or_init_meta(reel_dir)
+    key = str(scene_number)
+    scene_entry = meta.get("scenes", {}).get(key)
+    if not scene_entry:
+        raise FileNotFoundError(f"Scene {scene_number} not found")
+    target_version = next(
+        (v for v in scene_entry.get("versions", []) if v.get("version") == version),
+        None,
+    )
+    if not target_version:
+        raise FileNotFoundError(f"Version {version} not found")
+
+    vid_name = f"scene_{scene_number:02d}_v{version}.mp4"
+    (reel_dir / vid_name).write_bytes(video_bytes)
+    target_version["video_filename"] = vid_name
+    target_version["video_url"] = _scene_url(date, reel_slug, vid_name)
+    target_version["video_prompt_used"] = video_prompt_used
+    target_version["tone_id"] = tone_id
+    target_version["dialogue"] = dialogue
+    target_version["animation_hint"] = animation_hint
+    target_version["video_generated_at"] = datetime.utcnow().isoformat() + "Z"
+    _save_meta(reel_dir, meta)
+    return {
+        "scene_number": scene_number,
+        "new_version": target_version,
         "all_versions": scene_entry["versions"],
         "favorite_version": scene_entry.get("favorite_version"),
     }
@@ -393,6 +471,7 @@ def get_reel_output(date: str, reel_slug: str) -> Optional[dict]:
         "avatar": meta.get("avatar", ""),
         "lever": meta.get("lever", ""),
         "concept": meta.get("concept", ""),
+        "caption": meta.get("caption", ""),
         "voice_direction": meta.get("voice_direction", ""),
         "hashtags": meta.get("hashtags", ""),
         "scenes": scenes,
@@ -418,10 +497,20 @@ def list_generated_reels() -> list[dict]:
 
 # ─── ffmpeg final assembly ────────────────────────────────────────────────────
 
-def _pick_version(entry: dict) -> Optional[dict]:
+def _pick_version(entry: dict, require_video: bool = False) -> Optional[dict]:
     versions = entry.get("versions", [])
     if not versions:
         return None
+    if require_video:
+        videos = [v for v in versions if v.get("video_filename")]
+        if not videos:
+            return None
+        fav = entry.get("favorite_version")
+        if fav is not None:
+            for v in videos:
+                if v.get("version") == fav:
+                    return v
+        return videos[-1]
     fav = entry.get("favorite_version")
     if fav is not None:
         for v in versions:
@@ -440,7 +529,7 @@ def render_final(date: str, reel_slug: str) -> str:
     # collect chosen scene videos in scene-number order
     chosen: list[Path] = []
     for num_str, entry in sorted(meta.get("scenes", {}).items(), key=lambda x: int(x[0])):
-        picked = _pick_version(entry)
+        picked = _pick_version(entry, require_video=True)
         if not picked or not picked.get("video_filename"):
             continue
         path = reel_dir / picked["video_filename"]
@@ -486,44 +575,71 @@ def get_mascot_context() -> tuple[str, list[dict]]:
 
 # ─── Pipeline orchestrator ──────────────────────────────────────────────────
 
-def generate_scene_full(
+def generate_scene_image_step(
     filename: str,
     reel: Reel,
     scene_number: int,
     setting: str,
     expression: str,
-    tone_id: str,
-    dialogue: str,
-    animation_hint: str,
     aspect_ratio: str,
     extra_image_prompt: str = "",
+    ref_filename: Optional[str] = None,
+    prompt_override: Optional[str] = None,
 ) -> dict:
-    """Run the full pipeline: image → video → save → return result dict."""
-    mascot_desc, tones = get_mascot_context()
-    primary_ref, additional_refs = resolve_refs(expression)
-    image_prompt = _build_image_prompt(setting, expression, mascot_desc, extra_image_prompt)
-    video_prompt = _build_video_prompt(dialogue, animation_hint, tone_id, tones)
+    """Step 1: generate the still image only. Saves a new image-only version.
+    If prompt_override is provided, it bypasses the auto-built prompt entirely."""
+    primary_ref = resolve_ref(expression, ref_filename)
+    image_prompt = (prompt_override or "").strip() or _build_image_prompt(
+        setting, expression, extra_image_prompt
+    )
 
-    img_bytes, refs_used = generate_scene_image(primary_ref, additional_refs, image_prompt, aspect_ratio)
-
-    # write the scene image to a temp file so we can re-upload to FAL for veo i2v
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tf:
-        tf.write(img_bytes)
-        tmp_img_path = Path(tf.name)
-    try:
-        vid_bytes = generate_scene_video(tmp_img_path, video_prompt, aspect_ratio)
-    finally:
-        try:
-            tmp_img_path.unlink()
-        except Exception:
-            pass
-
-    return save_generated_scene(
+    img_bytes, refs_used = generate_scene_image(primary_ref, image_prompt, aspect_ratio)
+    return save_image_only_version(
         filename, reel, scene_number,
-        img_bytes, vid_bytes,
-        image_prompt, video_prompt, refs_used,
-        setting, expression, tone_id, dialogue, animation_hint,
-        aspect_ratio,
+        img_bytes, image_prompt, refs_used,
+        setting, expression, aspect_ratio,
+    )
+
+
+def animate_scene_version_step(
+    date: str,
+    reel_slug: str,
+    scene_number: int,
+    version: int,
+    dialogue: str,
+    animation_hint: str,
+    tone_id: str,
+    aspect_ratio: str,
+    prompt_override: Optional[str] = None,
+    auto_fix: bool = True,
+) -> dict:
+    """Step 2: animate an existing image version. Reads scene_NN_vM.png from disk and calls Veo i2v.
+    If prompt_override is provided, it bypasses the auto-built prompt entirely."""
+    reel_dir = _target_dir(date, reel_slug)
+    meta = _load_or_init_meta(reel_dir)
+    key = str(scene_number)
+    scene_entry = meta.get("scenes", {}).get(key)
+    if not scene_entry:
+        raise FileNotFoundError(f"Scene {scene_number} not found")
+    target_version = next(
+        (v for v in scene_entry.get("versions", []) if v.get("version") == version),
+        None,
+    )
+    if not target_version or not target_version.get("image_filename"):
+        raise FileNotFoundError(f"Version {version} has no image to animate")
+    img_path = reel_dir / target_version["image_filename"]
+    if not img_path.exists():
+        raise FileNotFoundError(f"Image file missing: {img_path.name}")
+
+    _, tones = get_mascot_context()
+    video_prompt = (prompt_override or "").strip() or _build_video_prompt(
+        dialogue, animation_hint, tone_id, tones
+    )
+    vid_bytes = generate_scene_video(img_path, video_prompt, aspect_ratio, auto_fix=auto_fix)
+
+    return add_video_to_version(
+        date, reel_slug, scene_number, version,
+        vid_bytes, video_prompt, tone_id, dialogue, animation_hint,
     )
 
 

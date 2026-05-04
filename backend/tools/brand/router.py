@@ -280,6 +280,69 @@ async def delete_mascot_ref(filename: str):
     return {"deleted": filename}
 
 
+@router.post("/mascot/edit-ref")
+async def edit_mascot_ref(body: dict):
+    """Remix an existing mascot ref using nano-banana-pro/edit. Saves the result
+    as a new ref (does not overwrite the source)."""
+    import fal_client
+    import requests
+
+    source_filename = body.get("source_filename")
+    prompt = (body.get("prompt") or "").strip()
+    if not source_filename or not prompt:
+        raise HTTPException(status_code=400, detail="source_filename and prompt are required")
+
+    source_path = BRAND_DIR / "mascot" / source_filename
+    if not source_path.exists():
+        raise HTTPException(status_code=404, detail=f"Source ref not found: {source_filename}")
+
+    tag = body.get("tag", "")
+    is_base = bool(body.get("is_base", False))
+    aspect_ratio = body.get("aspect_ratio", "1:1")
+    new_filename = body.get("new_filename") or f"{Path(source_filename).stem}-remix.png"
+    if not new_filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+        new_filename += ".png"
+
+    try:
+        source_url = fal_client.upload_file(str(source_path))
+        result = fal_client.subscribe(
+            "fal-ai/nano-banana-pro/edit",
+            arguments={
+                "prompt": prompt,
+                "image_urls": [source_url],
+                "num_images": 1,
+                "aspect_ratio": aspect_ratio,
+                "output_format": "png",
+            },
+            with_logs=False,
+        )
+        images = result.get("images") or []
+        if not images:
+            raise RuntimeError("FAL returned no images")
+        png = requests.get(images[0]["url"], timeout=60).content
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"FAL edit failed: {e}")
+
+    mdir = BRAND_DIR / "mascot"
+    mdir.mkdir(parents=True, exist_ok=True)
+    # avoid overwriting an existing file
+    safe = Path(new_filename).name
+    stem = Path(safe).stem
+    suffix = Path(safe).suffix or ".png"
+    counter = 1
+    while (mdir / safe).exists():
+        safe = f"{stem}-{counter}{suffix}"
+        counter += 1
+    (mdir / safe).write_bytes(png)
+    service.add_mascot_ref(BRAND_DIR, safe, tag=tag, is_base=is_base)
+    return {
+        "filename": safe,
+        "url": f"/files/mascot/{safe}",
+        "tag": tag,
+        "is_base": is_base,
+    }
+
+
 @router.post("/mascot/generate")
 async def generate_mascot_image(body: dict):
     """One-click generate a base mascot image with nano-banana from visual_description."""

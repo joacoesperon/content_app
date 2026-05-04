@@ -14,6 +14,7 @@ import {
   Sparkles,
   Star,
   Loader2,
+  Wand2,
 } from 'lucide-react';
 import {
   fetchBrandDna,
@@ -42,6 +43,7 @@ import {
   patchMascotRef,
   deleteMascotRef,
   generateMascotImage,
+  editMascotRef,
 } from '../lib/api';
 import type { Mascot, MascotRef, MascotTone } from '../lib/api';
 import { Button } from '@/components/ui/button';
@@ -756,6 +758,14 @@ function MascotSection() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadTag, setUploadTag] = useState('neutral');
   const [uploadIsBase, setUploadIsBase] = useState(false);
+  // Remix state
+  const [remixSource, setRemixSource] = useState<string>('');
+  const [remixPrompt, setRemixPrompt] = useState('');
+  const [remixTag, setRemixTag] = useState('');
+  const [remixIsBase, setRemixIsBase] = useState(false);
+  const [remixAspect, setRemixAspect] = useState('1:1');
+  const [remixing, setRemixing] = useState(false);
+  const [remixError, setRemixError] = useState<string | null>(null);
 
   const load = () => {
     fetchMascot().then(setMascot);
@@ -838,6 +848,41 @@ function MascotSection() {
     if (!confirm(`Delete ${filename}?`)) return;
     await deleteMascotRef(filename);
     fetchMascotRefs().then(setRefs);
+  };
+
+  // when refs load, default the remix source to the base ref (or the first one)
+  useEffect(() => {
+    if (refs.length === 0) {
+      setRemixSource('');
+      return;
+    }
+    if (!remixSource || !refs.find((r) => r.filename === remixSource)) {
+      const base = refs.find((r) => r.is_base);
+      setRemixSource((base ?? refs[0]).filename);
+    }
+  }, [refs]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRemix = async () => {
+    if (!remixSource || !remixPrompt.trim()) return;
+    setRemixing(true);
+    setRemixError(null);
+    try {
+      await editMascotRef({
+        source_filename: remixSource,
+        prompt: remixPrompt,
+        tag: remixTag,
+        is_base: remixIsBase,
+        aspect_ratio: remixAspect,
+      });
+      setRemixPrompt('');
+      setRemixTag('');
+      setRemixIsBase(false);
+      fetchMascotRefs().then(setRefs);
+    } catch (e) {
+      setRemixError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setRemixing(false);
+    }
   };
 
   return (
@@ -977,6 +1022,99 @@ function MascotSection() {
                       <Upload size={13} className="mr-1" /> Upload
                     </Button>
                   </div>
+
+                  {refs.length > 0 && (
+                    <Card className="p-3 space-y-3 bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Wand2 size={14} className="text-accent" />
+                        <Label className="text-sm font-semibold">Remix an existing ref</Label>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        Edits an existing image with <code>nano-banana-pro/edit</code> using your prompt. The result is saved as a new ref (the source stays untouched). Useful for adding arms/legs, swapping the expression, changing the pose, etc.
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1 block">Source ref</Label>
+                          <select
+                            value={remixSource}
+                            onChange={(e) => setRemixSource(e.target.value)}
+                            className="w-full h-8 text-xs rounded-md border border-border bg-background px-2"
+                          >
+                            {refs.map((r) => (
+                              <option key={r.filename} value={r.filename}>
+                                {r.filename}{r.tag ? ` (${r.tag})` : ''}{r.is_base ? ' ★' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1 block">Aspect ratio</Label>
+                          <select
+                            value={remixAspect}
+                            onChange={(e) => setRemixAspect(e.target.value)}
+                            className="w-full h-8 text-xs rounded-md border border-border bg-background px-2"
+                          >
+                            <option value="1:1">1:1 (square)</option>
+                            <option value="4:5">4:5 (portrait)</option>
+                            <option value="9:16">9:16 (reel)</option>
+                            <option value="16:9">16:9 (landscape)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1 block">Edit prompt</Label>
+                        <Textarea
+                          value={remixPrompt}
+                          onChange={(e) => setRemixPrompt(e.target.value)}
+                          rows={5}
+                          className="text-xs font-mono"
+                          placeholder="Describe the change. E.g. 'Add cute Pixar-style arms and legs to this candle. Keep everything else identical.'"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex-1 min-w-32">
+                          <Label className="text-xs text-muted-foreground mb-1 block">New ref tag (optional)</Label>
+                          <Input
+                            value={remixTag}
+                            onChange={(e) => setRemixTag(e.target.value)}
+                            placeholder="e.g. neutral, smug, with-limbs"
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <label className="flex items-center gap-1 text-xs cursor-pointer pt-5">
+                          <input
+                            type="checkbox"
+                            checked={remixIsBase}
+                            onChange={(e) => setRemixIsBase(e.target.checked)}
+                          />
+                          Set new ref as base
+                        </label>
+                      </div>
+
+                      {remixError && <p className="text-xs text-red-500">{remixError}</p>}
+
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={handleRemix}
+                          disabled={remixing || !remixSource || !remixPrompt.trim()}
+                        >
+                          {remixing ? (
+                            <>
+                              <Loader2 size={13} className="animate-spin mr-1" /> Remixing…
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 size={13} className="mr-1" /> Remix
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </Card>
+                  )}
 
                   {refs.length === 0 ? (
                     <p className="text-xs text-muted-foreground">No reference images yet. Generate one with AI or upload your own.</p>

@@ -1,6 +1,6 @@
 {
   "name": "JT (the JessTrading Candle)",
-  "visual_description": "3D Pixar-style mascot character. The ENTIRE BODY is a single tall rectangular green trading candle — the candle IS the whole character, not a candle head sitting on a separate body. Saturated green color (#00C853). Thin black wicks protrude from the top and the bottom of the rectangular body. A friendly cartoon face is placed on the FRONT FACE of the candle rectangle: large round expressive eyes and a small mouth that animates with speech. No arms, no legs, no neck, no separate torso — just the rectangular candle with eyes and a mouth. Soft warm Pixar-style lighting, subtle rim light, gentle drop shadow on the ground. Clean and stylized like a Pixar short film character.",
+  "visual_description": "3D Pixar-style mascot character. The body is a tall rectangular green\ntrading candle (saturated green #00C853) with thin black wicks on top\nand bottom. The character has a friendly cartoon face on the front of\nthe candle: large round expressive eyes and a small mouth that\nanimates with speech. The character has short chubby Pixar-style arms\nemerging from the sides (with rounded white cartoon hands) and short\nstubby legs at the bottom (with rounded white cartoon shoes), Funko\nPop proportions. Soft warm Pixar-style lighting, subtle rim light,\ngentle drop shadow. Clean and stylized like a Pixar short film\ncharacter.",
   "tones": [
     {
       "id": "deadpan",
@@ -46,6 +46,21 @@
     {
       "filename": "base.png",
       "tag": "neutral",
+      "is_base": false
+    },
+    {
+      "filename": "variante.png",
+      "tag": "",
+      "is_base": false
+    },
+    {
+      "filename": "variante2.png",
+      "tag": "",
+      "is_base": true
+    },
+    {
+      "filename": "variante3.png",
+      "tag": "",
       "is_base": false
     }
   ]

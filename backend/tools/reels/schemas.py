@@ -22,6 +22,7 @@ class ReelBrief(BaseModel):
     avatar: str
     lever: str
     concept: str
+    caption: str = ""
     total_length: str
     voice_direction: str
     scenes: list[SceneBrief]
@@ -43,16 +44,16 @@ class SceneVersion(BaseModel):
     image_url: Optional[str] = None
     video_filename: Optional[str] = None
     video_url: Optional[str] = None
-    setting: str
-    expression: str
-    tone_id: str
-    dialogue: str
-    animation_hint: str
-    image_prompt_used: str
-    video_prompt_used: str
+    setting: str = ""
+    expression: str = ""
+    tone_id: str = ""
+    dialogue: str = ""
+    animation_hint: str = ""
+    image_prompt_used: str = ""
+    video_prompt_used: str = ""
     refs_used: list[str] = []
-    aspect_ratio: str
-    generated_at: str
+    aspect_ratio: str = ""
+    generated_at: str = ""
 
 
 class SceneInfo(BaseModel):
@@ -61,17 +62,45 @@ class SceneInfo(BaseModel):
     favorite_version: Optional[int] = None
 
 
-class GenerateSceneRequest(BaseModel):
+class GenerateSceneImageRequest(BaseModel):
     filename: str
     reel_number: int
     scene_number: int
     setting: str
     expression: str
-    tone_id: str
+    aspect_ratio: str = "9:16"
+    extra_image_prompt: str = ""
+    ref_filename: Optional[str] = None  # which mascot ref to use; None = auto-resolve
+    prompt_override: Optional[str] = None  # if set, replaces the auto-built image prompt entirely
+
+
+class AnimateSceneRequest(BaseModel):
+    filename: str
+    reel_number: int
+    scene_number: int
+    version: int
     dialogue: str
     animation_hint: str
+    tone_id: str
     aspect_ratio: str = "9:16"
-    extra_image_prompt: str = ""  # optional override / extra direction
+    prompt_override: Optional[str] = None  # if set, replaces the auto-built video prompt entirely
+    auto_fix: bool = True
+
+
+class PreviewImagePromptRequest(BaseModel):
+    setting: str
+    expression: str
+    extra_image_prompt: str = ""
+
+
+class PreviewVideoPromptRequest(BaseModel):
+    dialogue: str
+    animation_hint: str
+    tone_id: str
+
+
+class PreviewPromptResponse(BaseModel):
+    prompt: str
 
 
 class GenerateSceneResponse(BaseModel):
@@ -107,6 +136,7 @@ class ReelOutput(BaseModel):
     avatar: str = ""
     lever: str = ""
     concept: str = ""
+    caption: str = ""
     voice_direction: str = ""
     hashtags: str = ""
     scenes: list[SceneInfo]

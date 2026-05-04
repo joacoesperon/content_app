@@ -7,9 +7,13 @@ from fastapi import APIRouter, HTTPException
 from backend.tools.reels import service
 from backend.tools.reels.parser import Reel
 from backend.tools.reels.schemas import (
+    AnimateSceneRequest,
     DirectorFileInfo,
-    GenerateSceneRequest,
+    GenerateSceneImageRequest,
     GenerateSceneResponse,
+    PreviewImagePromptRequest,
+    PreviewPromptResponse,
+    PreviewVideoPromptRequest,
     PricingInfo,
     ReelBrief,
     ReelOutput,
@@ -31,6 +35,7 @@ def _reel_to_brief(reel: Reel) -> ReelBrief:
         avatar=reel.avatar,
         lever=reel.lever,
         concept=reel.concept,
+        caption=getattr(reel, "caption", ""),
         total_length=reel.total_length,
         voice_direction=reel.voice_direction,
         scenes=[
@@ -73,10 +78,27 @@ async def get_pricing():
     return service.pricing_info()
 
 
-# ─── Scene generation ────────────────────────────────────────────────────────
+# ─── Prompt previews (return the prompt that WOULD be sent, no FAL call) ────
 
-@router.post("/generate-scene", response_model=GenerateSceneResponse)
-async def generate_scene(body: GenerateSceneRequest):
+@router.post("/preview-image-prompt", response_model=PreviewPromptResponse)
+async def preview_image_prompt(body: PreviewImagePromptRequest):
+    return PreviewPromptResponse(
+        prompt=service.preview_image_prompt(body.setting, body.expression, body.extra_image_prompt)
+    )
+
+
+@router.post("/preview-video-prompt", response_model=PreviewPromptResponse)
+async def preview_video_prompt(body: PreviewVideoPromptRequest):
+    return PreviewPromptResponse(
+        prompt=service.preview_video_prompt(body.dialogue, body.animation_hint, body.tone_id)
+    )
+
+
+# ─── Scene generation (split: image first, video on demand) ──────────────────
+
+@router.post("/generate-scene-image", response_model=GenerateSceneResponse)
+async def generate_scene_image_endpoint(body: GenerateSceneImageRequest):
+    """Step 1: generate the still image for a scene. Cheap (~$0.10)."""
     reels = service.load_reels(body.filename)
     reel = next((r for r in reels if r.number == body.reel_number), None)
     if not reel:
@@ -84,17 +106,53 @@ async def generate_scene(body: GenerateSceneRequest):
             status_code=404,
             detail=f"Reel {body.reel_number} not found in {body.filename}",
         )
-
     try:
         result = await asyncio.to_thread(
-            service.generate_scene_full,
+            service.generate_scene_image_step,
             body.filename, reel, body.scene_number,
-            body.setting, body.expression, body.tone_id,
-            body.dialogue, body.animation_hint,
+            body.setting, body.expression,
             body.aspect_ratio, body.extra_image_prompt,
+            body.ref_filename, body.prompt_override,
         )
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Generation failed: {e}")
+        raise HTTPException(status_code=502, detail=f"Image generation failed: {e}")
+
+    return GenerateSceneResponse(
+        scene_number=result["scene_number"],
+        new_version=SceneVersion(**result["new_version"]),
+        all_versions=[SceneVersion(**v) for v in result["all_versions"]],
+        favorite_version=result["favorite_version"],
+    )
+
+
+@router.post("/animate-scene", response_model=GenerateSceneResponse)
+async def animate_scene_endpoint(body: AnimateSceneRequest):
+    """Step 2: animate an existing image version with Veo 3.1 Fast i2v. Expensive (~$1.20)."""
+    import traceback
+    import sys
+
+    reels = service.load_reels(body.filename)
+    reel = next((r for r in reels if r.number == body.reel_number), None)
+    if not reel:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Reel {body.reel_number} not found in {body.filename}",
+        )
+    date = service._date_from_filename(body.filename)
+    try:
+        result = await asyncio.to_thread(
+            service.animate_scene_version_step,
+            date, reel.slug, body.scene_number, body.version,
+            body.dialogue, body.animation_hint, body.tone_id,
+            body.aspect_ratio, body.prompt_override, body.auto_fix,
+        )
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        # log the full traceback so we can debug FAL errors
+        print(f"\n[reels/animate-scene] FAL call failed:", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        raise HTTPException(status_code=502, detail=f"Animation failed: {type(e).__name__}: {e}")
 
     return GenerateSceneResponse(
         scene_number=result["scene_number"],
