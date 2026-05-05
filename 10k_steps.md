@@ -4,6 +4,23 @@
 > **Fecha base:** 2026-04-29
 > **Meta operativa:** ~70 ventas/mes ($147) o ~51 ventas/mes ($197). Promedio ~2 ventas/día.
 
+## Estado actual — 2026-05-05
+
+| Item | Estado |
+|------|--------|
+| Dominio `jesstrading.xyz` | ✅ comprado (Namecheap) |
+| LP en producción (`https://jesstrading.xyz`) | ✅ live (Next.js 14 + Vercel) |
+| Meta Business Manager | ✅ creado |
+| Meta Pixel `1927145034653778` + CAPI | ✅ configurado y deployado |
+| Domain verification Meta (DNS TXT) | ✅ agregado en Namecheap, propagando (~72h) |
+| Whop webhook → CAPI Purchase | ✅ endpoint live, secret en Vercel |
+| Ad account #1 (`JessTrading-Main`) | ✅ creado con método de pago |
+| Ad account #2 backup | ⏳ bloqueado por Meta (~3-4 semanas de historial) |
+| MailerLite (email capture) | 🔴 pendiente — crear cuenta y pasar API token |
+| MyFXBook tracker | 🔴 pendiente — semana 2 |
+| Testimonios | 🔴 pendiente — semana 2 |
+| Campañas Meta activas | 🔴 pendiente — semana 4 |
+
 ---
 
 ## 0. Diagnóstico — dónde estás hoy (sin endulzarlo)
@@ -53,7 +70,7 @@ Tenés un producto digital sólido y la mejor stack de generación de contenido 
 - **Whop fee:** ~3-5% + procesamiento. $147 → ~$135 neto.
 - **Refunds:** En productos de trading, expecta 10-15% de refund rate los primeros 30 días.
 - **Affiliates:** 40% comisión = $58.80 por venta vía afiliado. **Las ventas por afiliado dan menos margen pero CAC = 0.**
-- **Tools:** ConvertKit/Beehiiv (~$30/mes), tu propio dominio + hosting (~$15/mes), Stripe vía Whop, Meta Pixel (gratis), MyFXBook tracker (gratis), eventual Google Tag Manager.
+- **Tools:** MailerLite (gratis hasta 1k subs), dominio ~$12/año (Namecheap), Vercel hosting (gratis), Stripe vía Whop, Meta Pixel (gratis), MyFXBook tracker (gratis).
 
 ### Revenue real esperado por escenario realista
 
@@ -163,7 +180,7 @@ Si hay margen de tiempo, agregar un **bundle premium** ($297) que incluya el bot
 ### B) Conversión — la landing page pre-Whop (PRIORIDAD #1)
 
 #### B.1 — La decisión técnica
-**Opción ganadora:** dominio propio (`jesstrading.io` o similar) con LP en **Framer** o **Webflow** o **Carrd Pro**. NO hagas un sitio en código custom — perdés tiempo y no es donde está la diferencia. Framer tiene templates fintech excelentes que se adaptan al brand DNA en horas.
+**Decisión tomada:** LP en **Next.js 14** (App Router) deployada en Vercel en `jesstrading.xyz`. Stack: Tailwind CSS con brand tokens, Meta Pixel + CAPI integrados, Whop webhook configurado. **Ya está live y funcional.**
 
 El botón final manda a Whop con `?ref=lp_main` (parámetro tracking).
 
@@ -232,7 +249,7 @@ El botón final manda a Whop con `?ref=lp_main` (parámetro tracking).
 - Hotjar o Microsoft Clarity (gratis) — graba sesiones, ves dónde la gente abandona
 
 #### B.4 — La trampa a evitar
-**No** sobre-diseñes la LP. Una LP de Framer con foto + 5 secciones bien hechas convierte mejor que una página con animaciones, paralax, y 15 secciones. **Mobile, rápida, scannable. Texto > imagen.**
+**No** sobre-diseñes la LP. Mobile, rápida, scannable. Texto > imagen. La LP actual ya tiene las 10 secciones — el foco ahora es llenar los placeholders (MyFXBook, testimonios, video del bot).
 
 ---
 
@@ -380,17 +397,17 @@ Esto sigue siendo prioridad **media-alta** pero NO es el cuello de botella para 
 
 ## 5. Roadmap 90 días (semana por semana)
 
-### Semana 1 (29 abr → 5 may) — INFRAESTRUCTURA
+### Semana 1 (29 abr → 5 may) — INFRAESTRUCTURA ✅ casi completa
 **Objetivo:** Tener el sistema técnico listo. Cero ads aún.
 
-- [ ] Comprar dominio (`jesstrading.io` o similar)
-- [ ] Setup Framer/Webflow con template fintech, custom domain
-- [ ] Setup Meta Business Manager + Special Ad Category (financial)
-- [ ] Verificar dominio en Meta + Pixel + CAPI server-side
-- [ ] Setup Whop webhook → tu server → Meta CAPI Purchase event
-- [ ] Setup ConvertKit/Beehiiv (lista de emails)
+- [x] Comprar dominio `jesstrading.xyz`
+- [x] LP en Next.js deployada en Vercel — live en `https://jesstrading.xyz`
+- [x] Meta Business Manager + Pixel `1927145034653778` + CAPI
+- [x] Verificar dominio en Meta (DNS TXT agregado, propagando)
+- [x] Whop webhook → Meta CAPI Purchase event — live y testeado
+- [ ] **MailerLite** — crear cuenta gratis + pasar API token a Claude para armar el form de email capture en LP
 - [ ] Configurar MyFXBook tracker en cuenta real (poner $1k mínimo, dejar correr)
-- [ ] Crear backup ad account #2
+- [ ] Crear backup ad account #2 (bloqueado por Meta ~semana 4)
 
 ### Semana 2 (6 may → 12 may) — CONTENIDO DE PROOF
 **Objetivo:** Generar todo el material que la LP necesita.
@@ -408,7 +425,7 @@ Esto sigue siendo prioridad **media-alta** pero NO es el cuello de botella para 
 - [ ] Construir LP completa (estructura sección 3.B.2)
 - [ ] Conectar Pixel en LP, testear con Meta Pixel Helper
 - [ ] Conectar Whop con tracking parameter
-- [ ] Escribir 5-email nurture sequence + setup en ConvertKit
+- [ ] Escribir 5-email nurture sequence + setup en MailerLite
 - [ ] Test end-to-end: ad → LP → checkout → email → received product
 - [ ] Mobile UX review (la mayoría del tráfico va a ser mobile)
 - [ ] Speed test: LP debe cargar en <2 seg en mobile 4G
@@ -634,11 +651,12 @@ Either way, props on the [video/post/whatever].
 
 Ordenado por impacto/esfuerzo:
 
-1. **Comprar el dominio** (`jesstrading.io` o similar) — 10 min, $12.
-2. **Empezar el MyFXBook tracker** con cuenta real $1k+ — 30 min de setup, 30 días de wait para tener data.
-3. **Setup Meta Business Manager** + Special Ad Category request — 1h.
-4. **Bookear 3h del fin de semana** para grabar los videos del bot ejecutando trades — sin esto el resto se atasca.
-5. **Reach out a tus primeros 5 buyers** con un mensaje pidiendo testimonio — ofrecé $30 refund o feature en IG a cambio.
+1. ~~Comprar el dominio~~ ✅ `jesstrading.xyz`
+2. ~~Setup Meta BM + Pixel + CAPI + Whop webhook~~ ✅
+3. **Empezar MyFXBook tracker** con cuenta real $1k+ — 30 min de setup, 30 días de wait. **Próximo paso urgente.**
+4. **Crear cuenta MailerLite** (gratis) + pasar API token para que Claude arme el form de email capture en LP — 10 min.
+5. **Bookear 3h del fin de semana** para grabar los videos del bot ejecutando trades en MT5.
+6. **Reach out a tus primeros 5 buyers** pidiendo testimonio — ofrecé $30 refund o feature en IG a cambio.
 
 Si en 7 días tenés ✓ dominio ✓ MyFXBook corriendo ✓ Meta BM aprobado ✓ 5 testimonios solicitados, vas en camino.
 
