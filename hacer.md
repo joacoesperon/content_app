@@ -41,6 +41,8 @@
   ```
 - [ ] **Dame de vuelta:** ese `content="..."` para pegarlo en `app/layout.tsx` (C6)
 
+Copia esta metaetiqueta: <meta name="facebook-domain-verification" content="h5odawnu5owh42fee9l1qx0e8htym1" />
+
 ### 5. Meta Pixel + CAPI Access Token · 15 min
 - [ ] Events Manager (business.facebook.com/events_manager2) → Connect Data Source → Web → Meta Pixel
 - [ ] Nombrarlo `Jess Trading LP` → te da un **Pixel ID** (numérico)

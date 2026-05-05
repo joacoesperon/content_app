@@ -1,6 +1,6 @@
 # Jess Trading — Landing Page
 
-Next.js 14 (App Router) + Tailwind CSS. Lives at `jesstrading.io`. Pre-Whop conversion layer.
+Next.js 14 (App Router) + Tailwind CSS. Lives at `jesstrading.xyz`. Pre-Whop conversion layer.
 
 ## Stack
 - Next.js 14 (App Router, RSC)
@@ -56,10 +56,10 @@ This is a monorepo — `landing/` is one of multiple projects. Vercel needs to b
 7. Deploy
 
 ### Connect the domain
-1. Vercel project → Settings → Domains → Add `jesstrading.io`
+1. Vercel project → Settings → Domains → Add `jesstrading.xyz`
 2. Follow Vercel's DNS instructions on your registrar (Namecheap / Cloudflare)
 3. SSL is automatic
-4. Set `NEXT_PUBLIC_SITE_URL=https://jesstrading.io` in Vercel env vars after the domain is live
+4. Set `NEXT_PUBLIC_SITE_URL=https://jesstrading.xyz` in Vercel env vars after the domain is live
 
 ### Environment variables (set in Vercel dashboard)
 
@@ -72,7 +72,7 @@ This is a monorepo — `landing/` is one of multiple projects. Vercel needs to b
 | `CONVERTKIT_API_KEY` | Production + Preview | After V5 + C5 | ConvertKit → Account → API Keys |
 | `CONVERTKIT_API_SECRET` | Production | After V5 + C5 | ConvertKit → Account → API Keys |
 | `CONVERTKIT_LEADMAGNET_FORM_ID` | Production + Preview | After V5 + C5 | ConvertKit → form ID from URL |
-| `NEXT_PUBLIC_SITE_URL` | Production + Preview | After domain is live | `https://jesstrading.io` |
+| `NEXT_PUBLIC_SITE_URL` | Production + Preview | After domain is live | `https://jesstrading.xyz` |
 
 `NEXT_PUBLIC_*` vars are exposed to the browser — only put non-secrets there.
 
@@ -113,7 +113,7 @@ npm run start
 
 ### Setting up the Whop webhook
 1. Whop dashboard → Developers → Webhooks → New webhook
-2. URL: `https://jesstrading.io/api/whop-webhook`
+2. URL: `https://jesstrading.xyz/api/whop-webhook`
 3. Events: `payment.succeeded` (and/or `membership.went_valid`)
 4. Copy the signing secret → set `WHOP_WEBHOOK_SECRET` in env vars
 5. Test by triggering a test event from Whop — server logs should show the event acknowledged

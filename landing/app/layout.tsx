@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://jesstrading.io'),
+  metadataBase: new URL('https://jesstrading.xyz'),
   title: {
     default: 'Jess Trading — Algorithmic XAUUSD Bot',
     template: '%s · Jess Trading',
@@ -37,8 +37,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  // TODO: Once Meta gives you the verification meta tag, paste it here:
-  // verification: { other: { 'facebook-domain-verification': 'XXXXXXXXXXXX' } },
+  verification: { other: { 'facebook-domain-verification': 'h5odawnu5owh42fee9l1qx0e8htym1' } },
 };
 
 export const viewport: Viewport = {
