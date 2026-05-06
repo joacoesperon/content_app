@@ -1,10 +1,25 @@
 # Jess Trading — Plan para llegar a $10k/mes
 
+---
+
+## Qué hacer ahora
+
+**Vos:**
+- [ ] Configurar MyFXBook tracker en cuenta real ($1k mínimo) en myfxbook.com
+- [ ] Bookear 3h este fin de semana para grabar el bot ejecutando trades en MT5
+- [ ] Pegar el copy del Whop store cuando Claude lo escriba
+
+**Claude:**
+- [ ] Escribir el copy del Whop store (título, descripción, bullets, FAQ)
+- [ ] Generar las 24 creatives de Concept Ads (12 conceptos × 2 imágenes)
+
+---
+
 > **Objetivo:** $10,000 USD en revenue mensual de ventas del bot XAUUSD ($147 launch → $197) en los próximos 90 días.
 > **Fecha base:** 2026-04-29
 > **Meta operativa:** ~70 ventas/mes ($147) o ~51 ventas/mes ($197). Promedio ~2 ventas/día.
 
-## Estado actual — 2026-05-05
+## Estado actual — 2026-05-06
 
 | Item | Estado |
 |------|--------|
@@ -12,12 +27,16 @@
 | LP en producción (`https://jesstrading.xyz`) | ✅ live (Next.js 14 + Vercel) |
 | Meta Business Manager | ✅ creado |
 | Meta Pixel `1927145034653778` + CAPI | ✅ configurado y deployado |
-| Domain verification Meta (DNS TXT) | ✅ agregado en Namecheap, propagando (~72h) |
-| Whop webhook → CAPI Purchase | ✅ endpoint live, secret en Vercel |
+| Domain verification Meta (DNS TXT + meta tag) | ✅ verificado |
+| Whop webhook → CAPI Purchase | ✅ endpoint live y testeado |
 | Ad account #1 (`JessTrading-Main`) | ✅ creado con método de pago |
+| MailerLite grupo "Lead Magnet XAUUSD" | ✅ creado vía API |
+| Email capture en LP (`/api/subscribe`) | ✅ live — agrega a MailerLite + evento Lead a CAPI + Pixel |
 | Ad account #2 backup | ⏳ bloqueado por Meta (~3-4 semanas de historial) |
-| MailerLite (email capture) | 🔴 pendiente — crear cuenta y pasar API token |
+| Copy del Whop store | 🔴 pendiente |
+| 24 creatives de Concept Ads | 🔴 pendiente |
 | MyFXBook tracker | 🔴 pendiente — semana 2 |
+| Video del bot en MT5 | 🔴 pendiente — fin de semana |
 | Testimonios | 🔴 pendiente — semana 2 |
 | Campañas Meta activas | 🔴 pendiente — semana 4 |
 
