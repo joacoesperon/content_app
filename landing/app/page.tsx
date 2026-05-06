@@ -5,6 +5,7 @@ import { HowItWorks } from '@/components/sections/how-it-works';
 import { OfferStack } from '@/components/sections/offer-stack';
 import { BacktestProof } from '@/components/sections/backtest-proof';
 import { Testimonials } from '@/components/sections/testimonials';
+import { LeadMagnet } from '@/components/sections/lead-magnet';
 import { FAQ } from '@/components/sections/faq';
 import { FinalCTA } from '@/components/sections/final-cta';
 import { Footer } from '@/components/sections/footer';
@@ -20,6 +21,7 @@ export default function HomePage() {
         <OfferStack />
         <BacktestProof />
         <Testimonials />
+        <LeadMagnet />
         <FAQ />
         <FinalCTA />
       </main>
