@@ -148,3 +148,15 @@ class PricingInfo(BaseModel):
     video_per_scene: float
     estimated_per_reel_3_scenes: float
     estimated_per_reel_4_scenes: float
+
+
+class PublishReelRequest(BaseModel):
+    date: str
+    reel_slug: str
+    caption_override: Optional[str] = None
+    scheduled_time: Optional[str] = None  # ISO 8601
+
+
+class PublishReelResult(BaseModel):
+    ok: bool
+    post_id: str

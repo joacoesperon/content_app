@@ -880,6 +880,29 @@ export async function deleteReelOutput(date: string, slug: string): Promise<void
   if (!res.ok) throw new Error('Delete error');
 }
 
+export async function publishReelToInstagram(
+  date: string,
+  reel_slug: string,
+  caption_override?: string,
+  scheduled_time?: string,
+): Promise<{ ok: boolean; post_id: string }> {
+  const res = await fetch(`${REELS}/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      date,
+      reel_slug,
+      caption_override: caption_override ?? null,
+      scheduled_time: scheduled_time ?? null,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Error publicando en Instagram');
+  }
+  return res.json();
+}
+
 
 // ─── Carousels ────────────────────────────────────────────────────────────────
 

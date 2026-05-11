@@ -11,6 +11,7 @@ import {
   Loader2,
   RefreshCw,
   RotateCcw,
+  Send,
   Sparkles,
   Star,
   Trash2,
@@ -27,6 +28,7 @@ import {
   fetchReelsPricing,
   previewReelImagePrompt,
   previewReelVideoPrompt,
+  publishReelToInstagram,
   renderReelFinal,
   setReelFavorite,
 } from '../lib/api';
@@ -580,6 +582,10 @@ function ReelEditor({
   const [finalUrl, setFinalUrl] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
   const [mascotRefs, setMascotRefs] = useState<MascotRef[]>([]);
+  const [publishing, setPublishing] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishCaption, setPublishCaption] = useState('');
+  const [publishScheduled, setPublishScheduled] = useState('');
 
   const date = dateFromFilename(filename);
 
@@ -797,6 +803,32 @@ function ReelEditor({
     }
   };
 
+  const openPublish = () => {
+    const defaultCaption = (reel.concept + (hashtags ? `\n\n${hashtags}` : '')).trim();
+    setPublishCaption(defaultCaption);
+    setPublishScheduled('');
+    setPublishOpen(true);
+  };
+
+  const handlePublish = async () => {
+    if (!date) return;
+    setPublishing(true);
+    try {
+      const res = await publishReelToInstagram(
+        date,
+        reel.slug,
+        publishCaption || undefined,
+        publishScheduled || undefined,
+      );
+      toast.success(publishScheduled ? `Reel programado (ID: ${res.post_id})` : `Reel publicado (ID: ${res.post_id})`);
+      setPublishOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error publicando');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const copyCaptionAndHashtags = () => {
     const text = (reel.concept + (hashtags ? `\n\n${hashtags}` : '')).trim();
     navigator.clipboard.writeText(text);
@@ -881,11 +913,67 @@ function ReelEditor({
               </a>
             </Button>
           )}
+          {finalUrl && (
+            <Button size="sm" onClick={openPublish} className="bg-pink-600 hover:bg-pink-500 text-white">
+              <Send size={14} className="mr-2" />
+              Publicar en Instagram
+            </Button>
+          )}
         </div>
 
         {finalUrl && (
           <div className="mt-2">
             <video src={finalUrl} controls playsInline className="w-full max-w-sm rounded border border-border bg-black" />
+          </div>
+        )}
+
+        {publishOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="bg-background border border-border rounded-xl p-6 w-full max-w-lg space-y-4 shadow-xl">
+              <h2 className="text-base font-semibold">Publicar Reel en Instagram</h2>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Caption</label>
+                <Textarea
+                  value={publishCaption}
+                  onChange={(e) => setPublishCaption(e.target.value)}
+                  rows={5}
+                  className="text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">
+                  Programar publicación (opcional)
+                </label>
+                <Input
+                  type="datetime-local"
+                  value={publishScheduled}
+                  onChange={(e) => setPublishScheduled(e.target.value)}
+                  className="text-sm"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Dejá vacío para publicar ahora. Instagram puede tardar ~2-5 min en procesar el video.
+                </p>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={() => setPublishOpen(false)} disabled={publishing}>
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  className="bg-pink-600 hover:bg-pink-500 text-white"
+                >
+                  {publishing ? (
+                    <><Loader2 size={14} className="animate-spin mr-2" />Publicando…</>
+                  ) : publishScheduled ? (
+                    <><Send size={14} className="mr-2" />Programar</>
+                  ) : (
+                    <><Send size={14} className="mr-2" />Publicar ahora</>
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </Card>
@@ -976,6 +1064,10 @@ function ReelsList({
 function HistoryTab() {
   const [outputs, setOutputs] = useState<ReelOutput[]>([]);
   const [loading, setLoading] = useState(true);
+  const [publishingSlug, setPublishingSlug] = useState<string | null>(null);
+  const [publishOpen, setPublishOpen] = useState<ReelOutput | null>(null);
+  const [publishCaption, setPublishCaption] = useState('');
+  const [publishScheduled, setPublishScheduled] = useState('');
 
   const load = () => {
     setLoading(true);
@@ -989,6 +1081,32 @@ function HistoryTab() {
     await deleteReelOutput(o.date, o.reel_slug);
     toast.success('Deleted');
     load();
+  };
+
+  const openPublish = (o: ReelOutput) => {
+    const defaultCaption = (o.concept + (o.hashtags ? `\n\n${o.hashtags}` : '')).trim();
+    setPublishCaption(defaultCaption);
+    setPublishScheduled('');
+    setPublishOpen(o);
+  };
+
+  const handlePublish = async () => {
+    if (!publishOpen) return;
+    setPublishingSlug(publishOpen.reel_slug);
+    try {
+      const res = await publishReelToInstagram(
+        publishOpen.date,
+        publishOpen.reel_slug,
+        publishCaption || undefined,
+        publishScheduled || undefined,
+      );
+      toast.success(publishScheduled ? `Reel programado (ID: ${res.post_id})` : `Reel publicado (ID: ${res.post_id})`);
+      setPublishOpen(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error publicando');
+    } finally {
+      setPublishingSlug(null);
+    }
   };
 
   const pickVersion = (scene: ReelOutput['scenes'][number]): SceneVersion | null => {
@@ -1035,12 +1153,26 @@ function HistoryTab() {
               </div>
               <p className="text-sm text-foreground/80 max-w-xl">{o.concept}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap justify-end">
               {o.final_url && (
                 <Button size="sm" variant="outline" asChild>
                   <a href={o.final_url} download={`${o.reel_slug}.mp4`}>
                     <Download size={14} className="mr-2" /> final.mp4
                   </a>
+                </Button>
+              )}
+              {o.final_url && (
+                <Button
+                  size="sm"
+                  onClick={() => openPublish(o)}
+                  disabled={publishingSlug === o.reel_slug}
+                  className="bg-pink-600 hover:bg-pink-500 text-white"
+                >
+                  {publishingSlug === o.reel_slug ? (
+                    <><Loader2 size={14} className="animate-spin mr-2" />Publicando…</>
+                  ) : (
+                    <><Send size={14} className="mr-2" />Publicar</>
+                  )}
                 </Button>
               )}
               <Button
@@ -1070,6 +1202,57 @@ function HistoryTab() {
           </div>
         </Card>
       ))}
+
+      {publishOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-background border border-border rounded-xl p-6 w-full max-w-lg space-y-4 shadow-xl">
+            <h2 className="text-base font-semibold">Publicar Reel en Instagram</h2>
+            <p className="text-xs text-muted-foreground font-mono">{publishOpen.reel_slug}</p>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Caption</label>
+              <Textarea
+                value={publishCaption}
+                onChange={(e) => setPublishCaption(e.target.value)}
+                rows={5}
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">
+                Programar publicación (opcional)
+              </label>
+              <Input
+                type="datetime-local"
+                value={publishScheduled}
+                onChange={(e) => setPublishScheduled(e.target.value)}
+                className="text-sm"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Dejá vacío para publicar ahora. Instagram puede tardar ~2-5 min en procesar el video.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setPublishOpen(null)} disabled={!!publishingSlug}>
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handlePublish}
+                disabled={!!publishingSlug}
+                className="bg-pink-600 hover:bg-pink-500 text-white"
+              >
+                {publishingSlug ? (
+                  <><Loader2 size={14} className="animate-spin mr-2" />Publicando…</>
+                ) : publishScheduled ? (
+                  <><Send size={14} className="mr-2" />Programar</>
+                ) : (
+                  <><Send size={14} className="mr-2" />Publicar ahora</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

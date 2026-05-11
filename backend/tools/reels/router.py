@@ -15,6 +15,8 @@ from backend.tools.reels.schemas import (
     PreviewPromptResponse,
     PreviewVideoPromptRequest,
     PricingInfo,
+    PublishReelRequest,
+    PublishReelResult,
     ReelBrief,
     ReelOutput,
     RenderFinalRequest,
@@ -206,6 +208,54 @@ async def get_output(date: str, slug: str):
     if not data:
         raise HTTPException(status_code=404, detail="Reel not found")
     return data
+
+
+@router.post("/publish", response_model=PublishReelResult)
+async def publish_to_instagram(body: PublishReelRequest):
+    from backend.config import TOKEN_SYSTEM_USER
+    from backend.tools.carousels import instagram
+
+    if not TOKEN_SYSTEM_USER:
+        raise HTTPException(status_code=500, detail="TOKEN_SYSTEM_USER not configured")
+
+    reel_dir = service._target_dir(body.date, body.reel_slug)
+    final_path = reel_dir / "final.mp4"
+    if not final_path.exists():
+        raise HTTPException(status_code=400, detail="final.mp4 not found — render the reel first")
+
+    meta_path = reel_dir / "meta.json"
+    caption = body.caption_override
+    if not caption:
+        import json
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            concept = meta.get("concept", "")
+            hashtags = meta.get("hashtags", "")
+            caption = f"{concept}\n\n{hashtags}".strip() if hashtags else concept
+        except Exception:
+            caption = ""
+
+    scheduled_unix: int | None = None
+    if body.scheduled_time:
+        from datetime import datetime, timezone
+        try:
+            dt = datetime.fromisoformat(body.scheduled_time)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            scheduled_unix = int(dt.timestamp())
+            min_ts = int(datetime.now(timezone.utc).timestamp()) + 600
+            if scheduled_unix < min_ts:
+                raise HTTPException(status_code=400, detail="Scheduled time must be at least 10 minutes in the future")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid scheduled_time format, use ISO 8601")
+
+    try:
+        post_id = await instagram.publish_reel(final_path, caption, TOKEN_SYSTEM_USER, scheduled_unix)
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    service.record_publish(body.date, body.reel_slug, post_id, body.scheduled_time)
+    return PublishReelResult(ok=True, post_id=post_id)
 
 
 @router.delete("/outputs/{date}/{slug}")

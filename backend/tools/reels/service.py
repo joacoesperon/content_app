@@ -643,6 +643,17 @@ def animate_scene_version_step(
     )
 
 
+def record_publish(date: str, reel_slug: str, post_id: str, scheduled_time: Optional[str] = None) -> None:
+    reel_dir = _target_dir(date, reel_slug)
+    meta = _load_or_init_meta(reel_dir)
+    meta["instagram_post_id"] = post_id
+    if scheduled_time:
+        meta["instagram_scheduled_at"] = scheduled_time
+    else:
+        meta["instagram_published_at"] = datetime.utcnow().isoformat() + "Z"
+    _save_meta(reel_dir, meta)
+
+
 def delete_reel(date: str, reel_slug: str) -> None:
     target = _target_dir(date, reel_slug)
     if not target.exists():
