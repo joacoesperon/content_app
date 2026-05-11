@@ -14,6 +14,8 @@ TEMPLATES_FILE = PROJECT_ROOT / "backend" / "tools" / "static_ads" / "templates.
 
 FAL_KEY = os.environ.get("FAL_KEY", "")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+TOKEN_SYSTEM_USER = os.environ.get("TOKEN_SYSTEM_USER", "")
+IG_USER_ID = "17841477359358598"
 
 # Ensure directories exist
 BRAND_DIR.mkdir(exist_ok=True)

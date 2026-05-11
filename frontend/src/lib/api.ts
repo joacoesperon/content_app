@@ -1047,6 +1047,23 @@ export async function deleteCarouselOutput(date: string, slug: string): Promise<
   if (!res.ok) throw new Error('Error borrando carousel');
 }
 
+export async function publishCarouselToInstagram(
+  date: string,
+  post_slug: string,
+  caption_override?: string,
+): Promise<{ ok: boolean; post_id: string }> {
+  const res = await fetch(`${CAR}/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, post_slug, caption_override: caption_override ?? null }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Error publicando en Instagram');
+  }
+  return res.json();
+}
+
 
 // ─── Meta Ads ─────────────────────────────────────────────────────────────────
 

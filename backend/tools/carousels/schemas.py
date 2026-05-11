@@ -102,3 +102,14 @@ class PricingInfo(BaseModel):
     thinking_high_extra: float
     thinking_minimal_extra: float
     web_search_extra: float
+
+
+class PublishRequest(BaseModel):
+    date: str
+    post_slug: str
+    caption_override: Optional[str] = None
+
+
+class PublishResult(BaseModel):
+    ok: bool
+    post_id: str

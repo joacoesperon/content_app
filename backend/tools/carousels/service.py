@@ -475,6 +475,15 @@ def build_zip(folder: str) -> tuple[bytes, str]:
     return buf.getvalue(), zip_name
 
 
+def record_publish(date: str, post_slug: str, post_id: str) -> None:
+    from datetime import datetime, timezone
+    target = _target_dir(date, post_slug)
+    meta = _load_or_init_meta(target)
+    meta["instagram_post_id"] = post_id
+    meta["instagram_published_at"] = datetime.now(timezone.utc).isoformat()
+    _save_meta(target, meta)
+
+
 def delete_carousel(folder: str) -> None:
     import shutil
     parts = folder.split("/")

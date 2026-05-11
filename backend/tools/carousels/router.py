@@ -14,6 +14,8 @@ from backend.tools.carousels.schemas import (
     ModifierInfo,
     PostBrief,
     PricingInfo,
+    PublishRequest,
+    PublishResult,
     ScoutFileInfo,
     SetFavoriteRequest,
     SlideBrief,
@@ -169,6 +171,43 @@ async def download_zip(date: str, slug: str):
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="{name}"'},
     )
+
+
+@router.post("/publish", response_model=PublishResult)
+async def publish_to_instagram(body: PublishRequest):
+    from backend.config import TOKEN_SYSTEM_USER
+    from backend.tools.carousels import instagram
+
+    if not TOKEN_SYSTEM_USER:
+        raise HTTPException(status_code=500, detail="TOKEN_SYSTEM_USER not configured")
+
+    carousel = service.get_carousel(body.date, body.post_slug)
+    if not carousel:
+        raise HTTPException(status_code=404, detail="Carousel not found")
+
+    carousel_dir = service.CAROUSELS_DIR / body.date / body.post_slug
+    image_paths = []
+    for slide in carousel.slides:
+        if not slide.versions:
+            continue
+        if slide.favorite_version is not None:
+            v = next((v for v in slide.versions if v.version == slide.favorite_version), slide.versions[-1])
+        else:
+            v = slide.versions[-1]
+        image_paths.append(carousel_dir / v.filename)
+
+    if len(image_paths) < 2:
+        raise HTTPException(status_code=400, detail="Need at least 2 slides with generated images")
+
+    caption = body.caption_override or f"{carousel.caption}\n\n{carousel.hashtags}".strip()
+
+    try:
+        post_id = await instagram.publish_carousel(image_paths, caption, TOKEN_SYSTEM_USER)
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    service.record_publish(body.date, body.post_slug, post_id)
+    return PublishResult(ok=True, post_id=post_id)
 
 
 @router.delete("/outputs/{date}/{slug}")

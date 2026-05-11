@@ -8,12 +8,14 @@ import {
   Download,
   FileText,
   Image as ImageIcon,
+  Instagram,
   Loader2,
   RefreshCw,
   RotateCcw,
   Sparkles,
   Star,
   Trash2,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -25,6 +27,7 @@ import {
   fetchScoutFilePosts,
   fetchScoutFiles,
   getCarouselZipUrl,
+  publishCarouselToInstagram,
   setCarouselFavorite,
 } from '../lib/api';
 import type {
@@ -868,6 +871,9 @@ function PostsList({
 function HistoryTab() {
   const [outputs, setOutputs] = useState<CarouselOutput[]>([]);
   const [loading, setLoading] = useState(true);
+  const [publishing, setPublishing] = useState<string | null>(null); // folder key
+  const [publishCaption, setPublishCaption] = useState('');
+  const [publishLoading, setPublishLoading] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -885,6 +891,25 @@ function HistoryTab() {
     await deleteCarouselOutput(o.date, o.post_slug);
     toast.success('Deleted');
     load();
+  };
+
+  const openPublish = (o: CarouselOutput) => {
+    const caption = [o.caption, o.hashtags].filter(Boolean).join('\n\n');
+    setPublishCaption(caption);
+    setPublishing(o.folder);
+  };
+
+  const handlePublish = async (o: CarouselOutput) => {
+    setPublishLoading(true);
+    try {
+      await publishCarouselToInstagram(o.date, o.post_slug, publishCaption || undefined);
+      toast.success('Publicado en Instagram');
+      setPublishing(null);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Error publicando');
+    } finally {
+      setPublishLoading(false);
+    }
   };
 
   if (loading) {
@@ -944,6 +969,15 @@ function HistoryTab() {
               </Button>
               <Button
                 size="sm"
+                variant="outline"
+                onClick={() => openPublish(o)}
+                className="text-pink-400 border-pink-400/30 hover:bg-pink-400/10"
+              >
+                <Instagram size={14} className="mr-2" />
+                Publicar
+              </Button>
+              <Button
+                size="sm"
                 variant="ghost"
                 onClick={() => handleDelete(o)}
                 className="text-red-500 hover:text-red-400"
@@ -951,6 +985,43 @@ function HistoryTab() {
                 <Trash2 size={14} />
               </Button>
             </div>
+
+            {/* Publish modal */}
+            {publishing === o.folder && (
+              <div className="mt-4 rounded-xl border border-pink-400/20 bg-pink-400/5 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium flex items-center gap-2">
+                    <Instagram size={14} className="text-pink-400" />
+                    Publicar en Instagram
+                  </span>
+                  <button onClick={() => setPublishing(null)} className="text-muted-foreground hover:text-foreground">
+                    <X size={14} />
+                  </button>
+                </div>
+                <textarea
+                  className="w-full rounded-lg border border-white/10 bg-background p-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-pink-400/40"
+                  rows={5}
+                  value={publishCaption}
+                  onChange={(e) => setPublishCaption(e.target.value)}
+                  placeholder="Caption e hashtags..."
+                />
+                <div className="flex justify-end mt-3">
+                  <Button
+                    size="sm"
+                    onClick={() => handlePublish(o)}
+                    disabled={publishLoading}
+                    className="bg-pink-500 hover:bg-pink-400 text-white"
+                  >
+                    {publishLoading ? (
+                      <Loader2 size={14} className="mr-2 animate-spin" />
+                    ) : (
+                      <Instagram size={14} className="mr-2" />
+                    )}
+                    {publishLoading ? 'Publicando…' : 'Publicar ahora'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {o.slides.map((s) => {
