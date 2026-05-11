@@ -201,12 +201,26 @@ async def publish_to_instagram(body: PublishRequest):
 
     caption = body.caption_override or f"{carousel.caption}\n\n{carousel.hashtags}".strip()
 
+    scheduled_unix: int | None = None
+    if body.scheduled_time:
+        from datetime import datetime, timezone
+        try:
+            dt = datetime.fromisoformat(body.scheduled_time)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            scheduled_unix = int(dt.timestamp())
+            min_ts = int(datetime.now(timezone.utc).timestamp()) + 600  # 10 min minimum
+            if scheduled_unix < min_ts:
+                raise HTTPException(status_code=400, detail="Scheduled time must be at least 10 minutes in the future")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid scheduled_time format, use ISO 8601")
+
     try:
-        post_id = await instagram.publish_carousel(image_paths, caption, TOKEN_SYSTEM_USER)
+        post_id = await instagram.publish_carousel(image_paths, caption, TOKEN_SYSTEM_USER, scheduled_unix)
     except ValueError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
-    service.record_publish(body.date, body.post_slug, post_id)
+    service.record_publish(body.date, body.post_slug, post_id, body.scheduled_time)
     return PublishResult(ok=True, post_id=post_id)
 
 

@@ -475,12 +475,15 @@ def build_zip(folder: str) -> tuple[bytes, str]:
     return buf.getvalue(), zip_name
 
 
-def record_publish(date: str, post_slug: str, post_id: str) -> None:
+def record_publish(date: str, post_slug: str, post_id: str, scheduled_time: str | None = None) -> None:
     from datetime import datetime, timezone
     target = _target_dir(date, post_slug)
     meta = _load_or_init_meta(target)
     meta["instagram_post_id"] = post_id
-    meta["instagram_published_at"] = datetime.now(timezone.utc).isoformat()
+    if scheduled_time:
+        meta["instagram_scheduled_at"] = scheduled_time
+    else:
+        meta["instagram_published_at"] = datetime.now(timezone.utc).isoformat()
     _save_meta(target, meta)
 
 

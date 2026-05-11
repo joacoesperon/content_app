@@ -1051,11 +1051,17 @@ export async function publishCarouselToInstagram(
   date: string,
   post_slug: string,
   caption_override?: string,
+  scheduled_time?: string,
 ): Promise<{ ok: boolean; post_id: string }> {
   const res = await fetch(`${CAR}/publish`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date, post_slug, caption_override: caption_override ?? null }),
+    body: JSON.stringify({
+      date,
+      post_slug,
+      caption_override: caption_override ?? null,
+      scheduled_time: scheduled_time ?? null,
+    }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

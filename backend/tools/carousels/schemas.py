@@ -108,6 +108,7 @@ class PublishRequest(BaseModel):
     date: str
     post_slug: str
     caption_override: Optional[str] = None
+    scheduled_time: Optional[str] = None  # ISO 8601, e.g. "2026-05-12T09:00:00"
 
 
 class PublishResult(BaseModel):

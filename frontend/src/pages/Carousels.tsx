@@ -8,10 +8,10 @@ import {
   Download,
   FileText,
   Image as ImageIcon,
-  Instagram,
   Loader2,
   RefreshCw,
   RotateCcw,
+  Send,
   Sparkles,
   Star,
   Trash2,
@@ -873,6 +873,7 @@ function HistoryTab() {
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState<string | null>(null); // folder key
   const [publishCaption, setPublishCaption] = useState('');
+  const [publishScheduled, setPublishScheduled] = useState(''); // datetime-local value
   const [publishLoading, setPublishLoading] = useState(false);
 
   const load = () => {
@@ -896,14 +897,16 @@ function HistoryTab() {
   const openPublish = (o: CarouselOutput) => {
     const caption = [o.caption, o.hashtags].filter(Boolean).join('\n\n');
     setPublishCaption(caption);
+    setPublishScheduled('');
     setPublishing(o.folder);
   };
 
   const handlePublish = async (o: CarouselOutput) => {
     setPublishLoading(true);
     try {
-      await publishCarouselToInstagram(o.date, o.post_slug, publishCaption || undefined);
-      toast.success('Publicado en Instagram');
+      const scheduledIso = publishScheduled ? new Date(publishScheduled).toISOString() : undefined;
+      await publishCarouselToInstagram(o.date, o.post_slug, publishCaption || undefined, scheduledIso);
+      toast.success(publishScheduled ? 'Programado en Instagram' : 'Publicado en Instagram');
       setPublishing(null);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Error publicando');
@@ -973,7 +976,7 @@ function HistoryTab() {
                 onClick={() => openPublish(o)}
                 className="text-pink-400 border-pink-400/30 hover:bg-pink-400/10"
               >
-                <Instagram size={14} className="mr-2" />
+                <Send size={14} className="mr-2" />
                 Publicar
               </Button>
               <Button
@@ -991,7 +994,7 @@ function HistoryTab() {
               <div className="mt-4 rounded-xl border border-pink-400/20 bg-pink-400/5 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium flex items-center gap-2">
-                    <Instagram size={14} className="text-pink-400" />
+                    <Send size={14} className="text-pink-400" />
                     Publicar en Instagram
                   </span>
                   <button onClick={() => setPublishing(null)} className="text-muted-foreground hover:text-foreground">
@@ -1005,6 +1008,17 @@ function HistoryTab() {
                   onChange={(e) => setPublishCaption(e.target.value)}
                   placeholder="Caption e hashtags..."
                 />
+                <div className="mt-3">
+                  <label className="text-xs text-muted-foreground block mb-1">
+                    Programar para (opcional — dejá vacío para publicar ahora)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={publishScheduled}
+                    onChange={(e) => setPublishScheduled(e.target.value)}
+                    className="w-full rounded-lg border border-white/10 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-pink-400/40"
+                  />
+                </div>
                 <div className="flex justify-end mt-3">
                   <Button
                     size="sm"
@@ -1015,9 +1029,11 @@ function HistoryTab() {
                     {publishLoading ? (
                       <Loader2 size={14} className="mr-2 animate-spin" />
                     ) : (
-                      <Instagram size={14} className="mr-2" />
+                      <Send size={14} className="mr-2" />
                     )}
-                    {publishLoading ? 'Publicando…' : 'Publicar ahora'}
+                    {publishLoading
+                      ? (publishScheduled ? 'Programando…' : 'Publicando…')
+                      : (publishScheduled ? 'Programar' : 'Publicar ahora')}
                   </Button>
                 </div>
               </div>

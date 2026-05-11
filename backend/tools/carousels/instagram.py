@@ -33,13 +33,19 @@ async def _create_item_container(image_url: str, token: str) -> str:
     return data["id"]
 
 
-async def _create_carousel_container(children: list[str], caption: str, token: str) -> str:
-    data = await asyncio.to_thread(_post, f"{GRAPH_API}/{IG_USER_ID}/media", {
+async def _create_carousel_container(
+    children: list[str], caption: str, token: str, scheduled_unix: int | None = None
+) -> str:
+    params: dict = {
         "media_type": "CAROUSEL",
         "children": ",".join(children),
         "caption": caption,
         "access_token": token,
-    })
+    }
+    if scheduled_unix is not None:
+        params["published"] = "false"
+        params["scheduled_publish_time"] = str(scheduled_unix)
+    data = await asyncio.to_thread(_post, f"{GRAPH_API}/{IG_USER_ID}/media", params)
     return data["id"]
 
 
@@ -51,8 +57,13 @@ async def _publish_container(creation_id: str, token: str) -> str:
     return data["id"]
 
 
-async def publish_carousel(image_paths: list[Path], caption: str, token: str) -> str:
-    """Upload images, create containers, publish. Returns Instagram post ID."""
+async def publish_carousel(
+    image_paths: list[Path],
+    caption: str,
+    token: str,
+    scheduled_unix: int | None = None,
+) -> str:
+    """Upload images, create containers, publish or schedule. Returns Instagram post ID."""
     if len(image_paths) < 2:
         raise ValueError("Instagram carousels require at least 2 images")
     if len(image_paths) > 10:
@@ -65,6 +76,6 @@ async def publish_carousel(image_paths: list[Path], caption: str, token: str) ->
         item_id = await _create_item_container(url, token)
         item_ids.append(item_id)
 
-    carousel_id = await _create_carousel_container(item_ids, caption, token)
+    carousel_id = await _create_carousel_container(item_ids, caption, token, scheduled_unix)
     post_id = await _publish_container(carousel_id, token)
     return post_id
