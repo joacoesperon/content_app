@@ -48,6 +48,23 @@ async def _create_item_container(image_url: str, token: str) -> str:
     return data["id"]
 
 
+async def _wait_for_container(container_id: str, token: str, max_polls: int = 20) -> None:
+    """Poll until container status_code == FINISHED (needed for both item and carousel containers)."""
+    for _ in range(max_polls):
+        await asyncio.sleep(5)
+        status = await asyncio.to_thread(
+            _get,
+            f"{GRAPH_API}/{container_id}",
+            {"fields": "status_code", "access_token": token},
+        )
+        code = status.get("status_code", "")
+        if code == "FINISHED":
+            return
+        if code == "ERROR":
+            raise ValueError(f"Instagram container processing failed: {status}")
+    raise ValueError("Instagram container processing timed out")
+
+
 async def _create_carousel_container(
     children: list[str], caption: str, token: str, scheduled_unix: int | None = None
 ) -> str:
@@ -89,6 +106,7 @@ async def publish_carousel(
     item_ids: list[str] = []
     for url in public_urls:
         item_id = await _create_item_container(url, token)
+        await _wait_for_container(item_id, token)
         item_ids.append(item_id)
 
     carousel_id = await _create_carousel_container(item_ids, caption, token, scheduled_unix)

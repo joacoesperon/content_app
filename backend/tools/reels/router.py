@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
+import fal_client
 from fastapi import APIRouter, HTTPException
 
 from backend.tools.reels import service
@@ -248,6 +249,29 @@ async def publish_to_instagram(body: PublishReelRequest):
                 raise HTTPException(status_code=400, detail="Scheduled time must be at least 10 minutes in the future")
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid scheduled_time format, use ISO 8601")
+
+    if scheduled_unix is not None:
+        from backend.config import MAKE_WEBHOOK_URL
+        import requests as _req
+        if not MAKE_WEBHOOK_URL:
+            raise HTTPException(status_code=500, detail="MAKE_WEBHOOK_URL not configured")
+        video_url = await asyncio.to_thread(fal_client.upload_file, str(final_path))
+        payload = {
+            "post_slug": f"{body.date}_{body.reel_slug}",
+            "post_type": "reel",
+            "caption": caption,
+            "image_urls": "",
+            "video_url": video_url,
+            "scheduled_at": str(scheduled_unix),
+        }
+        def _post_webhook() -> None:
+            _req.post(MAKE_WEBHOOK_URL, json=payload, timeout=10).raise_for_status()
+        try:
+            await asyncio.to_thread(_post_webhook)
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"Make.com webhook failed: {e}")
+        service.record_publish(body.date, body.reel_slug, "scheduled", body.scheduled_time)
+        return PublishReelResult(ok=True, post_id="scheduled")
 
     try:
         post_id = await instagram.publish_reel(final_path, caption, TOKEN_SYSTEM_USER, scheduled_unix)
