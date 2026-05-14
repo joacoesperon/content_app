@@ -1,0 +1,307 @@
+{
+  "name": "Instagram Scheduler B - Publisher",
+  "flow": [
+    {
+      "id": 1,
+      "module": "datastore:SearchRecords",
+      "version": 1,
+      "parameters": {
+        "datastore": 123690
+      },
+      "mapper": {
+        "limit": ""
+      },
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "datastore": { "label": "instagram_scheduled_posts" }
+          }
+        },
+        "parameters": [
+          { "name": "datastore", "type": "datastore", "label": "Data store", "required": true }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:RouterModule",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "filter": {
+        "name": "Is pending and due",
+        "conditions": [
+          [
+            { "a": "{{1.status}}", "o": "text:equal", "b": "pending" },
+            { "a": "{{toNumber(1.scheduled_at)}}", "b": "{{timestamp}}", "o": "number:lessequal" }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 3,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://graph.facebook.com/v18.0/17841477359358598/media",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [],
+                "qs": [
+                  { "key": "media_type", "value": "CAROUSEL" },
+                  { "key": "children", "value": "{{1.image_urls}}" },
+                  { "key": "caption", "value": "{{1.caption}}" },
+                  { "key": "access_token", "value": "REEMPLAZA_CON_TU_TOKEN" }
+                ],
+                "bodyType": "",
+                "parseResponse": true,
+                "authUser": "",
+                "authPass": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "contentType": "application/x-www-form-urlencoded",
+                "body": ""
+              },
+              "metadata": { "designer": { "x": 600, "y": -200 } }
+            },
+            {
+              "id": 4,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://graph.facebook.com/v18.0/17841477359358598/media_publish",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [],
+                "qs": [
+                  { "key": "creation_id", "value": "{{3.data.id}}" },
+                  { "key": "access_token", "value": "REEMPLAZA_CON_TU_TOKEN" }
+                ],
+                "bodyType": "",
+                "parseResponse": true,
+                "authUser": "",
+                "authPass": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "contentType": "application/x-www-form-urlencoded",
+                "body": ""
+              },
+              "metadata": { "designer": { "x": 900, "y": -200 } }
+            },
+            {
+              "id": 5,
+              "module": "datastore:UpdateRecord",
+              "version": 1,
+              "parameters": { "datastore": 123690 },
+              "mapper": {
+                "key": "{{1.key}}",
+                "data": {
+                  "post_type": "{{1.post_type}}",
+                  "caption": "{{1.caption}}",
+                  "image_urls": "{{1.image_urls}}",
+                  "video_url": "{{1.video_url}}",
+                  "scheduled_at": "{{1.scheduled_at}}",
+                  "status": "published"
+                }
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": -200 },
+                "restore": {
+                  "parameters": { "datastore": { "label": "instagram_scheduled_posts" } }
+                },
+                "parameters": [
+                  { "name": "datastore", "type": "datastore", "label": "Data store", "required": true }
+                ],
+                "expect": [
+                  { "name": "key", "type": "text", "label": "Key" },
+                  {
+                    "name": "data",
+                    "type": "collection",
+                    "label": "Record",
+                    "spec": [
+                      { "name": "post_type", "type": "text", "label": null },
+                      { "name": "caption", "type": "text", "label": null },
+                      { "name": "image_urls", "type": "text", "label": null },
+                      { "name": "video_url", "type": "text", "label": null },
+                      { "name": "scheduled_at", "type": "text", "label": null },
+                      { "name": "status", "type": "text", "label": null }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "filter": {
+            "name": "Is carousel",
+            "conditions": [
+              [{ "a": "{{1.post_type}}", "o": "text:equal", "b": "carousel" }]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://graph.facebook.com/v18.0/17841477359358598/media",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [],
+                "qs": [
+                  { "key": "media_type", "value": "REELS" },
+                  { "key": "video_url", "value": "{{1.video_url}}" },
+                  { "key": "caption", "value": "{{1.caption}}" },
+                  { "key": "access_token", "value": "REEMPLAZA_CON_TU_TOKEN" }
+                ],
+                "bodyType": "",
+                "parseResponse": true,
+                "authUser": "",
+                "authPass": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "contentType": "application/x-www-form-urlencoded",
+                "body": ""
+              },
+              "metadata": { "designer": { "x": 600, "y": 200 } }
+            },
+            {
+              "id": 7,
+              "module": "builtin:Sleep",
+              "version": 1,
+              "parameters": {},
+              "mapper": { "delay": 60 },
+              "metadata": { "designer": { "x": 900, "y": 200 } }
+            },
+            {
+              "id": 8,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://graph.facebook.com/v18.0/17841477359358598/media_publish",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [],
+                "qs": [
+                  { "key": "creation_id", "value": "{{6.data.id}}" },
+                  { "key": "access_token", "value": "REEMPLAZA_CON_TU_TOKEN" }
+                ],
+                "bodyType": "",
+                "parseResponse": true,
+                "authUser": "",
+                "authPass": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "contentType": "application/x-www-form-urlencoded",
+                "body": ""
+              },
+              "metadata": { "designer": { "x": 1200, "y": 200 } }
+            },
+            {
+              "id": 9,
+              "module": "datastore:UpdateRecord",
+              "version": 1,
+              "parameters": { "datastore": 123690 },
+              "mapper": {
+                "key": "{{1.key}}",
+                "data": {
+                  "post_type": "{{1.post_type}}",
+                  "caption": "{{1.caption}}",
+                  "image_urls": "{{1.image_urls}}",
+                  "video_url": "{{1.video_url}}",
+                  "scheduled_at": "{{1.scheduled_at}}",
+                  "status": "published"
+                }
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": 200 },
+                "restore": {
+                  "parameters": { "datastore": { "label": "instagram_scheduled_posts" } }
+                },
+                "parameters": [
+                  { "name": "datastore", "type": "datastore", "label": "Data store", "required": true }
+                ],
+                "expect": [
+                  { "name": "key", "type": "text", "label": "Key" },
+                  {
+                    "name": "data",
+                    "type": "collection",
+                    "label": "Record",
+                    "spec": [
+                      { "name": "post_type", "type": "text", "label": null },
+                      { "name": "caption", "type": "text", "label": null },
+                      { "name": "image_urls", "type": "text", "label": null },
+                      { "name": "video_url", "type": "text", "label": null },
+                      { "name": "scheduled_at", "type": "text", "label": null },
+                      { "name": "status", "type": "text", "label": null }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "filter": {
+            "name": "Is reel",
+            "conditions": [
+              [{ "a": "{{1.post_type}}", "o": "text:equal", "b": "reel" }]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "eu1.make.com",
+    "notes": []
+  }
+}

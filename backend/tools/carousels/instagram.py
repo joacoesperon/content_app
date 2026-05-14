@@ -15,7 +15,10 @@ GRAPH_API = "https://graph.facebook.com/v18.0"
 
 def _post(url: str, params: dict) -> dict:
     res = requests.post(url, params=params, timeout=30)
-    data = res.json()
+    try:
+        data = res.json()
+    except Exception:
+        raise ValueError(f"Instagram API error {res.status_code}: {res.text[:300]}")
     if "error" in data:
         raise ValueError(data["error"]["message"])
     return data
@@ -23,7 +26,10 @@ def _post(url: str, params: dict) -> dict:
 
 def _get(url: str, params: dict) -> dict:
     res = requests.get(url, params=params, timeout=30)
-    data = res.json()
+    try:
+        data = res.json()
+    except Exception:
+        raise ValueError(f"Instagram API error {res.status_code}: {res.text[:300]}")
     if "error" in data:
         raise ValueError(data["error"]["message"])
     return data

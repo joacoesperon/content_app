@@ -187,19 +187,18 @@ async def publish_to_instagram(body: PublishRequest):
 
     carousel_dir = service.CAROUSELS_DIR / body.date / body.post_slug
     image_paths = []
-    for slide in carousel.slides:
-        if not slide.versions:
+    for slide in carousel["slides"]:
+        versions = slide["versions"]
+        if not versions:
             continue
-        if slide.favorite_version is not None:
-            v = next((v for v in slide.versions if v.version == slide.favorite_version), slide.versions[-1])
-        else:
-            v = slide.versions[-1]
-        image_paths.append(carousel_dir / v.filename)
+        fav = slide.get("favorite_version")
+        v = next((v for v in versions if v["version"] == fav), versions[-1]) if fav is not None else versions[-1]
+        image_paths.append(carousel_dir / v["filename"])
 
     if len(image_paths) < 2:
         raise HTTPException(status_code=400, detail="Need at least 2 slides with generated images")
 
-    caption = body.caption_override or f"{carousel.caption}\n\n{carousel.hashtags}".strip()
+    caption = body.caption_override or f"{carousel['caption']}\n\n{carousel['hashtags']}".strip()
 
     scheduled_unix: int | None = None
     if body.scheduled_time:
@@ -215,9 +214,36 @@ async def publish_to_instagram(body: PublishRequest):
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid scheduled_time format, use ISO 8601")
 
+    if scheduled_unix is not None:
+        from backend.config import MAKE_WEBHOOK_URL
+        if not MAKE_WEBHOOK_URL:
+            raise HTTPException(status_code=500, detail="MAKE_WEBHOOK_URL not configured")
+        public_urls = await asyncio.gather(*[instagram._upload_image(p) for p in image_paths])
+        container_ids = await asyncio.gather(*[
+            instagram._create_item_container(url, TOKEN_SYSTEM_USER)
+            for url in public_urls
+        ])
+        payload = {
+            "post_slug": f"{body.date}_{body.post_slug}",
+            "post_type": "carousel",
+            "caption": caption,
+            "image_urls": ",".join(container_ids),
+            "video_url": "",
+            "scheduled_at": str(scheduled_unix),
+        }
+        import requests as _req
+        def _post_webhook() -> None:
+            _req.post(MAKE_WEBHOOK_URL, json=payload, timeout=10).raise_for_status()
+        try:
+            await asyncio.to_thread(_post_webhook)
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"Make.com webhook failed: {e}")
+        service.record_publish(body.date, body.post_slug, "scheduled", body.scheduled_time)
+        return PublishResult(ok=True, post_id="scheduled")
+
     try:
-        post_id = await instagram.publish_carousel(image_paths, caption, TOKEN_SYSTEM_USER, scheduled_unix)
-    except ValueError as e:
+        post_id = await instagram.publish_carousel(image_paths, caption, TOKEN_SYSTEM_USER)
+    except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
 
     service.record_publish(body.date, body.post_slug, post_id, body.scheduled_time)

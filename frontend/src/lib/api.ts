@@ -1087,8 +1087,11 @@ export async function publishCarouselToInstagram(
     }),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail ?? 'Error publicando en Instagram');
+    const text = await res.text();
+    console.error('[publish] error body:', text);
+    let detail: string | undefined;
+    try { detail = JSON.parse(text).detail; } catch { /* not json */ }
+    throw new Error(detail ?? text ?? 'Error publicando en Instagram');
   }
   return res.json();
 }

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { format } from 'date-fns';
 import {
+  CalendarDays,
   Check,
   ChevronLeft,
   ChevronLeft as ArrowLeft,
@@ -15,8 +17,9 @@ import {
   Sparkles,
   Star,
   Trash2,
-  X,
 } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import {
   deleteCarouselOutput,
@@ -52,7 +55,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
-type Tab = 'new' | 'history';
+type Tab = 'new' | 'publish' | 'history';
 
 const RESOLUTION_OPTIONS: { value: string; label: string }[] = [
   { value: '0.5K', label: '0.5K' },
@@ -871,10 +874,6 @@ function PostsList({
 function HistoryTab() {
   const [outputs, setOutputs] = useState<CarouselOutput[]>([]);
   const [loading, setLoading] = useState(true);
-  const [publishing, setPublishing] = useState<string | null>(null); // folder key
-  const [publishCaption, setPublishCaption] = useState('');
-  const [publishScheduled, setPublishScheduled] = useState(''); // datetime-local value
-  const [publishLoading, setPublishLoading] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -892,27 +891,6 @@ function HistoryTab() {
     await deleteCarouselOutput(o.date, o.post_slug);
     toast.success('Deleted');
     load();
-  };
-
-  const openPublish = (o: CarouselOutput) => {
-    const caption = [o.caption, o.hashtags].filter(Boolean).join('\n\n');
-    setPublishCaption(caption);
-    setPublishScheduled('');
-    setPublishing(o.folder);
-  };
-
-  const handlePublish = async (o: CarouselOutput) => {
-    setPublishLoading(true);
-    try {
-      const scheduledIso = publishScheduled ? new Date(publishScheduled).toISOString() : undefined;
-      await publishCarouselToInstagram(o.date, o.post_slug, publishCaption || undefined, scheduledIso);
-      toast.success(publishScheduled ? 'Programado en Instagram' : 'Publicado en Instagram');
-      setPublishing(null);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Error publicando');
-    } finally {
-      setPublishLoading(false);
-    }
   };
 
   if (loading) {
@@ -972,15 +950,6 @@ function HistoryTab() {
               </Button>
               <Button
                 size="sm"
-                variant="outline"
-                onClick={() => openPublish(o)}
-                className="text-pink-400 border-pink-400/30 hover:bg-pink-400/10"
-              >
-                <Send size={14} className="mr-2" />
-                Publicar
-              </Button>
-              <Button
-                size="sm"
                 variant="ghost"
                 onClick={() => handleDelete(o)}
                 className="text-red-500 hover:text-red-400"
@@ -989,55 +958,6 @@ function HistoryTab() {
               </Button>
             </div>
 
-            {/* Publish modal */}
-            {publishing === o.folder && (
-              <div className="mt-4 rounded-xl border border-pink-400/20 bg-pink-400/5 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium flex items-center gap-2">
-                    <Send size={14} className="text-pink-400" />
-                    Publicar en Instagram
-                  </span>
-                  <button onClick={() => setPublishing(null)} className="text-muted-foreground hover:text-foreground">
-                    <X size={14} />
-                  </button>
-                </div>
-                <textarea
-                  className="w-full rounded-lg border border-white/10 bg-background p-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-pink-400/40"
-                  rows={5}
-                  value={publishCaption}
-                  onChange={(e) => setPublishCaption(e.target.value)}
-                  placeholder="Caption e hashtags..."
-                />
-                <div className="mt-3">
-                  <label className="text-xs text-muted-foreground block mb-1">
-                    Programar para (opcional — dejá vacío para publicar ahora)
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={publishScheduled}
-                    onChange={(e) => setPublishScheduled(e.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-pink-400/40"
-                  />
-                </div>
-                <div className="flex justify-end mt-3">
-                  <Button
-                    size="sm"
-                    onClick={() => handlePublish(o)}
-                    disabled={publishLoading}
-                    className="bg-pink-500 hover:bg-pink-400 text-white"
-                  >
-                    {publishLoading ? (
-                      <Loader2 size={14} className="mr-2 animate-spin" />
-                    ) : (
-                      <Send size={14} className="mr-2" />
-                    )}
-                    {publishLoading
-                      ? (publishScheduled ? 'Programando…' : 'Publicando…')
-                      : (publishScheduled ? 'Programar' : 'Publicar ahora')}
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {o.slides.map((s) => {
@@ -1069,6 +989,307 @@ function HistoryTab() {
           </div>
         </Card>
       ))}
+    </div>
+  );
+}
+
+// ─── Publish ─────────────────────────────────────────────────────────────────
+
+function PublishTab() {
+  const [files, setFiles] = useState<{ filename: string; posts_count: number }[]>([]);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [posts, setPosts] = useState<PostBrief[]>([]);
+  const [outputs, setOutputs] = useState<CarouselOutput[]>([]);
+  const [selectedEntry, setSelectedEntry] = useState<{ brief: PostBrief; output: CarouselOutput } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [publishCaption, setPublishCaption] = useState('');
+  const [useSchedule, setUseSchedule] = useState(true);
+  const [scheduledDate, setScheduledDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d;
+  });
+  const [scheduledTime, setScheduledTime] = useState('09:00');
+  const [publishLoading, setPublishLoading] = useState(false);
+
+  useEffect(() => {
+    fetchScoutFiles().then((fs) => {
+      setFiles(fs);
+      if (fs.length > 0) setSelectedFile(fs[0].filename);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedFile) return;
+    setLoading(true);
+    setSelectedEntry(null);
+    const date = dateFromFilename(selectedFile);
+    Promise.all([fetchScoutFilePosts(selectedFile), fetchCarouselOutputs()])
+      .then(([briefs, allOutputs]) => {
+        setPosts(briefs);
+        setOutputs(allOutputs.filter((o) => o.date === date));
+      })
+      .finally(() => setLoading(false));
+  }, [selectedFile]);
+
+  const entries = useMemo(() => {
+    return posts
+      .map((brief) => {
+        const output = outputs.find((o) => o.post_slug === brief.slug);
+        return output ? { brief, output } : null;
+      })
+      .filter((e): e is { brief: PostBrief; output: CarouselOutput } => e !== null);
+  }, [posts, outputs]);
+
+  const openPost = (entry: { brief: PostBrief; output: CarouselOutput }) => {
+    const caption = [entry.output.caption, entry.output.hashtags].filter(Boolean).join('\n\n');
+    setPublishCaption(caption);
+    setUseSchedule(true);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setScheduledDate(tomorrow);
+    setScheduledTime('09:00');
+    setSelectedEntry(entry);
+  };
+
+  const handlePublish = async () => {
+    if (!selectedEntry) return;
+    setPublishLoading(true);
+    try {
+      let scheduledIso: string | undefined;
+      if (useSchedule) {
+        const [h, m] = scheduledTime.split(':').map(Number);
+        const dt = new Date(scheduledDate);
+        dt.setHours(h, m, 0, 0);
+        scheduledIso = dt.toISOString();
+      }
+      await publishCarouselToInstagram(
+        selectedEntry.output.date,
+        selectedEntry.output.post_slug,
+        publishCaption || undefined,
+        scheduledIso,
+      );
+      toast.success(useSchedule ? 'Programado en Instagram' : 'Publicado en Instagram');
+      setSelectedEntry(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error publicando');
+    } finally {
+      setPublishLoading(false);
+    }
+  };
+
+  const pickVersion = (slide: CarouselOutput['slides'][number]): SlideVersion | null => {
+    if (!slide.versions.length) return null;
+    if (slide.favorite_version != null) {
+      const fav = slide.versions.find((v) => v.version === slide.favorite_version);
+      if (fav) return fav;
+    }
+    return slide.versions[slide.versions.length - 1];
+  };
+
+  const date = selectedFile ? dateFromFilename(selectedFile) : '';
+
+  if (selectedEntry) {
+    const { brief, output } = selectedEntry;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedEntry(null)}>
+            <ChevronLeft size={14} className="mr-1" /> Back to posts
+          </Button>
+          <div className="text-xs text-muted-foreground font-mono">
+            Post #{brief.number} · {brief.slug}
+          </div>
+        </div>
+
+        <Card className="p-4 space-y-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-mono font-semibold text-foreground">Post #{brief.number}</span>
+            <span className="text-xs text-muted-foreground">·</span>
+            <span className="text-xs font-mono text-muted-foreground">{date}</span>
+            <span className="text-xs text-muted-foreground">·</span>
+            <span className="text-xs px-2 py-0.5 rounded border border-accent/40 text-accent">{brief.category}</span>
+            <span className="text-xs text-muted-foreground">{brief.lever}</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {output.slides.map((s) => {
+              const v = pickVersion(s);
+              if (!v) return null;
+              const isFav = s.favorite_version === v.version;
+              return (
+                <a
+                  key={s.slide_number}
+                  href={v.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded overflow-hidden border border-border bg-black hover:border-accent/40 relative"
+                >
+                  <img src={v.url} alt={s.label} className="w-full h-auto block" />
+                  <div className="text-[10px] text-muted-foreground px-1 py-0.5 text-center">{s.label}</div>
+                  {isFav && (
+                    <Star size={12} className="absolute top-1 right-1 fill-yellow-400 text-yellow-400" />
+                  )}
+                </a>
+              );
+            })}
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground">Caption</Label>
+            <Textarea
+              value={publishCaption}
+              onChange={(e) => setPublishCaption(e.target.value)}
+              rows={5}
+              className="text-sm mt-1"
+              placeholder="Caption e hashtags..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="use-schedule"
+                checked={useSchedule}
+                onChange={(e) => setUseSchedule(e.target.checked)}
+                className="rounded border-border"
+              />
+              <Label htmlFor="use-schedule" className="text-xs text-muted-foreground cursor-pointer">
+                Programar publicación
+              </Label>
+            </div>
+
+            {useSchedule && (
+              <div className="flex items-center gap-3 flex-wrap">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="justify-start font-normal text-sm min-w-44">
+                      <CalendarDays size={14} className="mr-2 shrink-0" />
+                      {format(scheduledDate, 'EEE, d MMM yyyy')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start">
+                    <Calendar
+                      mode="single"
+                      selected={scheduledDate}
+                      onSelect={(d) => d && setScheduledDate(d)}
+                      disabled={(d) => d <= new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <input
+                  type="time"
+                  value={scheduledTime}
+                  onChange={(e) => setScheduledTime(e.target.value)}
+                  className="rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+
+                <span className="text-xs text-muted-foreground">
+                  {new Intl.DateTimeFormat('en', { timeZone: 'Europe/Madrid', timeZoneName: 'shortOffset' })
+                    .formatToParts(new Date())
+                    .find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+1'}{' '}
+                  Madrid
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              onClick={handlePublish}
+              disabled={publishLoading}
+              className="bg-pink-500 hover:bg-pink-400 text-white"
+            >
+              {publishLoading ? (
+                <Loader2 size={14} className="mr-2 animate-spin" />
+              ) : (
+                <Send size={14} className="mr-2" />
+              )}
+              {publishLoading
+                ? useSchedule ? 'Programando…' : 'Publicando…'
+                : useSchedule ? 'Programar' : 'Publicar ahora'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="max-w-sm">
+        <Label className="text-xs text-muted-foreground mb-1 block">Scout output</Label>
+        <Select value={selectedFile ?? undefined} onValueChange={setSelectedFile}>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose a Scout file" />
+          </SelectTrigger>
+          <SelectContent>
+            {files.map((f) => (
+              <SelectItem key={f.filename} value={f.filename}>
+                {f.filename} ({f.posts_count} posts)
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm py-16">
+          <Loader2 size={16} className="animate-spin" /> Loading...
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <p className="text-lg mb-2">No hay carousels generados para este archivo</p>
+          <p className="text-sm">Generá slides en "New from Scout" primero.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {entries.map(({ brief, output }) => {
+            const slideCount = output.slides.filter((s) => s.versions.length > 0).length;
+            return (
+              <button
+                key={brief.number}
+                onClick={() => openPost({ brief, output })}
+                className="w-full text-left p-4 rounded-lg border border-border hover:border-pink-400/40 hover:bg-muted/40 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-mono font-semibold text-foreground">Post #{brief.number}</span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs font-mono text-muted-foreground">{date}</span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs px-2 py-0.5 rounded border border-accent/40 text-accent">
+                      {brief.category}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{brief.lever}</span>
+                  </div>
+                  <span className="text-xs text-green-500 shrink-0">
+                    {slideCount}/{brief.slides.length} slides
+                  </span>
+                </div>
+                <p className="text-sm text-foreground/80 line-clamp-2">{brief.caption || '(no caption)'}</p>
+                <div className="flex gap-1 mt-2 overflow-hidden">
+                  {output.slides.slice(0, 4).map((s) => {
+                    const v = pickVersion(s);
+                    if (!v) return null;
+                    return (
+                      <img
+                        key={s.slide_number}
+                        src={v.url}
+                        alt={s.label}
+                        className="w-12 h-15 object-cover rounded border border-border"
+                      />
+                    );
+                  })}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1144,6 +1365,10 @@ export default function Carousels() {
             <FileText size={14} className="mr-2" />
             New from Scout
           </TabsTrigger>
+          <TabsTrigger value="publish">
+            <Send size={14} className="mr-2" />
+            Publish
+          </TabsTrigger>
           <TabsTrigger value="history">
             <ImageIcon size={14} className="mr-2" />
             History
@@ -1210,6 +1435,10 @@ export default function Carousels() {
               )}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="publish" className="mt-6">
+          <PublishTab />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">

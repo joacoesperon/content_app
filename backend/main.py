@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.config import BRAND_DIR, OUTPUTS_DIR
 from backend.core.registry import ToolRegistry
 
+
 app = FastAPI(title="Jess Trading Content App")
 
 app.add_middleware(
