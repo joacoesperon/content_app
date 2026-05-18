@@ -129,3 +129,7 @@ class MediaFile(BaseModel):
     filename: str
     type: str
     url: str
+
+
+class PromptUpdate(BaseModel):
+    content: str

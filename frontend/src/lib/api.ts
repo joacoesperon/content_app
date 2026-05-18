@@ -181,13 +181,15 @@ export async function updateBrandDnaRaw(jsonStr: string) {
   return res.json();
 }
 
-export async function fetchContentMix() {
-  const res = await fetch(`${BASE}/api/tools/brand/content-mix`);
+// ─── Agent Prompts ────────────────────────────────────────────────────────────
+
+export async function fetchScoutPrompt() {
+  const res = await fetch(`${BASE}/api/tools/brand/scout-prompt`);
   return res.json() as Promise<{ content: string }>;
 }
 
-export async function updateContentMix(content: string) {
-  const res = await fetch(`${BASE}/api/tools/brand/content-mix`, {
+export async function updateScoutPrompt(content: string) {
+  const res = await fetch(`${BASE}/api/tools/brand/scout-prompt`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
@@ -199,16 +201,13 @@ export async function updateContentMix(content: string) {
   return res.json();
 }
 
-
-// ─── Reels Mix ────────────────────────────────────────────────────────────────
-
-export async function fetchReelsMix() {
-  const res = await fetch(`${BASE}/api/tools/brand/reels-mix`);
+export async function fetchDirectorPrompt() {
+  const res = await fetch(`${BASE}/api/tools/brand/director-prompt`);
   return res.json() as Promise<{ content: string }>;
 }
 
-export async function updateReelsMix(content: string) {
-  const res = await fetch(`${BASE}/api/tools/brand/reels-mix`, {
+export async function updateDirectorPrompt(content: string) {
+  const res = await fetch(`${BASE}/api/tools/brand/director-prompt`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),

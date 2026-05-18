@@ -19,6 +19,7 @@ from backend.tools.brand.schemas import (
     Product,
     ProductCreate,
     ProductUpdate,
+    PromptUpdate,
 )
 
 router = APIRouter()
@@ -191,31 +192,27 @@ async def delete_media(media_type: str, filename: str, product_id: str = ""):
     return {"deleted": filename}
 
 
-# ─── Content Mix ─────────────────────────────────────────────────────────────
+# ─── Agent Prompts ────────────────────────────────────────────────────────────
 
-@router.get("/content-mix")
-async def get_content_mix():
-    return {"content": service.load_content_mix(BRAND_DIR)}
+@router.get("/scout-prompt")
+async def get_scout_prompt():
+    return {"content": service.load_scout_prompt(BRAND_DIR)}
 
 
-@router.put("/content-mix")
-async def update_content_mix(body: dict):
-    content = body.get("content", "")
-    service.save_content_mix(BRAND_DIR, content)
+@router.put("/scout-prompt")
+async def update_scout_prompt(body: PromptUpdate):
+    service.save_scout_prompt(BRAND_DIR, body.content)
     return {"ok": True}
 
 
-# ─── Reels Mix ────────────────────────────────────────────────────────────────
-
-@router.get("/reels-mix")
-async def get_reels_mix():
-    return {"content": service.load_reels_mix(BRAND_DIR)}
+@router.get("/director-prompt")
+async def get_director_prompt():
+    return {"content": service.load_director_prompt(BRAND_DIR)}
 
 
-@router.put("/reels-mix")
-async def update_reels_mix(body: dict):
-    content = body.get("content", "")
-    service.save_reels_mix(BRAND_DIR, content)
+@router.put("/director-prompt")
+async def update_director_prompt(body: PromptUpdate):
+    service.save_director_prompt(BRAND_DIR, body.content)
     return {"ok": True}
 
 

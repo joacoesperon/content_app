@@ -155,30 +155,30 @@ Mood: {ph.get('mood', '')}
     _style_md_path(brand_dir).write_text(md, encoding="utf-8")
 
 
-def load_content_mix(brand_dir: Path) -> str:
-    path = brand_dir / "content-mix.md"
+# ─── Scout Prompt ─────────────────────────────────────────────────────────────
+
+def load_scout_prompt(brand_dir: Path) -> str:
+    path = brand_dir / "scout-prompt.md"
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
 
 
-def save_content_mix(brand_dir: Path, content: str) -> None:
-    path = brand_dir / "content-mix.md"
-    path.write_text(content, encoding="utf-8")
+def save_scout_prompt(brand_dir: Path, content: str) -> None:
+    (brand_dir / "scout-prompt.md").write_text(content, encoding="utf-8")
 
 
-# ─── Reels Mix ────────────────────────────────────────────────────────────────
+# ─── Director Prompt ──────────────────────────────────────────────────────────
 
-def load_reels_mix(brand_dir: Path) -> str:
-    path = brand_dir / "reels-mix.md"
+def load_director_prompt(brand_dir: Path) -> str:
+    path = brand_dir / "director-prompt.md"
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
 
 
-def save_reels_mix(brand_dir: Path, content: str) -> None:
-    path = brand_dir / "reels-mix.md"
-    path.write_text(content, encoding="utf-8")
+def save_director_prompt(brand_dir: Path, content: str) -> None:
+    (brand_dir / "director-prompt.md").write_text(content, encoding="utf-8")
 
 
 # ─── Mascot ───────────────────────────────────────────────────────────────────

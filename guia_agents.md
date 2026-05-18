@@ -693,6 +693,3 @@ Start with the simplest pattern that works. A prompt chain handles most multi-st
 Invest in tool design and evaluation early. Well-designed tools with clear names, precise descriptions, and structured error messages will improve agent performance more than switching models or frameworks. And 20 good test cases will catch more bugs than any amount of manual testing.
 The field is moving fast, MCP became a universal standard in under a year, both major providers shipped Agent SDKs, and new frameworks appear monthly. But the fundamentals in this guide are stable: the agentic loop, the five workflow patterns, the principles of good tool design, and the discipline of starting simple. Master these, and you can adapt to whatever comes next.
 YOU CAN NOW BUILD AN AGENT.
-
-# GUIA DIRECTOR
-

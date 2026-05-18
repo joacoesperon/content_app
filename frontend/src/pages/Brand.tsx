@@ -32,10 +32,10 @@ import {
   uploadReferenceAd,
   updateReferenceAdLabel,
   deleteReferenceAd,
-  fetchContentMix,
-  updateContentMix,
-  fetchReelsMix,
-  updateReelsMix,
+  fetchScoutPrompt,
+  updateScoutPrompt,
+  fetchDirectorPrompt,
+  updateDirectorPrompt,
   fetchMascot,
   updateMascot,
   fetchMascotRefs,
@@ -635,19 +635,24 @@ function PlainTextEditor({ onSwitchToStructured: _onSwitchToStructured }: { onSw
   );
 }
 
-function ContentMixSection() {
+function PromptSection({ title, subtitle, fetch, save }: {
+  title: string;
+  subtitle: string;
+  fetch: () => Promise<{ content: string }>;
+  save: (content: string) => Promise<unknown>;
+}) {
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    fetchContentMix().then((r) => setContent(r.content ?? ''));
+    fetch().then((r) => setContent(r.content ?? ''));
   }, []);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateContentMix(content);
+      await save(content);
     } finally {
       setSaving(false);
     }
@@ -660,8 +665,8 @@ function ContentMixSection() {
         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/40 transition-colors"
       >
         <div>
-          <span className="font-semibold text-foreground">Content Mix</span>
-          <span className="ml-2 text-xs text-muted-foreground">Weekly post distribution plan for Scout</span>
+          <span className="font-semibold text-foreground">{title}</span>
+          <span className="ml-2 text-xs text-muted-foreground">{subtitle}</span>
         </div>
         {open ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
       </button>
@@ -669,70 +674,10 @@ function ContentMixSection() {
         <>
           <Separator />
           <CardContent className="space-y-3 pt-4 pb-5">
-            <p className="text-xs text-muted-foreground">
-              Scout reads this file to decide the category and tone of each of the 7 weekly posts.
-              Edit to adjust the mix (e.g. more educational, fewer product posts).
-            </p>
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={20}
-              className="font-mono text-xs"
-            />
-            <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={saving}>
-                <Save size={14} />
-                {saving ? 'Saving…' : 'Save changes'}
-              </Button>
-            </div>
-          </CardContent>
-        </>
-      )}
-    </Card>
-  );
-}
-
-function ReelsMixSection() {
-  const [content, setContent] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    fetchReelsMix().then((r) => setContent(r.content ?? ''));
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateReelsMix(content);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Card className="overflow-hidden py-0">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/40 transition-colors"
-      >
-        <div>
-          <span className="font-semibold text-foreground">Reels Mix</span>
-          <span className="ml-2 text-xs text-muted-foreground">Weekly reel distribution plan for Director</span>
-        </div>
-        {open ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
-      </button>
-      {open && (
-        <>
-          <Separator />
-          <CardContent className="space-y-3 pt-4 pb-5">
-            <p className="text-xs text-muted-foreground">
-              Director reads this file to decide the categories, levers, and structure of the weekly reels.
-            </p>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={20}
+              rows={30}
               className="font-mono text-xs"
             />
             <div className="flex justify-end">
@@ -1304,9 +1249,19 @@ export default function Brand() {
             />
           </SectionCard>
 
-          <ContentMixSection />
+          <PromptSection
+            title="Scout Prompt"
+            subtitle="System prompt for Scout (includes content mix)"
+            fetch={fetchScoutPrompt}
+            save={updateScoutPrompt}
+          />
 
-          <ReelsMixSection />
+          <PromptSection
+            title="Director Prompt"
+            subtitle="System prompt for Director (includes reel structure)"
+            fetch={fetchDirectorPrompt}
+            save={updateDirectorPrompt}
+          />
 
           <MascotSection />
 

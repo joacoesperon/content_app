@@ -32,15 +32,12 @@ class DirectorTool(BaseTool):
         avatars_file = BRAND_DIR / "data" / "avatars.json"
         if not avatars_file.exists():
             return {"ready": False, "reason": "avatars.json not found"}
-        brand_style = BRAND_DIR / "brand-style.md"
-        if not brand_style.exists():
-            return {"ready": False, "reason": "brand-style.md not found — save Brand DNA once to generate it"}
         mascot = BRAND_DIR / "data" / "mascot.json"
         if not mascot.exists():
             return {"ready": False, "reason": "mascot.json not found — set up the mascot in Brand Tool"}
-        reels_mix = BRAND_DIR / "reels-mix.md"
-        if not reels_mix.exists():
-            return {"ready": False, "reason": "reels-mix.md not found — set it up in Brand Tool"}
+        director_prompt = BRAND_DIR / "director-prompt.md"
+        if not director_prompt.exists():
+            return {"ready": False, "reason": "director-prompt.md not found — create it in the Brand tool"}
         return {"ready": True}
 
 
