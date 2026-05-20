@@ -208,36 +208,30 @@ async def publish_to_instagram(body: PublishRequest):
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
             scheduled_unix = int(dt.timestamp())
-            min_ts = int(datetime.now(timezone.utc).timestamp()) + 600  # 10 min minimum
-            if scheduled_unix < min_ts:
-                raise HTTPException(status_code=400, detail="Scheduled time must be at least 10 minutes in the future")
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid scheduled_time format, use ISO 8601")
 
     if scheduled_unix is not None:
-        from backend.config import MAKE_WEBHOOK_URL
-        if not MAKE_WEBHOOK_URL:
-            raise HTTPException(status_code=500, detail="MAKE_WEBHOOK_URL not configured")
-        public_urls = await asyncio.gather(*[instagram._upload_image(p) for p in image_paths])
-        container_ids = await asyncio.gather(*[
-            instagram._create_item_container(url, TOKEN_SYSTEM_USER)
-            for url in public_urls
-        ])
-        payload = {
-            "post_slug": f"{body.date}_{body.post_slug}",
-            "post_type": "carousel",
-            "caption": caption,
-            "image_urls": ",".join(container_ids),
-            "video_url": "",
-            "scheduled_at": str(scheduled_unix),
-        }
-        import requests as _req
-        def _post_webhook() -> None:
-            _req.post(MAKE_WEBHOOK_URL, json=payload, timeout=10).raise_for_status()
         try:
-            await asyncio.to_thread(_post_webhook)
+            import fal_client
+            from backend.tools.carousels import gdrive
+            folder_id = await asyncio.to_thread(gdrive.get_post_folder, body.date, body.post_slug)
+            await asyncio.gather(*[
+                asyncio.to_thread(gdrive.upload_image, p, folder_id) for p in image_paths
+            ])
+            public_urls = await asyncio.gather(*[
+                asyncio.to_thread(fal_client.upload_file, str(p)) for p in image_paths
+            ])
+            await asyncio.to_thread(
+                gdrive.append_scheduled_post,
+                f"{body.date}_{body.post_slug}",
+                "carousel",
+                caption,
+                scheduled_unix,
+                [str(u) for u in public_urls],
+            )
         except Exception as e:
-            raise HTTPException(status_code=502, detail=f"Make.com webhook failed: {e}")
+            raise HTTPException(status_code=502, detail=f"Schedule failed: {e}")
         service.record_publish(body.date, body.post_slug, "scheduled", body.scheduled_time)
         return PublishResult(ok=True, post_id="scheduled")
 

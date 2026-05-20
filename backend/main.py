@@ -1,3 +1,6 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,7 +9,15 @@ from backend.config import BRAND_DIR, OUTPUTS_DIR
 from backend.core.registry import ToolRegistry
 
 
-app = FastAPI(title="Jess Trading Content App")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from backend.tools.carousels.scheduler import run_forever
+    task = asyncio.create_task(run_forever())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="Jess Trading Content App", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

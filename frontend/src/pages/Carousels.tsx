@@ -1009,7 +1009,7 @@ function PublishTab() {
     d.setDate(d.getDate() + 1);
     return d;
   });
-  const [scheduledTime, setScheduledTime] = useState('09:00');
+  const [scheduledTime, setScheduledTime] = useState('21:00');
   const [publishLoading, setPublishLoading] = useState(false);
 
   useEffect(() => {
@@ -1048,7 +1048,7 @@ function PublishTab() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     setScheduledDate(tomorrow);
-    setScheduledTime('09:00');
+    setScheduledTime('21:00');
     setSelectedEntry(entry);
   };
 
@@ -1059,9 +1059,19 @@ function PublishTab() {
       let scheduledIso: string | undefined;
       if (useSchedule) {
         const [h, m] = scheduledTime.split(':').map(Number);
-        const dt = new Date(scheduledDate);
-        dt.setHours(h, m, 0, 0);
-        scheduledIso = dt.toISOString();
+        const utcGuess = new Date(Date.UTC(
+          scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate(), h, m
+        ));
+        const offsetStr = new Intl.DateTimeFormat('en', {
+          timeZone: 'Europe/Madrid', timeZoneName: 'shortOffset',
+        }).formatToParts(utcGuess).find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1';
+        const match = offsetStr.match(/GMT([+-])(\d+)/);
+        const sign = match?.[1] === '+' ? 1 : -1;
+        const offsetH = parseInt(match?.[2] ?? '1');
+        scheduledIso = new Date(Date.UTC(
+          scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate(),
+          h - sign * offsetH, m
+        )).toISOString();
       }
       await publishCarouselToInstagram(
         selectedEntry.output.date,
@@ -1174,7 +1184,7 @@ function PublishTab() {
                       mode="single"
                       selected={scheduledDate}
                       onSelect={(d) => d && setScheduledDate(d)}
-                      disabled={(d) => d <= new Date()}
+                      disabled={(d) => { const today = new Date(); today.setHours(0,0,0,0); return d < today; }}
                       initialFocus
                     />
                   </PopoverContent>
@@ -1184,15 +1194,9 @@ function PublishTab() {
                   type="time"
                   value={scheduledTime}
                   onChange={(e) => setScheduledTime(e.target.value)}
-                  className="rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="border border-border rounded px-2 py-1 text-sm bg-background"
                 />
-
-                <span className="text-xs text-muted-foreground">
-                  {new Intl.DateTimeFormat('en', { timeZone: 'Europe/Madrid', timeZoneName: 'shortOffset' })
-                    .formatToParts(new Date())
-                    .find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+1'}{' '}
-                  Madrid
-                </span>
+                <span className="text-xs text-muted-foreground">Madrid</span>
               </div>
             )}
           </div>

@@ -15,6 +15,9 @@ else
     exit 1
 fi
 
+# Kill any process already on port 8000
+lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+
 # Start backend
 echo "[Backend] Starting FastAPI on http://localhost:8000"
 uvicorn backend.main:app --reload --port 8000 &

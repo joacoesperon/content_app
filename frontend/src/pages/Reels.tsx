@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
 import {
+  CalendarDays,
   Check,
   ChevronLeft,
   ChevronLeft as ArrowLeft,
@@ -17,6 +19,8 @@ import {
   Trash2,
   Video,
 } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import {
   deleteReelOutput,
@@ -54,7 +58,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
-type Tab = 'new' | 'history';
+type Tab = 'new' | 'publish' | 'history';
 
 const ASPECT_OPTIONS = [
   { value: '9:16', label: '9:16 (reel)' },
@@ -1059,6 +1063,237 @@ function ReelsList({
   );
 }
 
+// ─── Publish ─────────────────────────────────────────────────────────────────
+
+function PublishTab() {
+  const [outputs, setOutputs] = useState<ReelOutput[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedOutput, setSelectedOutput] = useState<ReelOutput | null>(null);
+  const [publishCaption, setPublishCaption] = useState('');
+  const [useSchedule, setUseSchedule] = useState(true);
+  const [scheduledDate, setScheduledDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d;
+  });
+  const [scheduledTime, setScheduledTime] = useState('21:00');
+  const [publishLoading, setPublishLoading] = useState(false);
+
+  useEffect(() => {
+    fetchReelOutputs()
+      .then((all) => setOutputs(all.filter((o) => !!o.final_url)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const openReel = (o: ReelOutput) => {
+    const caption = (o.concept + (o.hashtags ? `\n\n${o.hashtags}` : '')).trim();
+    setPublishCaption(caption);
+    setUseSchedule(true);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setScheduledDate(tomorrow);
+    setScheduledTime('21:00');
+    setSelectedOutput(o);
+  };
+
+  const handlePublish = async () => {
+    if (!selectedOutput) return;
+    setPublishLoading(true);
+    try {
+      let scheduledIso: string | undefined;
+      if (useSchedule) {
+        const [h, m] = scheduledTime.split(':').map(Number);
+        const utcGuess = new Date(Date.UTC(
+          scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate(), h, m
+        ));
+        const offsetStr = new Intl.DateTimeFormat('en', {
+          timeZone: 'Europe/Madrid', timeZoneName: 'shortOffset',
+        }).formatToParts(utcGuess).find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1';
+        const match = offsetStr.match(/GMT([+-])(\d+)/);
+        const sign = match?.[1] === '+' ? 1 : -1;
+        const offsetH = parseInt(match?.[2] ?? '1');
+        scheduledIso = new Date(Date.UTC(
+          scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate(),
+          h - sign * offsetH, m
+        )).toISOString();
+      }
+      await publishReelToInstagram(
+        selectedOutput.date,
+        selectedOutput.reel_slug,
+        publishCaption || undefined,
+        scheduledIso,
+      );
+      toast.success(useSchedule ? 'Programado en Instagram' : 'Publicado en Instagram');
+      setSelectedOutput(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error publicando');
+    } finally {
+      setPublishLoading(false);
+    }
+  };
+
+  if (selectedOutput) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedOutput(null)}>
+            <ChevronLeft size={14} className="mr-1" /> Back to reels
+          </Button>
+          <div className="text-xs text-muted-foreground font-mono">
+            {selectedOutput.date} · {selectedOutput.reel_slug}
+          </div>
+        </div>
+
+        <Card className="p-4 space-y-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-mono text-muted-foreground">{selectedOutput.date}</span>
+            {selectedOutput.category && (
+              <>
+                <span className="text-xs text-muted-foreground">·</span>
+                <span className="text-xs px-2 py-0.5 rounded border border-accent/40 text-accent">{selectedOutput.category}</span>
+              </>
+            )}
+            {selectedOutput.lever && (
+              <>
+                <span className="text-xs text-muted-foreground">·</span>
+                <span className="text-xs text-muted-foreground">{selectedOutput.lever}</span>
+              </>
+            )}
+          </div>
+
+          {selectedOutput.final_url && (
+            <video
+              src={selectedOutput.final_url}
+              controls
+              className="w-full max-w-xs rounded border border-border mx-auto block"
+            />
+          )}
+
+          <div>
+            <Label className="text-xs text-muted-foreground">Caption</Label>
+            <Textarea
+              value={publishCaption}
+              onChange={(e) => setPublishCaption(e.target.value)}
+              rows={5}
+              className="text-sm mt-1"
+              placeholder="Caption e hashtags..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="use-schedule-reel"
+                checked={useSchedule}
+                onChange={(e) => setUseSchedule(e.target.checked)}
+                className="rounded border-border"
+              />
+              <Label htmlFor="use-schedule-reel" className="text-xs text-muted-foreground cursor-pointer">
+                Programar publicación
+              </Label>
+            </div>
+
+            {useSchedule && (
+              <div className="flex items-center gap-3 flex-wrap">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="justify-start font-normal text-sm min-w-44">
+                      <CalendarDays size={14} className="mr-2 shrink-0" />
+                      {format(scheduledDate, 'EEE, d MMM yyyy')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start">
+                    <Calendar
+                      mode="single"
+                      selected={scheduledDate}
+                      onSelect={(d) => d && setScheduledDate(d)}
+                      disabled={(d) => { const today = new Date(); today.setHours(0,0,0,0); return d < today; }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <input
+                  type="time"
+                  value={scheduledTime}
+                  onChange={(e) => setScheduledTime(e.target.value)}
+                  className="border border-border rounded px-2 py-1 text-sm bg-background"
+                />
+                <span className="text-xs text-muted-foreground">Madrid</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              onClick={handlePublish}
+              disabled={publishLoading}
+              className="bg-pink-500 hover:bg-pink-400 text-white"
+            >
+              {publishLoading ? (
+                <Loader2 size={14} className="mr-2 animate-spin" />
+              ) : (
+                <Send size={14} className="mr-2" />
+              )}
+              {publishLoading
+                ? useSchedule ? 'Programando…' : 'Publicando…'
+                : useSchedule ? 'Programar' : 'Publicar ahora'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground text-sm py-16">
+        <Loader2 size={16} className="animate-spin" /> Loading...
+      </div>
+    );
+  }
+
+  if (outputs.length === 0) {
+    return (
+      <div className="text-center py-20 text-muted-foreground">
+        <p className="text-lg mb-2">No reels rendered yet</p>
+        <p className="text-sm">Generate and render reels in the "New" tab first.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {outputs.map((o) => (
+        <Card key={o.folder} className="p-4 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-xs font-mono text-muted-foreground">{o.date}</span>
+              {o.category && (
+                <>
+                  <span className="text-xs text-muted-foreground">·</span>
+                  <span className="text-xs px-2 py-0.5 rounded border border-accent/40 text-accent">{o.category}</span>
+                </>
+              )}
+              {o.lever && <span className="text-xs text-muted-foreground">{o.lever}</span>}
+            </div>
+            <p className="text-sm truncate text-foreground/80">{o.concept}</p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => openReel(o)}
+            className="bg-pink-600 hover:bg-pink-500 text-white shrink-0"
+          >
+            <Send size={14} className="mr-2" />
+            Publish
+          </Button>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 // ─── History ─────────────────────────────────────────────────────────────────
 
 function HistoryTab() {
@@ -1321,6 +1556,10 @@ export default function Reels() {
             <FileText size={14} className="mr-2" />
             New from Director
           </TabsTrigger>
+          <TabsTrigger value="publish">
+            <Send size={14} className="mr-2" />
+            Publish
+          </TabsTrigger>
           <TabsTrigger value="history">
             <Film size={14} className="mr-2" />
             History
@@ -1374,6 +1613,10 @@ export default function Reels() {
               )}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="publish" className="mt-6">
+          <PublishTab />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">

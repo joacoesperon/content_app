@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 
-import fal_client
 from fastapi import APIRouter, HTTPException
 
 from backend.tools.reels import service
@@ -244,32 +243,25 @@ async def publish_to_instagram(body: PublishReelRequest):
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
             scheduled_unix = int(dt.timestamp())
-            min_ts = int(datetime.now(timezone.utc).timestamp()) + 600
-            if scheduled_unix < min_ts:
-                raise HTTPException(status_code=400, detail="Scheduled time must be at least 10 minutes in the future")
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid scheduled_time format, use ISO 8601")
 
     if scheduled_unix is not None:
-        from backend.config import MAKE_WEBHOOK_URL
-        import requests as _req
-        if not MAKE_WEBHOOK_URL:
-            raise HTTPException(status_code=500, detail="MAKE_WEBHOOK_URL not configured")
-        video_url = await asyncio.to_thread(fal_client.upload_file, str(final_path))
-        payload = {
-            "post_slug": f"{body.date}_{body.reel_slug}",
-            "post_type": "reel",
-            "caption": caption,
-            "image_urls": "",
-            "video_url": video_url,
-            "scheduled_at": str(scheduled_unix),
-        }
-        def _post_webhook() -> None:
-            _req.post(MAKE_WEBHOOK_URL, json=payload, timeout=10).raise_for_status()
         try:
-            await asyncio.to_thread(_post_webhook)
+            from backend.tools.carousels import gdrive
+            folder_id = await asyncio.to_thread(gdrive.get_post_folder, body.date, body.reel_slug)
+            video_gdrive_url = await asyncio.to_thread(gdrive.upload_image, final_path, folder_id)
+            await asyncio.to_thread(
+                gdrive.append_scheduled_post,
+                f"{body.date}_{body.reel_slug}",
+                "reel",
+                caption,
+                scheduled_unix,
+                [],
+                str(video_gdrive_url),
+            )
         except Exception as e:
-            raise HTTPException(status_code=502, detail=f"Make.com webhook failed: {e}")
+            raise HTTPException(status_code=502, detail=f"Schedule failed: {e}")
         service.record_publish(body.date, body.reel_slug, "scheduled", body.scheduled_time)
         return PublishReelResult(ok=True, post_id="scheduled")
 

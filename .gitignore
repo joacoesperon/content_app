@@ -6,3 +6,6 @@ node_modules/
 frontend/dist/
 outputs/
 brand/meta-ads/settings.json
+credentials.json
+credentials.json
+token.pickle
