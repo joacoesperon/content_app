@@ -5,7 +5,6 @@ __pycache__/
 node_modules/
 frontend/dist/
 outputs/
-brand/meta-ads/settings.json
-credentials.json
+brand/meta-ads/settings.jsons
 credentials.json
 token.pickle
