@@ -62,10 +62,11 @@ def _get_or_create_folder(service, name: str, parent_id: str) -> str:
     return folder["id"]
 
 
-def get_post_folder(date: str, post_slug: str) -> str:
-    """Return the Drive folder ID for Instagram Uploads/{date}/{post_slug}, creating as needed."""
+def get_post_folder(date: str, post_slug: str, post_type: str = "carousels") -> str:
+    """Return the Drive folder ID for Instagram Uploads/{post_type}/{date}/{post_slug}, creating as needed."""
     service = build("drive", "v3", credentials=_get_creds())
-    date_folder_id = _get_or_create_folder(service, date, GDRIVE_FOLDER_ID)
+    type_folder_id = _get_or_create_folder(service, post_type, GDRIVE_FOLDER_ID)
+    date_folder_id = _get_or_create_folder(service, date, type_folder_id)
     post_folder_id = _get_or_create_folder(service, post_slug, date_folder_id)
     return post_folder_id
 

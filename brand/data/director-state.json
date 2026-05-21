@@ -1,9 +1,9 @@
 {
-  "last_avatar": "trader_principiante",
+  "last_run": "2026-05-21",
+  "last_slot3": "trader_psychology",
   "last_concepts": [
-    "Hot take / contrast: the learning treadmill trap — 7 years of doing everything right and still losing. The execution was always the leak, not the knowledge.",
-    "Educational: the 3 cause-of-death moments for beginner accounts — boredom trade, revenge trade, size mistake — mapped clinically, with algos named as immune by design not magic.",
-    "Avatar persuasion / fear: JT voices the principiante's 2 a.m. internal monologue on the night they blew their first account, landing on a quiet observation about what changes when you remove the emotional human from the execution."
-  ],
-  "last_run": "2026-05-04"
+    "market_reaction: NVIDIA hits $5.7 trillion market cap — Jensen Huang boards Air Force One to Beijing with Trump, Tim Cook, Elon Musk — NVDA earnings week",
+    "educational: The stop loss execution gap — traders know their stop but override it when price touches the line — the voice that costs more accounts than bad strategy",
+    "trader_psychology: The market isn't crashing but feels more stressful than ever — cash feels wrong, invested feels wrong — surviving the inconclusive gray limbo"
+  ]
 }

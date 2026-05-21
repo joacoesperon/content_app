@@ -249,7 +249,7 @@ async def publish_to_instagram(body: PublishReelRequest):
     if scheduled_unix is not None:
         try:
             from backend.tools.carousels import gdrive
-            folder_id = await asyncio.to_thread(gdrive.get_post_folder, body.date, body.reel_slug)
+            folder_id = await asyncio.to_thread(gdrive.get_post_folder, body.date, body.reel_slug, "reels")
             video_gdrive_url = await asyncio.to_thread(gdrive.upload_image, final_path, folder_id)
             await asyncio.to_thread(
                 gdrive.append_scheduled_post,

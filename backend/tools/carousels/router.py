@@ -213,14 +213,10 @@ async def publish_to_instagram(body: PublishRequest):
 
     if scheduled_unix is not None:
         try:
-            import fal_client
             from backend.tools.carousels import gdrive
-            folder_id = await asyncio.to_thread(gdrive.get_post_folder, body.date, body.post_slug)
-            await asyncio.gather(*[
-                asyncio.to_thread(gdrive.upload_image, p, folder_id) for p in image_paths
-            ])
+            folder_id = await asyncio.to_thread(gdrive.get_post_folder, body.date, body.post_slug, "carousels")
             public_urls = await asyncio.gather(*[
-                asyncio.to_thread(fal_client.upload_file, str(p)) for p in image_paths
+                asyncio.to_thread(gdrive.upload_image, p, folder_id) for p in image_paths
             ])
             await asyncio.to_thread(
                 gdrive.append_scheduled_post,
