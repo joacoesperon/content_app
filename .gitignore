@@ -8,3 +8,4 @@ outputs/
 brand/meta-ads/settings.jsons
 credentials.json
 token.pickle
+client_secret_*.json

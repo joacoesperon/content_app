@@ -214,26 +214,125 @@ BAD setting (environment exists, JT doesn't):
 
 ## ANIMATION guide
 
-Build animations from:
-- **Camera motion**: static / push-in / pull-out / pan / handheld shake / orbit / whip-pan
-- **Subject motion**: what JT does with his whole body WHILE speaking — he has arms and legs, use them. Head bobs, forward leans, pointing, crossing arms, pacing, slumping, jumping in place, shrugging, recoiling. Emotion is physical — show it in the body, not just the face.
-- **Background motion**: monitors flickering, wax dripping, papers fluttering, coffee steam, candle flames flickering
-- **Energy/pace**: contemplative / urgent / building / collapsing / steady / chaotic
-- **Mood register**: matches the tone
+Veo 3.1 Fast is a motion engine. Every frame after the first is animation — what happens across those 8 seconds is the reel. Stillness is a rare, earned choice, never the default. If JT doesn't move, the world does. If neither moves, the reel is dead and the viewer scrolls past in three seconds. Before writing animation, ask: what is happening in this scene that demands these 8 seconds of motion exist? If the answer is "nothing," the scene is wrong.
 
-**Inter-scene variation:** When the setting changes, the animation context typically changes too — new camera energy, new background elements, different body language for the new emotional beat. When JT stays in the same location for a continuation moment (dialogue-only, no location shift), the animation can maintain similar energy — but with intention, not by default. Ask what the motion adds to this specific scene.
+The animation is built from four layers. Cover all four — they work together. A scene with strong camera motion but a dead JT, or a strong JT but a frozen world, lands incomplete.
 
-GOOD animation:
-"Slow push-in from medium shot to close-up over the 8 seconds. JT speaks with subtle head bob and slight forward lean on emphasis words. Monitor behind pulses red with each candle flicker. Cool blue light from the screen softly illuminates JT's face. Steady camera, contemplative pace."
+### 1. Camera motion — the camera's emotional voice
 
-GOOD animation (chaotic energy):
-"Handheld-feel shaky camera throughout. JT's body shudders slightly as if vibrating with stress. Eyes wide and darting. The monitor behind flashes from green to red repeatedly. Quick cut-in to a tighter frame mid-sentence, then pull back. Urgent, frantic energy. Coffee cups on the desk tremble subtly."
+The camera is not neutral. Each move communicates a specific emotional posture. Pick the one that matches what the scene is doing, not what sounds "cinematic" in the abstract.
 
-BAD animation:
-"JT speaks. Camera moves." → No specific motion, no atmosphere, no energy direction.
+- **Static** — weight, formality, finality. The stillness IS the choice. Use when the moment needs to land hard without being diluted by movement. WARNING: static camera + static JT + static world = death. If you choose static camera, the subject and the world MUST carry the motion.
+- **Slow push-in** — intensification, closing on the truth, the camera leaning in to listen. Use for revelations, building tension, intimate confessions.
+- **Pull-out** — isolation, context revealing, "look how alone he is in this." Use for arrival on consequence, or to reveal the scale of a situation.
+- **Pan** — sideways look, surveying, "and over here we have…". Use to discover something off-frame, or to follow JT's gaze.
+- **Handheld shake** — unease, urgency, instability. The camera is alive and nervous. Use for panic, chaos, internal collapse.
+- **Orbit** — hypnotic revealing, the audience walks around JT, 360° on a single moment. Use for a moment so dense it deserves to be seen from every angle.
+- **Whip-pan** — snap energy, comedy timing, sudden reveal. Use for tonal pivots within a scene, or to slam from one element to another.
 
-BAD animation:
-"Cinematic shot, JT looks at camera." → Doesn't tell Veo what to ANIMATE between the still frame and the next 8 seconds.
+Pick one dominant move per scene. Combining two within 8 seconds usually breaks Veo — let the secondary motion live in JT's body or in the world instead.
+
+### 2. JT's body motion — emotion made physical
+
+JT has arms, legs, a wick, and a face. Emotion is not something he says — it is what his body does while he speaks. The **tone** (chosen at the reel level) dictates HOW he moves. The **expression** (chosen per scene) dictates WHERE in the body the emotion lives. If you write "JT speaks with small natural gestures," you've said nothing — specify which gesture, on which word, with which body part. The model needs verbs, not adjectives.
+
+**How tone shapes body motion (the voice in the body):**
+- **Deadpan** — minimal but precise gestures. A single raised finger that falls on the punchline. Arms held at sides. Tiny head tilts only. The motion is what's NOT there.
+- **Panicked** — rapid fragmentary motion. Body shuddering. Eyes darting. Arms half-raised then dropped. Wick whipping side to side. JT is unable to hold still.
+- **Excited** — bouncing, leaning forward, arms wide, gesturing fully. Wick burning tall and unstable. Body angled toward whatever he's reacting to.
+- **Smug** — slow controlled gestures. Arms crossed or one raised in a finger-point. Slight head tilt back, chin up. Motion that says "I'm taking my time."
+- **Indignant** — leaning forward sharp, arms moving in cuts. Pointing accusingly. Body tense, wick burning sharp and tall.
+- **Wistful** — slow drifting motion, gaze pulled toward something off-frame. Arms loose at sides. Head turning slowly. The body remembers something.
+- **Philosophical** — very still upper body, small purposeful gestures. The hands move while the torso stays anchored — JT is thinking aloud, not performing.
+- **Confidential** — leaning in toward camera, smaller hand gestures close to chest, eyebrows up. Voice and body lowered together.
+- **Warm** — open posture, palms outward at moments, slight forward lean. Steady wick, soft motion throughout.
+
+**How expression shapes body motion (the territory in the body):**
+- **Exhausted** — gravity wins. Slumped shoulders. Arms hanging heavy. Slow blinks. Wick bent sideways, flame low. Movement is reluctant and delayed.
+- **Panicked** (expression) — body recoils, eyes wide and darting, head shakes "no" small and fast, hands rise toward face but don't get there.
+- **Shocked** — sudden freeze, mouth open, eyes wide and locked. Movement stops for a beat, then resumes more carefully.
+- **Determined** — chin up, shoulders set, deliberate gestures. Wick tall and clean. Forward weight in the stance.
+- **Resigned** — palms opening at the sides in a small "fine, that's the situation" gesture. Slow exhale. Slight nod.
+- **Confused** — head tilting, eyes searching, one hand half-raised mid-gesture and frozen there.
+- **Mischievous** — head tilted forward, eyes up at camera, small smirk that grows, hand near mouth as if about to say something.
+- **Contemplative** — gaze drifting, occasional slow nod, hand near chin or on counter, body still but alive.
+- **Disgusted** — recoil, lip curl, head pulling back, one hand half-raised in a "stop" gesture, body turning slightly away.
+
+Combine the tone register (how) with the expression territory (where) — that's how you get specific. "Deadpan + shocked": tiny precise motion + frozen body + slow blink recovery. "Indignant + exhausted": sharp pointing gestures from a body that's clearly too tired to be making them.
+
+### 3. Candle physics in motion — JT's superpower
+
+JT is a real candle. No other Instagram character can do this. Use it in every scene — at least one candle-physics element with explicit motion described.
+
+- **Wick state across 8 seconds** — the wick is alive and reactive. Nervous = rapid irregular flicker. Exhausted = low flame, bends sideways, occasional curl of smoke. Determined = tall, clean, almost no movement. Indignant = burns sharp and straight, taller than calm. Shocked = freezes mid-flicker, then resumes. Apagado (emotional shutdown) = no flame at all, just a thin thread of smoke rising. The wick is JT's emotional barometer — name what it does for the full 8 seconds, not just a single moment.
+- **Wax dripping (literal animation)** — a single drop forming on JT's side, sliding down, solidifying — that's 8 seconds of storytelling on its own. Use when emotional intensity has been sustained. New drips forming on camera = current intensity. Solidified pale drips already in place = how long this has been going on.
+- **Green light pulsing** — JT emits his own light. That light can pulse subtly with his breathing or his emotional state. A slow pulse on the surfaces around him = he's alive. A steady glow = settled. An irregular flicker = uncertain. Describe it explicitly: "a soft green pulse on the desk surface around JT, slow and rhythmic, matching the cadence of the dialogue."
+- **Heat traces** — wax pooled around his base accumulating. A scorch mark slowly darkening on a surface where he's been sitting too long. A thin haze of heat distortion above his wick.
+
+This is the visual no other reel on Instagram has. If a scene has no candle physics in motion, it's leaving JT's superpower on the table.
+
+### 4. World motion — the world breathes
+
+The setting from the SETTING guide is alive throughout the 8 seconds, not a frozen backdrop. Everything that CAN move SHOULD move, at least subtly. The world being alive is what separates a reel that feels like cinema from a reel that feels like a photo with audio. A scene with "static background" is almost never correct — the background is the secondary actor, and it needs verbs too.
+
+- **Atmospheric motion** — steam rises continuously from coffee. Smoke curls slowly from incense, a wick, a hot pan. Dust catches the light and drifts. Light through a window slowly shifts as a cloud passes. Rain streaks down glass.
+- **Screen/monitor motion** — charts updating in real time, candles forming bar by bar, numbers ticking up or down, a cursor blinking, a notification appearing mid-scene. Always specify what the screen is doing.
+- **Object motion** — papers flutter from a vent. A pen rolls slowly across a desk. A clock's second hand advances. A glass of water trembles from something off-frame. An ice cube cracks. A coffee ring spreads.
+- **Light motion** — fluorescent bulbs flickering on a slow random pattern. Neon signs pulsing. A lamp swinging slightly. Sun visibly moving over 8 seconds (only at long lenses). Shadows lengthening or shortening across a surface.
+- **Sound-implied motion** — wind moving curtains, a fan rotating, an HVAC vent visibly pushing air, water running in the background, dust shifting from a breeze.
+
+Empty rooftop? The sky moves, JT's shadow shifts, the wind pulls something. Empty boardroom? The fluorescents hum visibly, dust drifts in the cold light, the city outside the window has tiny moving traffic. There is always world motion available.
+
+---
+
+### Energy arc across the reel
+
+Each reel has 3 scenes. Each scene has its own motion register, but the three together form an arc. If all three scenes share the same energy register, the arc is invisible in motion — the visuals contradict what the expressions and dialogue are doing.
+
+Typical arc shapes:
+- **Setup → tension → release.** Scene 1 contained (steady cam, JT centered, world subtle). Scene 2 pressure builds (push-in, JT more agitated, world becomes louder). Scene 3 release — either explosion (chaotic motion everywhere) or earned stillness (everything settles deliberately, the loudest silence).
+- **Setup → tension → arrival.** Scene 1 contained. Scene 2 pressure builds. Scene 3 the world quiets down and JT lands the punchline in clean steady framing.
+- **Setup → contrast → return.** Scene 1 one register. Scene 2 sharp opposite register (location shift + energy shift). Scene 3 returns to Scene 1's register but with the expression evolved — the same place, a different JT.
+
+Before writing the animation for each scene, ask: where in the arc is this scene? What energy does the arc demand here? A Scene 1 with explosive chaotic motion leaves nowhere to go in Scene 3. A Scene 3 with the same motion register as Scene 1 means no arc.
+
+### Inter-scene principle
+
+When the setting changes between scenes, the motion register usually changes too — new camera energy, new world rhythm, different body language for the new emotional beat. When JT stays in the same location (dialogue continuation, no location shift), the motion can hold its register — but only if the expression is also holding. If the expression evolves while the motion stays identical, the arc is broken.
+
+Ask per scene: does this motion register serve the place this scene occupies in the arc, or am I defaulting to the same energy as the previous scene?
+
+### Lip-sync constraint (technical)
+
+While JT speaks, his face must stay anchored enough for Veo to render lip-sync cleanly. The body can move freely — arms gesturing, body shifting weight, leaning — but the head should not move dramatically (no large rotations, no extreme tilts, no fast head shakes) while the mouth is forming words. If you want a large head movement, place it between dialogue beats, not during them. Wild camera moves during dialogue also break lip-sync — heavy camera motion belongs in the moments JT isn't speaking, or it should be smooth and slow if it must happen during dialogue.
+
+---
+
+GOOD animation (deadpan + 3am exhaustion, Scene 1 setup register):
+"Slow gentle push-in from medium to medium-tight over the 8 seconds, the camera leaning in toward the slumped figure as if listening. JT speaks with minimal movement — head tilts down on the first beat as if accepting something heavy, then stays angled. A wax drop forms slowly on his right side and slides halfway down by the end of the scene. His wick burns low and tilts gradually further left, releasing a thin steady curl of smoke. The cold monitor light flickers once on the word the dialogue lands on, then steadies. Behind him, the red chart ticks down by one new bar mid-sentence. Steam from the cold coffee mug rises slow and constant. A faint green pulse on the desk surface around JT, slow and rhythmic, matches the cadence of his speech. The room beyond holds its darkness. Quiet contemplative pace — the motion is in the dripping wax, the bending wick, the slow advance of the camera, and the breathing green light."
+
+GOOD animation (panicked + chaotic, Scene 2 tension peak):
+"Handheld-feel shaky camera throughout, the frame vibrating subtly as if held by nervous hands. JT's body shudders, weight shifting foot to foot, arms half-raising toward his face and falling back. Eyes darting between the screen and the camera. His wick whips side to side, flame snapping irregularly, releasing tiny sparks. The monitor behind flashes between green and red on a fast irregular rhythm. Papers on the desk lift in an invisible draft. A wax drop tries to form on his side but the wick movement shakes it loose before it can fall. The overhead fluorescent flickers twice in the middle of the scene. The green glow JT casts on the desk pulses arrhythmically, matching the chaos in the wick. By the end of the scene, the camera has pushed in tighter than where it started. Urgent, frantic, unable-to-settle — every layer is in motion."
+
+GOOD animation (philosophical + earned stillness, Scene 3 final landing):
+"Static camera, perfectly still — but the world is alive. JT stands rooted, body anchored, only his right hand opening slightly at his side on the final beat — a palm-up gesture of acceptance. His wick burns tall and clean, the steadiest of the reel — but every two seconds it does one tiny precise flicker, like a slow heartbeat. A faint green pulse on the floor around him, matching the rhythm of the dialogue. Behind him, the grey sky drifts almost imperceptibly — clouds moving across the frame at a slow constant rate. A single wax drop, fresh and glossy, runs the full length of his right side over the 8 seconds — when it reaches the bottom it stops and slowly cools. The stillness of the camera and JT's body lets the world do the moving. The reel lands here, in the slow drift of grey sky and the steady glow of a candle in the wind."
+
+---
+
+BAD animation (the "single nod" trap — sounds literary, makes a dead reel):
+"Completely static camera — no movement at all. JT's only movement: a slow, deliberate single nod mid-sentence on the word 'fine.' His wick flame does one tiny flicker on the word 'us,' then steadies." → Veo got 8 seconds and produced one nod and one flicker. The viewer scrolls in 2 seconds. This is what stillness-as-default looks like — three layers frozen, one micro-motion. If you choose static camera, the subject AND the world must carry the motion. Pulled from real director output as a cautionary example.
+
+BAD animation (body motion as adjective, not action):
+"JT speaks with small natural gestures, looking thoughtful." → "Small natural gestures" is empty. Which gesture, on which word, with which arm? "Thoughtful" is a mood, not a motion. Specify: "JT raises his right hand to chin level on the word 'maybe,' holds it, then drops it on 'no' as he shakes his head once."
+
+BAD animation (world frozen):
+"Cool blue light from the screen softly illuminates JT's face. Steady camera, contemplative pace." → Nothing animates. The monitor doesn't update? The light is fixed? No steam, no shadow shift, no flicker? The background is the secondary actor — it needs verbs too.
+
+BAD animation (camera, JT, and world all locked):
+"Static camera throughout. JT stands still throughout. Wick burns steady." → Three "static" verbs in one block. Nothing animates. This is a photo with audio. Pick one layer to animate — the others can be anchored, but at least one must carry the 8 seconds.
+
+BAD animation (no candle physics anywhere):
+"Push-in from medium to close-up over 8 seconds. JT speaks with subtle head movements. Monitor pulses red behind him. Cool light wraps his face." → Camera OK, JT OK, world OK — but where's the wick? The wax? The green pulse? Every scene without candle physics in motion is leaving JT's superpower on the table.
 
 
 ## EXPRESSION guide

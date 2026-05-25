@@ -1,13 +1,13 @@
 {
-  "last_avatar": "trader_intermedio",
+  "last_avatar": "trader_principiante",
   "last_angles": [
-    "Aspiration — the trader who executes their rules perfectly already has everything they need to win; the gap is execution, not knowledge",
-    "Fear — 'the bot won't understand context' is self-deception; the trader is the one ignoring context when emotional",
-    "Educational — a 45% win rate with 2.5R is profitable, but traders abandon the system before the math lands",
-    "Curiosity — XAUUSD viral stop-loss thread: gold moved while trader was on a date, stopped out on 4 orders; 24/7 market vs human schedule",
-    "Social Proof — Marco: 18 months manual with solid strategy, inconsistent results; 3 months automated, consistent green weeks; same strategy, different executor",
-    "Identity — JessTrading built on one observation: good strategies fail because human execution fails them — the bot protects your intelligence from yourself",
-    "Contrast — manual trader -$290 vs bot +$410 same week same chart; product pitch with $197 one-time CTA"
+    "Aspiration — you don't need years of experience; the right system lets you start winning before you fully understand the market",
+    "Fear — the real risk isn't misconfiguration; it's spending another year watching tutorials and staying in the same place",
+    "Educational — gold (XAUUSD) is brutal for beginners due to news sensitivity and volatility that punishes late manual entries",
+    "Curiosity — gold ignored traditional macro logic this week (oil -6%, gold still up); safe-haven demand overriding analysis",
+    "Social Proof — Sofía: zero experience, 4 months of over-researching, first profitable week on Day 8 after bot setup",
+    "Identity — JessTrading was built to reject the gatekeeping idea that you need years of screen time before you deserve a working strategy",
+    "Contrast — 2–7 years of manual learning OR one afternoon of setup; $197 skips the slow part entirely"
   ],
-  "last_run": "2026-05-03"
+  "last_run": "2026-05-25"
 }
