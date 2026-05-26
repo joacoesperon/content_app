@@ -114,6 +114,8 @@ For each reel that needs research, follow the process defined in the **Reel Type
 
 Do NOT invent research. If nothing concrete surfaces, use the defined fallback for that type.
 
+**From research to angle:** A Reddit insight is a topic, not a reel. Before entering the PLAN, translate each finding into a specific scene: what is the moment within this trend that only JT can show? Not the trend itself — the scene, the situation, the particular instant where the emotional truth of it lands. "People are worried about algos" is a topic. "The algo executed the plan perfectly while the human who built it closed the position early because he got scared, and neither of them knows the other exists" is a scene. Find the scene. If the entry point is the same one any trading account would use, find a different angle on the same topic before moving to the PLAN.
+
 ## Step 3 — PLAN before writing
 
 **What is a lever?** The lever is the engagement mechanism — what makes someone watch to the end, save, share, or comment. Each reel pulls on one primary lever:
@@ -139,8 +141,10 @@ PLAN:
   Reel 3: Type: [slot 3 type] — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [concept / situation / take] — Hook: [visual + first words] — Scenes: [N]
 - CTA carrier: [Reel N or "none this batch"] — at most ONE of the three reels may carry a soft CTA, in its FINAL scene. Pick the reel where the CTA fits naturally (educational / storytime cierre). Hot-takes, opinions, observations: NO CTA. If nothing fits, choose "none this batch".
 - Lever check: are all reels using DIFFERENT levers? [yes/no — if no, replan]
+- Lever history check: do any levers in this batch repeat from `director-state.json → last_levers`? [list repeats — if any, replace unless no other option]
 - Topic check: are all 3 topics substantively different — not the same argument re-packaged? [yes/no — if no, replan]
-- Emotion+Tone check: are all 3 reels using DIFFERENT emotion+tone combinations? [yes/no — if no, replan]
+- Angle check: for each reel, what's the non-obvious entry point on this topic? Most trading accounts would lead with [X] — JT's version leads with [what instead]? [answer per reel — if still generic, find a different angle before writing]
+- Emotion+Tone check: are all 3 reels using DIFFERENT emotion+tone combinations? Are any tones repeating from `director-state.json → last_tones`? [yes/no — replace repeats if possible]
 - Emotional arc check: does each reel have a clear expression progression across scenes (e.g. confused → panicked → resigned, smug → shocked → contemplative, excited → exhausted → determined) rather than the same expression repeated? [describe the arc per reel using mascot.json expression names]
 - POV check: any declared shifts are intentional and at a single scene boundary? [yes/no]
 
@@ -156,6 +160,8 @@ PLAN:
 
 Write each field knowing what the others already contribute. Add your layer — don't rebuild the whole scene.
 
+**Scene count:** A reel is 2 or 3 scenes. 3 is the default — setup, tension, landing. Use 2 when the idea doesn't need a middle: hook → arrival, no buildup required. Never more than 3. Declare the count in the PLAN.
+
 ### Reel [N] — [Type] — [Lever]
 **Concept:** [One sentence describing the idea]
 **POV:** [1st / 2nd / 3rd — or "Xst→Ynd shift at Scene N" if declared in the PLAN — see POV guide below]
@@ -164,6 +170,7 @@ Write each field knowing what the others already contribute. Add your layer — 
 **Total length:** [N×8s, e.g. 24s (3 scenes × 8s)]
 
 #### Scene 1 (0:00–0:08)
+**Before writing this scene:** the first frame is the scroll-stopper — before audio, before motion, before JT speaks. Ask: if a viewer sees only this still image with no context, do they stop? The dialogue hook lives in the first 5-6 words; the visual hook lives at 0:00. The Setting and Animation of Scene 1 carry both — write them with that weight.
 **Setting:** [Complete visual description sent to nano-banana-2/edit. Use the SETTING guide below.]
 **Mascot expression:** [pick from mascot.json → expressions — see EXPRESSION guide below]
 **Tone:** [pick from mascot.json → tones — see TONE guide below]
@@ -183,8 +190,6 @@ Write each field knowing what the others already contribute. Add your layer — 
 The setting is not decoration — it is the emotional state made physical. Before choosing a location, ask: what does this scene's emotional beat look like as a place? Exhaustion is a desk nobody cleaned up. Shame is a cramped room with harsh light and nowhere to hide. Defiance is a vast empty space with one small figure standing in the middle of it. Choose the setting that makes the emotion visible before JT opens his mouth.
 
 **This is an edit prompt sent to nano-banana with a JT reference image.** The model already knows what JT looks like — the reference handles his visual character. The setting prompt directs two things: the environment JT is placed in, and how JT exists within it (physical state, posture, candle physics, interaction with the space). Don't describe JT's base appearance — it's in the reference. Describe where he is and what state he's in.
-
-Start the prompt with the image's purpose — "Instagram Reel about trader exhaustion after a losing week" — before describing the scene. This single line shifts how nano-banana interprets everything that follows: the emotional register, the weight of the composition, the kind of detail it selects.
 
 Start the prompt with the image's purpose — "Instagram Reel about trader exhaustion after a losing week" — before describing the scene. This single line shifts how nano-banana interprets everything that follows: the emotional register, the weight of the composition, the kind of detail it selects.
 
@@ -523,4 +528,6 @@ BAD caption (just repeats the dialogue):
    - `last_concepts`: list of topics used across all 3 reels (to avoid repeating)
    - `last_run`: today's date (YYYY-MM-DD)
    - `last_slot3`: the slot 3 type used this run (so next run picks the following one in the cycle)
+   - `last_levers`: list of levers used across all 3 reels in this batch (to avoid repeating in the next batch)
+   - `last_tones`: list of tones used across all 3 reels in this batch (to avoid repeating in the next batch)
 3. Confirm what was saved and where
