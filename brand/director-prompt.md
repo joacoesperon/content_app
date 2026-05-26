@@ -160,6 +160,8 @@ PLAN:
 
 Write each field knowing what the others already contribute. Add your layer — don't rebuild the whole scene.
 
+**Before writing Scene 1 of each reel:** go back to the angle you declared in the PLAN. Ask: does Scene 1's Setting and Animation actually execute that angle visually? Or does the angle only exist as a description in the PLAN? The PLAN angle is a promise — Scene 1 is where it's kept. If the first frame doesn't show the angle, it doesn't exist in the reel.
+
 **Scene count:** A reel is 2 or 3 scenes. 3 is the default — setup, tension, landing. Use 2 when the idea doesn't need a middle: hook → arrival, no buildup required. Never more than 3. Declare the count in the PLAN.
 
 ### Reel [N] — [Type] — [Lever]
@@ -181,7 +183,9 @@ Write each field knowing what the others already contribute. Add your layer — 
 [same fields. For each transition, actively ask: does this scene need a different setting or framing to serve the reel? A location shift that marks a new emotional beat or adds contrast — use it. If the story works in one place — stay. An unmotivated change is noise, not craft. Expression evolves as the arc demands — tone stays consistent. See SETTING, ANIMATION, EXPRESSION, and TONE guides for inter-scene guidance.]
 
 #### Scene N — final (last 8s)
-[same fields. This scene must earn the viewer's completion — they watched this far, deliver the arrival. The emotional arc lands here. Don't trail off, don't repeat what was already said, don't give a generic close. The reel has been building to something — this is where it arrives. If this reel is the CTA carrier per the PLAN, the soft CTA may live here — after the payoff, never instead of it. No "follow for more X". No "smash that like button".]
+[same fields. This scene must earn the viewer's completion — they watched this far, deliver the arrival. The emotional arc lands here. Don't trail off, don't repeat what was already said, don't give a generic close. The reel has been building to something — this is where it arrives. If this reel is the CTA carrier per the PLAN, the soft CTA may live here — after the payoff, never instead of it. No "follow for more X". No "smash that like button".
+
+Before writing Setting and Animation: verify that JT's physical position, scale, and body state reinforce the landing tone. A smug or indignant landing needs JT physically large and positioned with authority — on a high surface, filling the frame, standing upright. A philosophical or resigned landing can afford JT smaller, more contained. If JT's physical state contradicts the tone of the landing, fix the Setting first.]
 
 ---
 
@@ -191,7 +195,7 @@ The setting is not decoration — it is the emotional state made physical. Befor
 
 **This is an edit prompt sent to nano-banana with a JT reference image.** The model already knows what JT looks like — the reference handles his visual character. The setting prompt directs two things: the environment JT is placed in, and how JT exists within it (physical state, posture, candle physics, interaction with the space). Don't describe JT's base appearance — it's in the reference. Describe where he is and what state he's in.
 
-Start the prompt with the image's purpose — "Instagram Reel about trader exhaustion after a losing week" — before describing the scene. This single line shifts how nano-banana interprets everything that follows: the emotional register, the weight of the composition, the kind of detail it selects.
+Start every scene's Setting prompt with the image's purpose — "Instagram Reel about trader exhaustion after a losing week" — before describing the scene. This applies to every scene in the reel, not just Scene 1. This single line shifts how nano-banana interprets everything that follows: the emotional register, the weight of the composition, the kind of detail it selects.
 
 A complete setting is built from these layers:
 
@@ -311,6 +315,8 @@ Every setting has a baseline sound environment that exists whether or not anythi
 **SFX — discrete sound events:**
 These are specific sounds that occur because of specific actions or physics. Ask: what sounds does the motion in this scene create? JT's candle physics have sounds — wick crackling, a wax drop hitting a surface, the hiss of a fresh flame. World motion creates sound — papers lifting in a draft, a chart ticking over, a monitor beeping, rain on glass. Anchor each SFX to the visual action that produces it: `SFX: wax drop taps the desk as it lands at mid-scene` lands better than `SFX: dripping sound`. Sound without a visual anchor feels disconnected. Use the syntax: `SFX: [description anchored to the visual action and when it occurs]`.
 
+**SFX rule:** every SFX needs an object and a surface. "A faint warm tone", "a subliminal sound", "a click like a period at the end of a sentence" — these are subjective experiences, not physical events. Veo cannot render them. If you can't name what object produces the sound and what it hits or moves through, delete the SFX.
+
 **Voice delivery — how JT speaks:**
 The final line of every animation block is the voice delivery instruction. This is how Veo renders JT's dialogue with the correct register. Translate the tone you chose in the Tone field: `JT says in a [tone] voice, "[exact dialogue text from the Dialogue field]"`. The dialogue must be copied exactly — this is the line Veo uses for lip-sync.
 
@@ -382,6 +388,9 @@ BAD animation (no candle physics anywhere):
 
 BAD animation (no audio direction):
 "Slow push-in from medium-tight to close-up. JT's left arm rises on the key word and holds. His wick tilts and releases a thin curl of smoke. The chart ticks down one bar mid-sentence. Green pulse on the desk surface." → Camera, body, candle physics, world motion — all present. But no ambient noise, no SFX, no voice delivery line. Veo guesses the entire soundscape and voice register. Every animation block must close with ambient noise, relevant SFX anchored to their visual actions, and `JT says in a [tone] voice, "[dialogue]"`.
+
+BAD animation (re-describing the Setting — I2V violation):
+"The red chart on the monitor shows a downward sequence. The cold fluorescent light falls hard on JT. A stack of books sits to his left." → These elements were established in the Setting — Veo already has the image. The animation block should say what they DO across 8 seconds, not confirm they exist. Every line in the animation block must describe motion or change, not existence. If removing a line would leave the scene unchanged, delete that line.
 
 
 ## EXPRESSION guide
