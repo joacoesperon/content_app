@@ -67,6 +67,13 @@ const ASPECT_OPTIONS = [
   { value: '16:9', label: '16:9' },
 ];
 
+const RESOLUTION_OPTIONS = [
+  { value: '0.5K', label: '0.5K ($0.06)' },
+  { value: '1K',   label: '1K ($0.08)' },
+  { value: '2K',   label: '2K ($0.12)' },
+  { value: '4K',   label: '4K ($0.16)' },
+];
+
 function dateFromFilename(filename: string): string {
   const m = filename.match(/^(\d{4}-\d{2}-\d{2})/);
   return m ? m[1] : '';
@@ -84,6 +91,7 @@ interface SceneFormState {
   dialogue: string;
   animationHint: string;
   aspectRatio: string;
+  imageResolution: string;
   extraImagePrompt: string;
   refFilename: string;  // which mascot ref to use as the edit base (empty = auto-resolve)
   // prompt overrides (E1)
@@ -113,6 +121,7 @@ function initialSceneState(s: ReelBrief['scenes'][number]): SceneFormState {
     dialogue: s.dialogue,
     animationHint: s.animation_hint,
     aspectRatio: '9:16',
+    imageResolution: '1K',
     extraImagePrompt: '',
     refFilename: '',
     imagePromptOverride: '',
@@ -311,6 +320,21 @@ function SceneCard({
             </SelectTrigger>
             <SelectContent>
               {ASPECT_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Resolution</Label>
+          <Select value={scene.imageResolution} onValueChange={(v) => onChange({ imageResolution: v })}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {RESOLUTION_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value} className="text-xs">
                   {o.label}
                 </SelectItem>
@@ -692,6 +716,7 @@ function ReelEditor({
         setting: scene.setting,
         expression: scene.expression,
         aspect_ratio: scene.aspectRatio,
+        resolution: scene.imageResolution,
         extra_image_prompt: scene.extraImagePrompt || undefined,
         ref_filename: scene.refFilename || null,
         prompt_override: scene.imagePromptOverride || null,

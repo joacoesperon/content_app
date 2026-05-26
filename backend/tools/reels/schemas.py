@@ -69,6 +69,7 @@ class GenerateSceneImageRequest(BaseModel):
     setting: str
     expression: str
     aspect_ratio: str = "9:16"
+    resolution: str = "1K"  # "0.5K" | "1K" | "2K" | "4K"
     extra_image_prompt: str = ""
     ref_filename: Optional[str] = None  # which mascot ref to use; None = auto-resolve
     prompt_override: Optional[str] = None  # if set, replaces the auto-built image prompt entirely

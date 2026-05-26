@@ -156,13 +156,14 @@ def _build_image_prompt(scene_setting: str, expression: str, extra: str = "") ->
 
 def _build_video_prompt(dialogue: str, animation_hint: str, tone_id: str, tones_meta: list[dict]) -> str:
     tone_desc = next(
-        (t.get("label", "") + " — " + t.get("use_when", "") for t in tones_meta if t.get("id") == tone_id),
+        (t.get("label", "") + " — " + t.get("use_when", "") for t in tones_meta if isinstance(t, dict) and t.get("id") == tone_id),
         tone_id or "",
     )
     bits = []
     if animation_hint:
         bits.append(animation_hint.strip())
-    if dialogue:
+    # only add dialogue explicitly if it's not already in the animation block
+    if dialogue and dialogue.strip() not in animation_hint:
         bits.append(f"The character speaks the line: \"{dialogue.strip()}\"")
     if tone_desc:
         bits.append(f"Voice tone: {tone_desc}")
@@ -197,6 +198,7 @@ def generate_scene_image(
     primary_ref: Path,
     image_prompt: str,
     aspect_ratio: str,
+    resolution: str = "1K",
 ) -> tuple[bytes, list[str]]:
     """Call nano-banana/edit with a SINGLE mascot ref + scene prompt. Returns (png_bytes, ref_filenames_used)."""
     primary_url = fal_client.upload_file(str(primary_ref))
@@ -210,7 +212,7 @@ def generate_scene_image(
             "num_images": 1,
             "aspect_ratio": aspect_ratio,
             "output_format": "png",
-            "resolution": "1K",
+            "resolution": resolution,
         },
         with_logs=False,
     )
@@ -585,6 +587,7 @@ def generate_scene_image_step(
     extra_image_prompt: str = "",
     ref_filename: Optional[str] = None,
     prompt_override: Optional[str] = None,
+    resolution: str = "1K",
 ) -> dict:
     """Step 1: generate the still image only. Saves a new image-only version.
     If prompt_override is provided, it bypasses the auto-built prompt entirely."""
@@ -593,7 +596,7 @@ def generate_scene_image_step(
         setting, expression, extra_image_prompt
     )
 
-    img_bytes, refs_used = generate_scene_image(primary_ref, image_prompt, aspect_ratio)
+    img_bytes, refs_used = generate_scene_image(primary_ref, image_prompt, aspect_ratio, resolution)
     return save_image_only_version(
         filename, reel, scene_number,
         img_bytes, image_prompt, refs_used,

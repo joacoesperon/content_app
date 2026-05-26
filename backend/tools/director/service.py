@@ -219,7 +219,7 @@ async def run_director_stream(
     for _ in range(25):
         response = await client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=16000,
+            max_tokens=32000,
             system=_load_system_prompt(),
             tools=TOOLS,
             messages=messages,

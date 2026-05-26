@@ -62,7 +62,7 @@ class Reel:
 
 
 REEL_HEADER_RE = re.compile(
-    r"^##\s+Reel\s+(\d+)\s+[—-]\s+(.+?)\s+[—-]\s+(.+?)\s+[—-]\s+(.+?)\s*$",
+    r"^##\s+Reel\s+(\d+)\s+[—-]\s+(.+?)\s+[—-]\s+(.+?)\s*$",
     re.MULTILINE,
 )
 
@@ -88,8 +88,8 @@ def parse_director_file(path: Path) -> list[Reel]:
         reel = Reel(
             number=int(m.group(1)),
             category=m.group(2).strip(),
-            avatar=m.group(3).strip(),
-            lever=m.group(4).strip(),
+            avatar="",
+            lever=m.group(3).strip(),
             concept=_extract_field(body, "Concept"),
             total_length=_extract_field(body, "Total length"),
             voice_direction=_extract_field(body, r"Voice direction(?:\s*\(overall\))?"),
@@ -122,9 +122,9 @@ def _extract_scenes(body: str) -> list[Scene]:
             number=int(m.group(1)),
             setting=_extract_field(scene_body, "Setting"),
             expression=_extract_field(scene_body, r"Mascot expression"),
-            tone_id=_extract_field(scene_body, r"Tone id"),
+            tone_id=_extract_field(scene_body, r"Tone"),
             dialogue=_extract_field(scene_body, "Dialogue"),
-            animation_hint=_extract_field(scene_body, r"Animation hint"),
+            animation_hint=_extract_field(scene_body, r"Animation"),
         ))
     scenes.sort(key=lambda s: s.number)
     return scenes

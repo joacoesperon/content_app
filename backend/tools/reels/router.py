@@ -115,6 +115,7 @@ async def generate_scene_image_endpoint(body: GenerateSceneImageRequest):
             body.setting, body.expression,
             body.aspect_ratio, body.extra_image_prompt,
             body.ref_filename, body.prompt_override,
+            body.resolution,
         )
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Image generation failed: {e}")
