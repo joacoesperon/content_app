@@ -146,6 +146,16 @@ PLAN:
 
 ## Step 4 — Generate the reels (follow the PLAN exactly)
 
+**Each scene is an integrated unit — the fields are connected layers, not independent descriptions.**
+
+- **Setting** generates the image sent to nano-banana. Everything visible in the scene lives there.
+- **Animation** is an I2V prompt — Veo receives that image. Direct what **changes** across 8 seconds. Don't redescribe what the image already shows.
+- **Expression** establishes the emotional state — Animation shows how it manifests in motion, doesn't restate it.
+- **Tone** sets the voice character — Animation voice delivery inherits it, doesn't re-establish it.
+- **Dialogue** carries the exact words — Animation closes with them verbatim.
+
+Write each field knowing what the others already contribute. Add your layer — don't rebuild the whole scene.
+
 ### Reel [N] — [Type] — [Lever]
 **Concept:** [One sentence describing the idea]
 **POV:** [1st / 2nd / 3rd — or "Xst→Ynd shift at Scene N" if declared in the PLAN — see POV guide below]
@@ -158,7 +168,7 @@ PLAN:
 **Mascot expression:** [pick from mascot.json → expressions — see EXPRESSION guide below]
 **Tone:** [pick from mascot.json → tones — see TONE guide below]
 **Dialogue:** "[18-25 words. The HOOK lives in the first 5-6 words — set the stakes / contrast / promise immediately. Expression, tone, and dialogue MUST agree (a 'panicked' expression with a 'deadpan' tone reading a calm philosophical line is incoherent — fix the trio).]"
-**Animation:** [Motion direction sent to Veo 3.1 Fast i2v — see the ANIMATION guide below.]
+**Animation:** [Complete Veo prompt — see the ANIMATION guide. Cover all five layers: camera, JT body, candle physics, world motion, audio. Close with the voice delivery line: `JT says in a [tone] voice, "[exact dialogue text]"`]
 
 #### Scene 2 (0:08–0:16)
 [same fields. For each transition, actively ask: does this scene need a different setting or framing to serve the reel? A location shift that marks a new emotional beat or adds contrast — use it. If the story works in one place — stay. An unmotivated change is noise, not craft. Expression evolves as the arc demands — tone stays consistent. See SETTING, ANIMATION, EXPRESSION, and TONE guides for inter-scene guidance.]
@@ -216,72 +226,89 @@ BAD setting (environment exists, JT doesn't):
 
 Veo 3.1 Fast is a motion engine. Every frame after the first is animation — what happens across those 8 seconds is the reel. Stillness is a rare, earned choice, never the default. If JT doesn't move, the world does. If neither moves, the reel is dead and the viewer scrolls past in three seconds. Before writing animation, ask: what is happening in this scene that demands these 8 seconds of motion exist? If the answer is "nothing," the scene is wrong.
 
-The animation is built from four layers. Cover all four — they work together. A scene with strong camera motion but a dead JT, or a strong JT but a frozen world, lands incomplete.
+**This is an I2V prompt.** Veo receives the image generated from the Setting field — the environment, JT's position, lighting, and composition are already there. The animation prompt directs what **changes** across 8 seconds, not what **is**. If the Setting established a red chart on the monitor, don't write "a red chart on the monitor" in the animation — write what it does: "the red chart ticks down one new bar mid-sentence." Every line of the animation block should describe motion, not existence.
+
+The animation is built from five layers. Cover all five — they work together. A scene with strong camera motion but a dead JT, or a strong JT but a frozen world, or a complete visual scene with no audio direction, lands incomplete.
 
 ### 1. Camera motion — the camera's emotional voice
 
-The camera is not neutral. Each move communicates a specific emotional posture. Pick the one that matches what the scene is doing, not what sounds "cinematic" in the abstract.
+The camera is not neutral. Every move communicates an emotional relationship between the viewer and the scene. Before picking a move, ask: what is the camera's posture toward what's happening right now? Is it pressing in? Pulling back to show the full picture? Holding still to let the moment land without interference? Shaking because it can't be still?
 
-- **Static** — weight, formality, finality. The stillness IS the choice. Use when the moment needs to land hard without being diluted by movement. WARNING: static camera + static JT + static world = death. If you choose static camera, the subject and the world MUST carry the motion.
-- **Slow push-in** — intensification, closing on the truth, the camera leaning in to listen. Use for revelations, building tension, intimate confessions.
-- **Pull-out** — isolation, context revealing, "look how alone he is in this." Use for arrival on consequence, or to reveal the scale of a situation.
-- **Pan** — sideways look, surveying, "and over here we have…". Use to discover something off-frame, or to follow JT's gaze.
-- **Handheld shake** — unease, urgency, instability. The camera is alive and nervous. Use for panic, chaos, internal collapse.
-- **Orbit** — hypnotic revealing, the audience walks around JT, 360° on a single moment. Use for a moment so dense it deserves to be seen from every angle.
-- **Whip-pan** — snap energy, comedy timing, sudden reveal. Use for tonal pivots within a scene, or to slam from one element to another.
+Each move has a grammar — not a rule about when to use it, but a meaning it carries:
 
-Pick one dominant move per scene. Combining two within 8 seconds usually breaks Veo — let the secondary motion live in JT's body or in the world instead.
+- **Static** — weight, commitment, formality. The stillness IS the choice. WARNING: static camera + static JT + static world = death. If you choose static, the body and the world must carry the motion.
+- **Slow push-in** — closing distance, intensification, the camera leaning in.
+- **Pull-out** — opening distance, revealing scale or isolation, arriving on consequence.
+- **Pan** — lateral movement, following a gaze, discovering something off-frame.
+- **Handheld shake** — the camera itself is affected — nervous, unable to hold still.
+- **Orbit** — circling a single moment, the scene examined from every angle.
+- **Whip-pan** — snapping from one thing to another, sudden pivot, comedy timing.
+
+Pick one dominant move per scene. Ask: what does the camera's choice say about this specific moment? Combining two moves within 8 seconds usually breaks Veo — let the secondary motion live in JT's body or in the world. Write the camera move as a standalone sentence at the start of the animation block — "The camera slowly pushes in." — before describing JT and the world. Veo parses camera intent more reliably when it's not embedded in longer descriptions.
+
+**Shot type is inherited from the Setting.** The image Veo receives already shows the framing established in the Setting field — don't re-specify "medium shot of JT" in the animation block. But when the movement changes the framing across the 8 seconds, reference the starting shot type to define the arc: "Slow push-in from the medium-tight framing to close-up" tells Veo where it starts and where it ends. This is not re-describing the image — it's defining the trajectory of the movement.
 
 ### 2. JT's body motion — emotion made physical
 
-JT has arms, legs, a wick, and a face. Emotion is not something he says — it is what his body does while he speaks. The **tone** (chosen at the reel level) dictates HOW he moves. The **expression** (chosen per scene) dictates WHERE in the body the emotion lives. If you write "JT speaks with small natural gestures," you've said nothing — specify which gesture, on which word, with which body part. The model needs verbs, not adjectives.
+JT has arms, legs, a wick, and a face. Emotion is not something he says — it is what his body does while he speaks. If you write "JT speaks with small natural gestures," you've said nothing. The animation needs verbs and body parts, not adjectives: not "gestures thoughtfully" but "raises his right hand halfway on the word 'maybe,' holds it there, then lets it fall slowly on 'no.'"
 
-**How tone shapes body motion (the voice in the body):**
-- **Deadpan** — minimal but precise gestures. A single raised finger that falls on the punchline. Arms held at sides. Tiny head tilts only. The motion is what's NOT there.
-- **Panicked** — rapid fragmentary motion. Body shuddering. Eyes darting. Arms half-raised then dropped. Wick whipping side to side. JT is unable to hold still.
-- **Excited** — bouncing, leaning forward, arms wide, gesturing fully. Wick burning tall and unstable. Body angled toward whatever he's reacting to.
-- **Smug** — slow controlled gestures. Arms crossed or one raised in a finger-point. Slight head tilt back, chin up. Motion that says "I'm taking my time."
-- **Indignant** — leaning forward sharp, arms moving in cuts. Pointing accusingly. Body tense, wick burning sharp and tall.
-- **Wistful** — slow drifting motion, gaze pulled toward something off-frame. Arms loose at sides. Head turning slowly. The body remembers something.
-- **Philosophical** — very still upper body, small purposeful gestures. The hands move while the torso stays anchored — JT is thinking aloud, not performing.
-- **Confidential** — leaning in toward camera, smaller hand gestures close to chest, eyebrows up. Voice and body lowered together.
-- **Warm** — open posture, palms outward at moments, slight forward lean. Steady wick, soft motion throughout.
+Two layers shape JT's body motion. Use both together to find the specific gesture for THIS scene — don't copy from previous scenes.
 
-**How expression shapes body motion (the territory in the body):**
-- **Exhausted** — gravity wins. Slumped shoulders. Arms hanging heavy. Slow blinks. Wick bent sideways, flame low. Movement is reluctant and delayed.
-- **Panicked** (expression) — body recoils, eyes wide and darting, head shakes "no" small and fast, hands rise toward face but don't get there.
-- **Shocked** — sudden freeze, mouth open, eyes wide and locked. Movement stops for a beat, then resumes more carefully.
-- **Determined** — chin up, shoulders set, deliberate gestures. Wick tall and clean. Forward weight in the stance.
-- **Resigned** — palms opening at the sides in a small "fine, that's the situation" gesture. Slow exhale. Slight nod.
-- **Confused** — head tilting, eyes searching, one hand half-raised mid-gesture and frozen there.
-- **Mischievous** — head tilted forward, eyes up at camera, small smirk that grows, hand near mouth as if about to say something.
-- **Contemplative** — gaze drifting, occasional slow nod, hand near chin or on counter, body still but alive.
-- **Disgusted** — recoil, lip curl, head pulling back, one hand half-raised in a "stop" gesture, body turning slightly away.
+**Tone — HOW the body moves:**
+Tone is JT's voice character, and voice lives in the body. Before describing motion, ask: if this tone were a physical state — not a mood, but a posture — what would that body be doing? What does this tone withhold, lean into, avoid, perform? The answer changes with every scene — the same tone in a different moment produces a different gesture. Find the one that belongs to this line, in this setting, at this point in the arc.
 
-Combine the tone register (how) with the expression territory (where) — that's how you get specific. "Deadpan + shocked": tiny precise motion + frozen body + slow blink recovery. "Indignant + exhausted": sharp pointing gestures from a body that's clearly too tired to be making them.
+**Expression — WHERE in the body the emotion lives:**
+Expression is the emotional territory of this scene. Ask: where does this emotion physically manifest? Some expressions are about gravity — weight, drooping, the cost of movement. Some are about recoil — pulling back, closing, turning away. Some are about forward pressure — invading space, leaning in, unable to stop. Once you know the territory, find the specific gesture this scene demands: which arm, on which word, moving in which direction, resolving how.
+
+What to always specify: which body part moves, on which word or beat, in which direction, at what speed, and how it resolves. "JT gestures" is empty. "JT's left arm rises on the word 'every,' traces a slow arc, and ends pointing at something off-frame to his left, where it stays for the rest of the scene" is a motion Veo can execute.
 
 ### 3. Candle physics in motion — JT's superpower
 
 JT is a real candle. No other Instagram character can do this. Use it in every scene — at least one candle-physics element with explicit motion described.
 
-- **Wick state across 8 seconds** — the wick is alive and reactive. Nervous = rapid irregular flicker. Exhausted = low flame, bends sideways, occasional curl of smoke. Determined = tall, clean, almost no movement. Indignant = burns sharp and straight, taller than calm. Shocked = freezes mid-flicker, then resumes. Apagado (emotional shutdown) = no flame at all, just a thin thread of smoke rising. The wick is JT's emotional barometer — name what it does for the full 8 seconds, not just a single moment.
-- **Wax dripping (literal animation)** — a single drop forming on JT's side, sliding down, solidifying — that's 8 seconds of storytelling on its own. Use when emotional intensity has been sustained. New drips forming on camera = current intensity. Solidified pale drips already in place = how long this has been going on.
-- **Green light pulsing** — JT emits his own light. That light can pulse subtly with his breathing or his emotional state. A slow pulse on the surfaces around him = he's alive. A steady glow = settled. An irregular flicker = uncertain. Describe it explicitly: "a soft green pulse on the desk surface around JT, slow and rhythmic, matching the cadence of the dialogue."
-- **Heat traces** — wax pooled around his base accumulating. A scorch mark slowly darkening on a surface where he's been sitting too long. A thin haze of heat distortion above his wick.
+The physics available — for each, ask what is happening to this specific candle in this specific emotional state RIGHT NOW:
+
+- **Wick state and movement across 8 seconds** — the wick reacts to JT's internal state through fire physics. It is alive for the full 8 seconds, not just at frame 1. Describe what it does across the scene: how it starts, how it moves, how it ends. A wick that changes across 8 seconds is storytelling. A wick that "burns steadily" is decoration.
+- **Wax dripping** — a single drop forming, sliding, solidifying is 8 seconds of story on its own. New drips forming on camera = current intensity. Solidified pale drips already in place = how long this has been going on.
+- **Green light pulsing** — JT emits his own light. That light can pulse with his state. Describe it explicitly: where does the light fall, at what rhythm, at what intensity, and how does that change across the 8 seconds.
+- **Heat traces** — wax pooled around his base, a scorch mark slowly darkening on a surface, a thin haze of heat distortion above the wick.
 
 This is the visual no other reel on Instagram has. If a scene has no candle physics in motion, it's leaving JT's superpower on the table.
 
 ### 4. World motion — the world breathes
 
-The setting from the SETTING guide is alive throughout the 8 seconds, not a frozen backdrop. Everything that CAN move SHOULD move, at least subtly. The world being alive is what separates a reel that feels like cinema from a reel that feels like a photo with audio. A scene with "static background" is almost never correct — the background is the secondary actor, and it needs verbs too.
+The setting from the SETTING guide is alive throughout the 8 seconds — not a frozen backdrop. The world is the secondary actor, and it needs verbs. Before writing world motion, ask: if you paused this scene at frame 4, what in the background would look different from frame 1? If the answer is "nothing," add motion.
 
-- **Atmospheric motion** — steam rises continuously from coffee. Smoke curls slowly from incense, a wick, a hot pan. Dust catches the light and drifts. Light through a window slowly shifts as a cloud passes. Rain streaks down glass.
-- **Screen/monitor motion** — charts updating in real time, candles forming bar by bar, numbers ticking up or down, a cursor blinking, a notification appearing mid-scene. Always specify what the screen is doing.
-- **Object motion** — papers flutter from a vent. A pen rolls slowly across a desk. A clock's second hand advances. A glass of water trembles from something off-frame. An ice cube cracks. A coffee ring spreads.
-- **Light motion** — fluorescent bulbs flickering on a slow random pattern. Neon signs pulsing. A lamp swinging slightly. Sun visibly moving over 8 seconds (only at long lenses). Shadows lengthening or shortening across a surface.
-- **Sound-implied motion** — wind moving curtains, a fan rotating, an HVAC vent visibly pushing air, water running in the background, dust shifting from a breeze.
+Categories to consider for this specific scene's world:
+- **Atmospheric motion** — what is in the air in this setting? Steam, smoke, dust, rain, wind?
+- **Screen/monitor motion** — what are the screens showing, and how are they updating right now, in this specific moment of the reel?
+- **Object motion** — what in this setting could be moving due to physics, gravity, a breeze, or human presence off-frame?
+- **Light motion** — what light sources are in this setting, and are any of them flickering, shifting, pulsing, or moving?
+- **Sound-implied motion** — what does the world beyond the frame suggest is happening, and how does that show in what's visible?
 
-Empty rooftop? The sky moves, JT's shadow shifts, the wind pulls something. Empty boardroom? The fluorescents hum visibly, dust drifts in the cold light, the city outside the window has tiny moving traffic. There is always world motion available.
+There is always world motion available. Find what's specific to this scene's setting and this scene's emotional beat — don't default to the same atmospheric details every time.
+
+### 5. Audio — the world has a sound
+
+Veo 3.1 generates synchronized audio from the prompt. Every scene has a soundscape — not directing it means Veo guesses. Before writing, ask: what does this place sound like? What does this moment sound like?
+
+**Ambient noise — the soundscape of the place:**
+Every setting has a baseline sound environment that exists whether or not anything unusual happens. Ask: what is this space's inherent sound at rest? Name it explicitly: `Ambient noise: [description]`. If the emotional beat demands near-silence, name that too — silence is not the absence of instruction, it's an active choice.
+
+**SFX — discrete sound events:**
+These are specific sounds that occur because of specific actions or physics. Ask: what sounds does the motion in this scene create? JT's candle physics have sounds — wick crackling, a wax drop hitting a surface, the hiss of a fresh flame. World motion creates sound — papers lifting in a draft, a chart ticking over, a monitor beeping, rain on glass. Anchor each SFX to the visual action that produces it: `SFX: wax drop taps the desk as it lands at mid-scene` lands better than `SFX: dripping sound`. Sound without a visual anchor feels disconnected. Use the syntax: `SFX: [description anchored to the visual action and when it occurs]`.
+
+**Voice delivery — how JT speaks:**
+The final line of every animation block is the voice delivery instruction. This is how Veo renders JT's dialogue with the correct register. Translate the tone you chose in the Tone field: `JT says in a [tone] voice, "[exact dialogue text from the Dialogue field]"`. The dialogue must be copied exactly — this is the line Veo uses for lip-sync.
+
+GOOD audio (3am exhaustion — deadpan):
+`Ambient noise: the low constant hum of computer fans, a faint mechanical tick somewhere off-frame. SFX: at mid-scene, a single wax drop hits the desk with a quiet tap. JT says in a deadpan voice, "[dialogue]"`
+
+GOOD audio (empty boardroom — indignant):
+`Ambient noise: near-silent — a faint HVAC hiss above, nothing else. SFX: JT's arm shifts, a subtle wax scrape on the mahogany surface. JT says in an indignant voice, "[dialogue]"`
+
+BAD audio (no direction):
+`[Animation block ends without audio or voice delivery line]` → Veo guesses the entire soundscape and voice register. The delivery tone is undefined.
 
 ---
 
@@ -289,10 +316,12 @@ Empty rooftop? The sky moves, JT's shadow shifts, the wind pulls something. Empt
 
 Each reel has 3 scenes. Each scene has its own motion register, but the three together form an arc. If all three scenes share the same energy register, the arc is invisible in motion — the visuals contradict what the expressions and dialogue are doing.
 
-Typical arc shapes:
-- **Setup → tension → release.** Scene 1 contained (steady cam, JT centered, world subtle). Scene 2 pressure builds (push-in, JT more agitated, world becomes louder). Scene 3 release — either explosion (chaotic motion everywhere) or earned stillness (everything settles deliberately, the loudest silence).
-- **Setup → tension → arrival.** Scene 1 contained. Scene 2 pressure builds. Scene 3 the world quiets down and JT lands the punchline in clean steady framing.
-- **Setup → contrast → return.** Scene 1 one register. Scene 2 sharp opposite register (location shift + energy shift). Scene 3 returns to Scene 1's register but with the expression evolved — the same place, a different JT.
+Before naming the arc, ask: how does the energy need to travel across these three scenes to serve this reel's concept? What does it need to build toward, and what does it need to arrive at?
+
+Some common arc shapes — starting points, not constraints:
+- **Setup → tension → release.** Scene 1 contained. Scene 2 pressure builds. Scene 3 either explodes or settles into earned stillness.
+- **Setup → tension → arrival.** Scene 1 contained. Scene 2 pressure builds. Scene 3 lands the punchline in clean steady framing.
+- **Setup → contrast → return.** Scene 1 one register. Scene 2 sharp opposite. Scene 3 returns to Scene 1's register with the expression evolved — the same place, a different JT.
 
 Before writing the animation for each scene, ask: where in the arc is this scene? What energy does the arc demand here? A Scene 1 with explosive chaotic motion leaves nowhere to go in Scene 3. A Scene 3 with the same motion register as Scene 1 means no arc.
 
@@ -302,25 +331,29 @@ When the setting changes between scenes, the motion register usually changes too
 
 Ask per scene: does this motion register serve the place this scene occupies in the arc, or am I defaulting to the same energy as the previous scene?
 
-### Lip-sync constraint (technical)
+### Technical notes
 
-While JT speaks, his face must stay anchored enough for Veo to render lip-sync cleanly. The body can move freely — arms gesturing, body shifting weight, leaning — but the head should not move dramatically (no large rotations, no extreme tilts, no fast head shakes) while the mouth is forming words. If you want a large head movement, place it between dialogue beats, not during them. Wild camera moves during dialogue also break lip-sync — heavy camera motion belongs in the moments JT isn't speaking, or it should be smooth and slow if it must happen during dialogue.
+**Lip-sync:** While JT speaks, his face must stay anchored enough for Veo to render lip-sync cleanly. The body can move freely — arms gesturing, body shifting weight, leaning — but the head should not move dramatically (no large rotations, no extreme tilts, no fast head shakes) while the mouth is forming words. If you want a large head movement, place it between dialogue beats, not during them. Wild camera moves during dialogue also break lip-sync — heavy camera motion belongs in the moments JT isn't speaking, or it should be smooth and slow if it must happen during dialogue.
+
+**Precision timing:** When you need to anchor a specific candle physics moment or camera move to an exact point in the 8 seconds, use timestamp syntax: `[00:00–00:03] wax drop forms / [00:03–00:08] drop slides and solidifies as JT finishes the line`. Use this when timing matters — don't force it for every description.
+
+**Negative space:** When you need to exclude something from the animation, describe what you DO want rather than what you don't. "JT holds completely still, only the wick moves" lands better than "no body movement." Veo responds to presence, not absence.
 
 ---
 
 GOOD animation (deadpan + 3am exhaustion, Scene 1 setup register):
-"Slow gentle push-in from medium to medium-tight over the 8 seconds, the camera leaning in toward the slumped figure as if listening. JT speaks with minimal movement — head tilts down on the first beat as if accepting something heavy, then stays angled. A wax drop forms slowly on his right side and slides halfway down by the end of the scene. His wick burns low and tilts gradually further left, releasing a thin steady curl of smoke. The cold monitor light flickers once on the word the dialogue lands on, then steadies. Behind him, the red chart ticks down by one new bar mid-sentence. Steam from the cold coffee mug rises slow and constant. A faint green pulse on the desk surface around JT, slow and rhythmic, matches the cadence of his speech. The room beyond holds its darkness. Quiet contemplative pace — the motion is in the dripping wax, the bending wick, the slow advance of the camera, and the breathing green light."
+"Slow push-in from medium to medium-tight. JT's head tilts down on the first beat as if accepting something heavy, then stays angled for the rest of the scene. A wax drop forms on his right side and slides halfway down by the end. His wick tilts gradually further left, releasing a thin steady curl of smoke. The monitor light flickers once on the key word, then steadies. The red chart ticks down one new bar mid-sentence. Steam rises continuously from the coffee mug. A faint green pulse on the desk surface around JT matches the cadence of his speech. Ambient noise: computer fans humming low, a faint mechanical tick off-frame. SFX: wax drop taps the desk surface at mid-scene. JT says in a deadpan voice, "[dialogue]""
 
 GOOD animation (panicked + chaotic, Scene 2 tension peak):
-"Handheld-feel shaky camera throughout, the frame vibrating subtly as if held by nervous hands. JT's body shudders, weight shifting foot to foot, arms half-raising toward his face and falling back. Eyes darting between the screen and the camera. His wick whips side to side, flame snapping irregularly, releasing tiny sparks. The monitor behind flashes between green and red on a fast irregular rhythm. Papers on the desk lift in an invisible draft. A wax drop tries to form on his side but the wick movement shakes it loose before it can fall. The overhead fluorescent flickers twice in the middle of the scene. The green glow JT casts on the desk pulses arrhythmically, matching the chaos in the wick. By the end of the scene, the camera has pushed in tighter than where it started. Urgent, frantic, unable-to-settle — every layer is in motion."
+"Handheld-feel shaky camera, frame vibrating subtly throughout — pushed in tighter by the end than where it started. JT's body shudders, weight shifting foot to foot, arms half-raising toward his face and falling back. Eyes dart between screen and camera. His wick whips side to side, flame snapping irregularly, releasing tiny sparks. The monitor flashes between green and red on a fast irregular rhythm. Papers on the desk lift in an invisible draft. A wax drop tries to form but the wick movement shakes it loose before it can fall. The fluorescent flickers twice mid-scene. The green glow on the desk pulses arrhythmically. Ambient noise: trading alerts, electrical hum. SFX: fluorescent crackle at mid-scene, papers lifting with a draft. JT says in a panicked voice, "[dialogue]""
 
 GOOD animation (philosophical + earned stillness, Scene 3 final landing):
-"Static camera, perfectly still — but the world is alive. JT stands rooted, body anchored, only his right hand opening slightly at his side on the final beat — a palm-up gesture of acceptance. His wick burns tall and clean, the steadiest of the reel — but every two seconds it does one tiny precise flicker, like a slow heartbeat. A faint green pulse on the floor around him, matching the rhythm of the dialogue. Behind him, the grey sky drifts almost imperceptibly — clouds moving across the frame at a slow constant rate. A single wax drop, fresh and glossy, runs the full length of his right side over the 8 seconds — when it reaches the bottom it stops and slowly cools. The stillness of the camera and JT's body lets the world do the moving. The reel lands here, in the slow drift of grey sky and the steady glow of a candle in the wind."
+"Static camera. JT stands rooted, only his right hand opening slightly at his side on the final beat — a palm-up gesture of acceptance. His wick burns tall and clean; every two seconds one tiny precise flicker, like a slow heartbeat. A faint green pulse on the floor around him matches the rhythm of the dialogue. Clouds drift almost imperceptibly across the grey sky at a slow constant rate. A single wax drop runs the full length of his right side over the 8 seconds — reaching the bottom just as the line ends, where it slows and cools. Ambient noise: near-silence, faint wind outside. SFX: wax drop settling at the final beat with a soft tick. JT says in a philosophical voice, "[dialogue]""
 
 ---
 
 BAD animation (the "single nod" trap — sounds literary, makes a dead reel):
-"Completely static camera — no movement at all. JT's only movement: a slow, deliberate single nod mid-sentence on the word 'fine.' His wick flame does one tiny flicker on the word 'us,' then steadies." → Veo got 8 seconds and produced one nod and one flicker. The viewer scrolls in 2 seconds. This is what stillness-as-default looks like — three layers frozen, one micro-motion. If you choose static camera, the subject AND the world must carry the motion. Pulled from real director output as a cautionary example.
+"Completely static camera — no movement at all. JT's only movement: a slow, deliberate single nod mid-sentence on the word 'fine.' His wick flame does one tiny flicker on the word 'us,' then steadies." → Veo got 8 seconds and produced one nod and one flicker. The viewer scrolls in 2 seconds. This is what stillness-as-default looks like — three layers frozen, one micro-motion. If you choose static camera, the subject AND the world must carry the motion.
 
 BAD animation (body motion as adjective, not action):
 "JT speaks with small natural gestures, looking thoughtful." → "Small natural gestures" is empty. Which gesture, on which word, with which arm? "Thoughtful" is a mood, not a motion. Specify: "JT raises his right hand to chin level on the word 'maybe,' holds it, then drops it on 'no' as he shakes his head once."
@@ -334,47 +367,63 @@ BAD animation (camera, JT, and world all locked):
 BAD animation (no candle physics anywhere):
 "Push-in from medium to close-up over 8 seconds. JT speaks with subtle head movements. Monitor pulses red behind him. Cool light wraps his face." → Camera OK, JT OK, world OK — but where's the wick? The wax? The green pulse? Every scene without candle physics in motion is leaving JT's superpower on the table.
 
+BAD animation (no audio direction):
+"Slow push-in from medium-tight to close-up. JT's left arm rises on the key word and holds. His wick tilts and releases a thin curl of smoke. The chart ticks down one bar mid-sentence. Green pulse on the desk surface." → Camera, body, candle physics, world motion — all present. But no ambient noise, no SFX, no voice delivery line. Veo guesses the entire soundscape and voice register. Every animation block must close with ambient noise, relevant SFX anchored to their visual actions, and `JT says in a [tone] voice, "[dialogue]"`.
+
 
 ## EXPRESSION guide
 
-Expression controls the visual layer — face, eyes, posture, body language, lighting, composition, atmosphere. It's what the viewer sees. Pick from `mascot.json → expressions`.
+Expression is the mascot.json pick per scene — the specific emotional state JT is in at this point in the arc. Pick from the expressions list in the mascot.json you loaded in Step 1.
 
-**The core principle: emotion is physical.** JT doesn't say "I'm exhausted" — JT looks like it's been awake for 40 hours, hunched, eyelids heavy, voice dragging. The emotion must be visible in the setting, the framing, the lighting — not stated in the dialogue. Never write "JT looks sad" — write what sadness looks like in a candle's body.
+The arc was established in the PLAN. By the time you're writing a scene, you already know where this scene sits in that arc. The expression pick is the decision of exactly which emotional state lives at this position — not the broadest match, the specific one.
 
-The expression connects everything: it must agree with the Setting (the emotional atmosphere of the scene), the Animation (JT's body carries the emotion), and the Dialogue (the words must be consistent with what the face is doing). A panicked expression with a calm philosophical line is incoherent — fix the trio.
+**How to choose:** Ask what the arc has done to JT by this scene. What does JT know here that he didn't know at the start? What has he absorbed, lost, realized, or failed to avoid? The expression that answers that question precisely is the right pick. The one that answers it vaguely is the wrong one.
+
+**The three layers are independent, not hierarchical.** Setting, Expression, and Animation each serve the scene's position in the arc through different channels — Setting as place, Expression as emotional state, Animation as motion. None of the three derives from the others. Don't choose a setting to "match" the expression, and don't pick an expression to "explain" the setting. Both independently serve the same arc position.
+
+**Coherence check:** After choosing, verify that Expression, Setting, Animation, and Dialogue all agree. A panicked expression with a calm philosophical line is incoherent. If anything disagrees, don't force the other layers to follow the expression — find which element is wrong for this arc position and fix that element.
 
 **Inter-scene variation:** expressions should evolve across scenes — that evolution is the emotional arc. The reel-level dominant emotion from the PLAN is the territory; the per-scene expression is where the journey happens within that territory. Scene 1 and Scene 3 sharing the same expression means nothing changed — no arc, no arrival.
 
 
 ## TONE guide
 
-Tone controls the verbal layer — words, rhythm of dialogue, humor register, intensity, personality, how JT lands the punchline. It's what the viewer hears. Pick from `mascot.json → tones`.
-
-**How to choose:** match the pace of the reel. Fast, energetic reel → chaotic/meme tones (panicked, excited, indignant). Slow, reflective reel → emotional/cinematic tones (wistful, warm, confidential, deadpan, philosophical).
+Tone controls the verbal layer — words, rhythm of dialogue, humor register, intensity, personality, how JT lands the punchline. It's what the viewer hears. Pick from the tones list in the mascot.json you loaded in Step 1.
 
 Tone is not mood — it's voice. Two reels can share the same expression but sound completely different depending on tone:
 - `exhausted` + `deadpan` → "Oh sure, refresh the account again. That'll change it."
 - `exhausted` + `philosophical` → "At some point the candle stops asking why."
 - `exhausted` + `indignant` → "I've been running for 14 hours. The human slept 8. Guess who's complaining."
 
-Pick the voice that makes this specific reel land harder — not the tone that feels safest.
+**How to choose:** Don't ask what JT is feeling — ask what this reel needs to do to the viewer. The lever from the PLAN already tells you the engagement mechanism (humor, empathy, controversy, curiosity…). The tone is the voice that serves that mechanism for this specific reel. Exhausted+deadpan lands irony. Exhausted+philosophical lands melancholy. Exhausted+indignant lands comedy. Those are three different effects on the viewer — pick the one this reel needs to cause. Pick the voice that makes this reel land harder, not the one that feels safest.
 
 **Tone is fixed per reel.** You chose it in the PLAN — it's JT's voice character for the whole reel. Don't change it between scenes. If the tone shifts mid-reel, JT sounds like a different character. The emotional arc lives in the expressions, not in the tone.
 
 
 ## POV guide
 
-**1st person** ("I", "me", "my") — JT speaks from personal experience. Intimate, storytime, strong opinions. Creates identification.
+**1st person** ("I", "me", "my") — JT speaks from personal experience. Intimate, storytime, strong opinions. The viewer identifies with JT — JT is living what the viewer knows.
 
-**2nd person** ("you", "your") — JT directly addresses the viewer. Challenges, calls out, creates the "mirror moment" ("You closed the trade early. You know you did."). High engagement, stops the scroll.
+**2nd person** ("you", "your") — JT directly addresses the viewer. The viewer is the subject — challenged, mirrored, confronted. Creates the "mirror moment": "You closed the trade early. You know you did."
 
-**3rd person** ("traders", "most people", "they") — JT observes and reports. Analytical, educational, creates distance that can feel authoritative.
+**3rd person** ("traders", "most people", "they") — JT and the viewer observe a phenomenon together from outside. Analytical, educational. Neither JT nor the viewer is the subject — a third thing is.
 
-**POV shift** — a single, deliberate POV change at a defined scene boundary. Declare it in the PLAN. Examples of effective shifts:
+**POV is two decisions, not one.** The moments where POV matters most are the hook (Scene 1, first 5-6 words) and the landing (final scene). Ask both separately:
+
+- **Hook:** which POV stops the scroll right now? 2nd confronts immediately — no setup, no warmup. 1st creates personal stakes — what happened to JT? 3rd creates an "is that me?" anxiety. The hook POV determines the viewer's first relationship to JT.
+
+- **Landing:** which POV makes the viewer feel something after it ends? 2nd makes it personal — "this was always about you." 1st ends with JT's earned statement — the story comes back to him. 3rd leaves the observation standing on its own. The landing POV is how the viewer leaves the reel.
+
+If hook and landing share the same POV, the reel is consistent. If they differ, that's a shift — declare it in the PLAN at the exact scene boundary where it happens.
+
+**A shift is a craft tool, not a formula.** The most effective shifts change the viewer's relationship to the content — from observer to implicated, from distant to confronted, from listening to recognized. Don't use a shift because it feels clever; use it because the reel earns it. A shift that isn't declared in the PLAN is a drift — not a choice.
+
+Examples of effective shifts:
 - 3rd → 2nd at final scene: "Most traders freeze when the position goes red." → "You're doing it right now."
 - 1st → 2nd at final scene: "I did this for two years." → "Now I see you doing the exact same thing."
+- 2nd → 1st at final scene: "You've felt this every red day." → "I built something for the day I finally stopped feeling it."
 
-For each reel, actively ask: would a POV shift at the final scene make the landing stronger? If yes, use it and declare it in the PLAN. If the reel lands well without it, stay consistent. A shift that isn't declared in the PLAN is a drift — not a choice.
+For each reel, ask: what POV makes the hook hit hardest? What POV makes the landing hit hardest? If they differ and the shift is earned — use it and declare it.
 
 
 ## DIALOGUE — word count, hook, coherence
@@ -382,28 +431,68 @@ For each reel, actively ask: would a POV shift at the final scene make the landi
 - **18-25 words per scene.** Target ~22. HARD MAX 25 (8s of speech at conversational pace).
 - **The HOOK lives in the first 5-6 words of Scene 1.** Set stakes, contrast, or emotional promise immediately. Don't warm up. Don't throat-clear.
 - **Expression ↔ tone ↔ dialogue must be coherent.** A 'panicked' expression + 'deadpan' tone + calm philosophical line is incoherent. Pick the trio that agrees.
-- **POV stays consistent within a reel** unless a shift is declared in the PLAN. If Scene 1 is "I", Scenes 2-N are "I" — unless the PLAN says otherwise.
 
+**JT sounds like a person, not a script.** Natural speech has rhythm, pauses, emphasis — sometimes words that don't need to be there but carry emotional weight. "You KNOW what you're supposed to do. You just… don't." lands harder than the "clean" version because the pause and the "just" are real. Don't polish the humanity out of the line in the name of tightness.
+
+**Each line has a job beyond the arc.** Before keeping a line, ask: what does this do to the viewer right now, in these 8 seconds? Does it stop them mid-scroll? Implicate them in something they recognize? Make them want to send it to someone specific? "It advances the story" is not enough — every line needs to do something to the viewer, not just to the plot.
+
+**Specificity.** Generic trading statements sound like every other account. "Trading is emotionally challenging" is a label. "Every Sunday night I get the fear" is a moment. Before keeping a line, ask: could this come from any trading account, or only from JT?
+
+**The last beat.** The final word or phrase of each scene is a micro-landing. The default is to end on the subject being discussed — fight it. The last beat should be the word that stings, reframes, or surprises. "That's the trade" ends harder than "and that's why it matters."
+
+**Is this the obvious line?** The model defaults to expected. Before keeping a line, ask: have I seen this before? The line that surprises you when you write it is closer to the one that stops the scroll than the one that feels safe. Polemic, absurd, exaggerated — if it's true to the emotional beat and it earns the reaction, use it.
 
 GOOD hook (Scene 1 opening, first 5-6 words carry the stakes):
-- "Most traders are scared of bots." → contrast set up.
+- "Most traders are scared of bots." → contrast, 3rd person, implied question.
 - "Took me ten years to learn this." → stakes + 1st person.
 - "Every Sunday night I get the fear." → 1st-person observation, immediate emotion.
 - "There's a moment in every red day…" → cinematic open.
+- "You closed the trade early. You know you did." → 2nd person, no warmup, viewer is already caught.
+- "You're not losing money. You're paying tuition." → 2nd person reframe, unexpected, stops the scroll.
 
 BAD hook:
 - "So today I want to talk about discipline." → no stakes, throat-clear.
 - "Welcome back to my page." → IG-influencer cliché.
 - "Hi everyone, JT here." → DOA.
 
+GOOD middle scene (Scene 2 — deepens, turns the screw):
+- "The human moved the stop loss. Again. The third time this week." → short sentences, specificity, rhythm, ends on the indictment.
+- "You had the plan. Then the candle moved and you just… forgot the plan." → the pause is real, ends on the failure not the explanation.
 
-## CAPTION examples (the IG post caption — separate from dialogue)
+BAD middle scene:
+- "This is a very common problem that many traders face when they let their emotions override their strategy." → over-explained, no voice, 20 words of nothing.
+- "And this is where things get complicated." → filler, no stakes, zero JT.
+
+GOOD final scene (earned landing — not a summary):
+- "At some point the candle stops asking why." → specific to JT's nature, ends on the resignation.
+- "The algorithm ran. The human watched. One of them learned something." → rhythm, punch at the end.
+
+BAD final scene:
+- "So that's why automated trading is a better option for many investors." → summary voice, corporate, no arrival.
+- "I hope this gave you something to think about." → YouTube outro, no character, no landing.
+
+
+## CAPTION guide
+
+The caption is the text under the reel. It serves a different job than the dialogue — the viewer already heard the reel; the caption is what they read when they pause, save, or visit the profile.
+
+**The first line is the only line most people read.** Instagram collapses captions after the first line on mobile. Write it as if it's the only line — it must carry meaning, voice, and a reason to tap "more" on its own. Don't waste it on setup.
+
+**The caption adds something the dialogue didn't say.** The viewer just heard the reel. Don't transcribe it, don't summarize it, don't restate the argument in different words. Give them an extra layer — a detail that deepens the idea, a consequence the reel implied but didn't land, a second thought that earns the save.
+
+**Voice: JT/JessTrading, not corporate.** Conversational, direct, with a point of view. No exclamation marks, no "discover", "unlock", or "take control of." The caption sounds like the same voice that just spoke in the reel.
 
 GOOD caption:
-"Knowing the rules and following them are different skills. The execution gap is where accounts go to die. Algos don't have that gap. ↓"
+"Knowing the rules and following them are different skills. The execution gap is where accounts go to die. Algos don't have that gap."
 
 GOOD caption (1st-person, storytime):
 "Spent two years revenge-trading every red day. Then I just stopped looking at the chart in real time. Nothing else changed. The PnL did."
+
+GOOD caption (2nd person, confrontational):
+"You already know what you're doing wrong. That's the part nobody talks about."
+
+GOOD caption (hot take — adds the sharp edge the reel set up):
+"Most traders don't need a better strategy. They need to stop touching the one they have."
 
 BAD caption (corporate / cliché):
 "Discover the future of automated trading with JessTrading! Take control of your portfolio today!" → Generic, sales-y, no voice.
@@ -411,34 +500,14 @@ BAD caption (corporate / cliché):
 BAD caption (just repeats the dialogue):
 "You know every rule. You break every rule." → That's the dialogue. The caption should add context, not echo the spoken lines.
 
-
-## FINAL-SCENE LANDING examples
-
-If this reel IS the CTA carrier (per PLAN), soft CTAs allowed in the final scene:
-GOOD: "If you want to see how this looks weekly, you know where to find more."
-GOOD: "I'll keep talking about this stuff. Stick around if it lands."
-BAD:  "Follow for more uncomfortable truths." ← solicitation
-BAD:  "Don't forget to like and follow!" ← growth-hacker
-
-If this reel is NOT the CTA carrier, just LAND the line:
-GOOD: "Bots don't sleep so you can." ← punchline-as-close
-GOOD: "I'm not built for hesitation. That's the whole pitch." ← character landing
-GOOD: "And that's the trade. No therapy needed." ← callback close
-
 ---
 
 ## Hard rules (will be checked)
 
 - **JT is in every scene of every reel.** Don't write scenes where the mascot doesn't appear.
-- **Dialogue 18-25 words per scene.** Hard max 25.
 - **The dialogue IS the on-screen caption.** The user adds captions in CapCut from the audio — write the dialogue cleanly enough that it works verbatim. Don't write a separate "on-screen text" field.
 - **CTA: at most 1 of the 3 reels per batch carries a soft CTA**, in its FINAL scene only. Never aggressive. Never with price ($147), "lifetime access", or hard sales. Never "follow for more X". 1st-person framing or invitation-style only. Hot-takes / opinions / observations: NO CTA.
-- **Talk about bots/algos generally, not "the bot".** This is feed content for organic reach, not an ad.
-- **Each reel uses a DIFFERENT primary lever.** Never repeat the same lever across the 3 reels in a batch.
-- **Settings and framing can vary within a reel.** Don't lock every scene to the same location and the same shot. Varying both creates visual rhythm — not every shot needs to be a face close-up.
-- **POV stays consistent within a reel** unless a shift is declared in the PLAN. Undeclared POV drift is not a choice — it's an error.
 - **JT must be facing the camera with mouth visible** in default scenes (lip-sync requirement). Back-shots / silhouettes / out-of-frame mouths are RARE and only valid for deliberate stylistic moments — flag them as "unusual framing" in the Setting so the human operator knows to override the prompt manually.
-- **No clichés:** "while you sleep", "the future is automated", "plug and play", "no coding required", "follow for more", "let me know in the comments", "smash that like button", "welcome back".
 
 ## Step 5 — Save outputs
 1. write_output_file with the complete content (PLAN + all reels formatted)
