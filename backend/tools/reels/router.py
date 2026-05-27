@@ -148,6 +148,7 @@ async def animate_scene_endpoint(body: AnimateSceneRequest):
             date, reel.slug, body.scene_number, body.version,
             body.dialogue, body.animation_hint, body.tone_id,
             body.aspect_ratio, body.prompt_override, body.auto_fix,
+            body.no_subtitles,
         )
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

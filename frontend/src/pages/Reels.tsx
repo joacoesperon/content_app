@@ -99,6 +99,7 @@ interface SceneFormState {
   videoPromptOverride: string;  // empty = use auto-built; non-empty = override sent to Veo
   // toggle for the auto_fix Veo flag (E2)
   autoFix: boolean;
+  noSubtitles: boolean;
   // originals (so we can reset)
   originalSetting: string;
   originalExpression: string;
@@ -127,6 +128,7 @@ function initialSceneState(s: ReelBrief['scenes'][number]): SceneFormState {
     imagePromptOverride: '',
     videoPromptOverride: '',
     autoFix: true,
+    noSubtitles: true,
     originalSetting: s.setting,
     originalExpression: s.expression,
     originalToneId: s.tone_id,
@@ -454,6 +456,16 @@ function SceneCard({
         <span>Veo auto_fix (rewrites prompt to dodge moderation; turn off if you want exact prompt)</span>
       </label>
 
+      <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+        <input
+          type="checkbox"
+          checked={scene.noSubtitles}
+          onChange={(e) => onChange({ noSubtitles: e.target.checked })}
+          className="h-3 w-3"
+        />
+        <span>No subtitles/captions in video (prevents Veo from generating text overlays)</span>
+      </label>
+
       <div className="grid grid-cols-2 gap-2">
         <Button onClick={onGenerateImage} disabled={imageJobInFlight} size="sm" variant={hasImage ? 'outline' : 'default'}>
           {imageJobInFlight ? (
@@ -607,6 +619,7 @@ function ReelEditor({
     reel.scenes.map(initialSceneState),
   );
   const [hashtags, setHashtags] = useState(reel.hashtags);
+  const [caption, setCaption] = useState(reel.caption ?? '');
   const [finalUrl, setFinalUrl] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
   const [mascotRefs, setMascotRefs] = useState<MascotRef[]>([]);
@@ -635,8 +648,9 @@ function ReelEditor({
   useEffect(() => {
     setScenes(reel.scenes.map(initialSceneState));
     setHashtags(reel.hashtags);
+    setCaption(reel.caption ?? '');
     setFinalUrl(null);
-  }, [reel.number, reel.slug, reel.hashtags, reel.scenes]);
+  }, [reel.number, reel.slug, reel.hashtags, reel.scenes, reel.caption]);
 
   // hydrate saved versions from disk
   useEffect(() => {
@@ -757,6 +771,7 @@ function ReelEditor({
         aspect_ratio: scene.aspectRatio,
         prompt_override: scene.videoPromptOverride || null,
         auto_fix: scene.autoFix,
+        no_subtitles: scene.noSubtitles,
         reel_slug: reel.slug,
       },
       (res) => {
@@ -833,7 +848,7 @@ function ReelEditor({
   };
 
   const openPublish = () => {
-    const defaultCaption = (reel.concept + (hashtags ? `\n\n${hashtags}` : '')).trim();
+    const defaultCaption = (caption + (hashtags ? `\n\n${hashtags}` : '')).trim();
     setPublishCaption(defaultCaption);
     setPublishScheduled('');
     setPublishOpen(true);
@@ -859,7 +874,7 @@ function ReelEditor({
   };
 
   const copyCaptionAndHashtags = () => {
-    const text = (reel.concept + (hashtags ? `\n\n${hashtags}` : '')).trim();
+    const text = (caption + (hashtags ? `\n\n${hashtags}` : '')).trim();
     navigator.clipboard.writeText(text);
     toast.success('Caption + hashtags copied');
   };
@@ -906,6 +921,17 @@ function ReelEditor({
           <p className="text-sm mt-1">{reel.concept}</p>
         </div>
 
+        <div>
+          <Label className="text-xs text-muted-foreground">Caption</Label>
+          <Textarea
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            rows={3}
+            className="text-xs mt-1"
+            placeholder="Instagram caption..."
+          />
+        </div>
+
         {reel.voice_direction && (
           <div>
             <Label className="text-xs text-muted-foreground">Voice direction</Label>
@@ -926,7 +952,7 @@ function ReelEditor({
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={copyCaptionAndHashtags}>
             <Copy size={14} className="mr-2" />
-            Copy concept + hashtags
+            Copy caption + hashtags
           </Button>
           {someGenerated && (
             <Button size="sm" variant="outline" onClick={renderFinal} disabled={rendering || !allHaveVideo}>

@@ -791,6 +791,7 @@ export async function animateReelScene(payload: {
   aspect_ratio: string;
   prompt_override?: string | null;
   auto_fix?: boolean;
+  no_subtitles?: boolean;
 }): Promise<ReelSceneResult> {
   const res = await fetch(`${REELS}/animate-scene`, {
     method: 'POST',

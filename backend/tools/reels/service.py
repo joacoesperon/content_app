@@ -154,7 +154,7 @@ def _build_image_prompt(scene_setting: str, expression: str, extra: str = "") ->
     return " ".join(b for b in bits if b)
 
 
-def _build_video_prompt(dialogue: str, animation_hint: str, tone_id: str, tones_meta: list[dict]) -> str:
+def _build_video_prompt(dialogue: str, animation_hint: str, tone_id: str, tones_meta: list[dict], no_subtitles: bool = True) -> str:
     tone_desc = next(
         (t.get("label", "") + " — " + t.get("use_when", "") for t in tones_meta if isinstance(t, dict) and t.get("id") == tone_id),
         tone_id or "",
@@ -167,13 +167,18 @@ def _build_video_prompt(dialogue: str, animation_hint: str, tone_id: str, tones_
         bits.append(f"The character speaks the line: \"{dialogue.strip()}\"")
     if tone_desc:
         bits.append(f"Voice tone: {tone_desc}")
-    bits.append(
+    closing = (
         "Lip-sync is critical: the character's mouth movements must clearly match the spoken dialogue. "
         "Subtle natural body movement. The character remains the focal point. "
-        "Do NOT add subtitles, captions, lower-third text, watermarks, or any text overlay on top of the video. "
-        "Existing in-scene text already in the starting image (signs, screens, sticky notes) must be preserved. "
         "9:16 vertical."
     )
+    if no_subtitles:
+        closing = (
+            "Do NOT add subtitles, captions, lower-third text, or caption overlays on the video. "
+            "Existing in-scene text in the starting image (signs, screens, sticky notes) must be preserved. "
+            + closing
+        )
+    bits.append(closing)
     return " ".join(bits)
 
 
@@ -229,6 +234,7 @@ def generate_scene_video(
     video_prompt: str,
     aspect_ratio: str = "9:16",
     auto_fix: bool = True,
+    no_subtitles: bool = True,
 ) -> bytes:
     """Call veo3.1 fast image-to-video with the generated scene image as start frame."""
     image_url = fal_client.upload_file(str(scene_image_path))
@@ -237,7 +243,7 @@ def generate_scene_video(
     arguments = {
         "image_url": image_url,
         "prompt": video_prompt,
-        "negative_prompt": VEO_NEGATIVE_PROMPT,
+        "negative_prompt": VEO_NEGATIVE_PROMPT if no_subtitles else "",
         "duration": "8s",
         "aspect_ratio": veo_aspect,
         "resolution": "720p",
@@ -615,6 +621,7 @@ def animate_scene_version_step(
     aspect_ratio: str,
     prompt_override: Optional[str] = None,
     auto_fix: bool = True,
+    no_subtitles: bool = True,
 ) -> dict:
     """Step 2: animate an existing image version. Reads scene_NN_vM.png from disk and calls Veo i2v.
     If prompt_override is provided, it bypasses the auto-built prompt entirely."""
@@ -636,9 +643,9 @@ def animate_scene_version_step(
 
     _, tones = get_mascot_context()
     video_prompt = (prompt_override or "").strip() or _build_video_prompt(
-        dialogue, animation_hint, tone_id, tones
+        dialogue, animation_hint, tone_id, tones, no_subtitles
     )
-    vid_bytes = generate_scene_video(img_path, video_prompt, aspect_ratio, auto_fix=auto_fix)
+    vid_bytes = generate_scene_video(img_path, video_prompt, aspect_ratio, auto_fix=auto_fix, no_subtitles=no_subtitles)
 
     return add_video_to_version(
         date, reel_slug, scene_number, version,

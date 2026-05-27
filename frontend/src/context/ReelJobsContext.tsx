@@ -32,6 +32,7 @@ export interface AnimateArgs {
   aspect_ratio: string;
   prompt_override?: string | null;
   auto_fix?: boolean;
+  no_subtitles?: boolean;
   reel_slug: string;  // for keying
 }
 
@@ -140,6 +141,7 @@ export function ReelJobsProvider({ children }: { children: ReactNode }) {
         aspect_ratio: args.aspect_ratio,
         prompt_override: args.prompt_override ?? null,
         auto_fix: args.auto_fix ?? true,
+        no_subtitles: args.no_subtitles ?? true,
       }), onDone);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

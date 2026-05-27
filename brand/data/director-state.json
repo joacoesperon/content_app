@@ -1,11 +1,11 @@
 {
-  "last_run": "2026-05-26",
-  "last_slot3": "hot_take",
+  "last_run": "2026-05-27",
+  "last_slot3": "algo_automation",
   "last_concepts": [
-    "market_reaction: ASTS space stock parabolic — rode the vertical, caught the top, now holding the bag with post-nut clarity",
-    "educational: Loss aversion — why traders hold losing positions too long and cut winning positions too early — the brain weights losses 2x more than equivalent gains",
-    "hot_take: Your psychology is not the problem — your strategy has no edge — stop blaming your brain and fix the setup"
+    "market_reaction: Micron (MU) +19% from UBS analyst tripling price target ($535 → $1,625) — one spreadsheet update adds $100B in market cap before noon — how market value actually gets created",
+    "educational: Win rate vs. Expectancy — 65% win rate still loses money when average loss is 4× average win — the wrong number traders track after every trade",
+    "algo_automation: Drawdown duration vs. depth — JT as the algo running 7 weeks inside parameters while the human who built him slowly loses faith not because the system broke but because uncertainty is hard to hold"
   ],
-  "last_levers": ["humor", "education", "controversy"],
-  "last_tones": ["deadpan", "confidential", "indignant"]
+  "last_levers": ["curiosity", "relatability", "empathy"],
+  "last_tones": ["smug", "warm", "philosophical"]
 }

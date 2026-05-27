@@ -86,6 +86,7 @@ class AnimateSceneRequest(BaseModel):
     aspect_ratio: str = "9:16"
     prompt_override: Optional[str] = None  # if set, replaces the auto-built video prompt entirely
     auto_fix: bool = True
+    no_subtitles: bool = True  # adds "no captions/subtitles" instruction to Veo prompt
 
 
 class PreviewImagePromptRequest(BaseModel):
