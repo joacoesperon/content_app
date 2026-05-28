@@ -138,9 +138,9 @@ PLAN:
 - Research insight 1: [thread title, subreddit, upvotes, the specific quote/pattern]
 - Research insight 2: [optional second insight, same format]
 - Reel assignments:
-  Reel 1: Type: market_reaction — Lever: [lever] — POV: [1st / 2nd / 3rd, or "Xst→Ynd shift at Scene N"] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [the specific event] — Hook: [what Scene 1 looks like visually + first 5-6 words of JT's dialogue] — Scenes: [N] — Continuation: [none / S2: yes / S2: yes, S3: yes]
-  Reel 2: Type: educational — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [the concept to explain] — Hook: [visual + first words] — Scenes: [N] — Continuation: [none / S2: yes / S2: yes, S3: yes]
-  Reel 3: Type: [slot 3 type] — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [concept / situation / take] — Hook: [visual + first words] — Scenes: [N] — Continuation: [none / S2: yes / S2: yes, S3: yes]
+  Reel 1: Type: market_reaction — Lever: [lever] — POV: [1st / 2nd / 3rd, or "Xst→Ynd shift at Scene N"] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [the specific event] — Hook: [what Scene 1 looks like visually + first 5-6 words of JT's dialogue] — Scenes: [N] — Continuation: [S2: yes/no, S3: yes/no — same location = yes, location change = no]
+  Reel 2: Type: educational — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [the concept to explain] — Hook: [visual + first words] — Scenes: [N] — Continuation: [S2: yes/no, S3: yes/no — same location = yes, location change = no]
+  Reel 3: Type: [slot 3 type] — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [concept / situation / take] — Hook: [visual + first words] — Scenes: [N] — Continuation: [S2: yes/no, S3: yes/no — same location = yes, location change = no]
 - CTA carrier: [Reel N or "none this batch"] — at most ONE of the three reels may carry a soft CTA, in its FINAL scene. Pick the reel where the CTA fits naturally (educational / storytime cierre). Hot-takes, opinions, observations: NO CTA. If nothing fits, choose "none this batch".
 - Lever check: are all reels using DIFFERENT levers? [yes/no — if no, replan]
 - Lever history check: do any levers in this batch repeat from `director-state.json → last_levers`? [list repeats — if any, replace unless no other option]
@@ -148,7 +148,7 @@ PLAN:
 - Angle check: for each reel, what's the non-obvious entry point on this topic? Most trading accounts would lead with [X] — JT's version leads with [what instead]? [answer per reel — if still generic, find a different angle before writing]
 - Emotion+Tone check: are all 3 reels using DIFFERENT emotion+tone combinations? Are any tones repeating from `director-state.json → last_tones`? [yes/no — replace repeats if possible]
 - Emotional arc check: does each reel have a clear expression progression across scenes (e.g. confused → panicked → resigned, smug → shocked → contemplative, excited → exhausted → determined) rather than the same expression repeated? [describe the arc per reel using mascot.json expression names]
-- Continuation check: for each reel with 2+ scenes, decide per transition whether Scene N uses continuation (Veo extend-video — video picks up from the last frame of Scene N-1) or fresh I2V. Ask per transition: (1) does Scene N pick up from the exact moment Scene N-1 ended, not a new beat? (2) would a visual cut reset an emotional build that should stay unbroken? (3) is JT in the middle of a physical state — gesture, wick position, body weight — that Scene N inherits directly? A "yes" to any of these is a signal for continuation. A new setting, a new emotional beat, or a deliberate visual reset is a signal for I2V. Scene 1 is always I2V. No default — each transition earns its own decision. Record per reel with one-line reason per transition.
+- Continuation check: the rule is location-based. Same location as the previous scene → Continuation: true. Different location → Continuation: false. Scene 1 is always false. That is the whole decision. Prop changes, physical state changes, emotional arc shifts, notebook filling up, time passing — none of these trigger I2V; they all happen within the continuation video via the animation hint. The only trigger for I2V is a genuine location change. Note: do not bias the story toward keeping the same location just to use continuation — if the narrative earns a new location, use it. But if the story lives in one place, the reel flows as one continuous video. Record per reel: [S2: yes/no, S3: yes/no].
 - POV check: any declared shifts are intentional and at a single scene boundary? [yes/no]
 
 ## Step 4 — Generate the reels (follow the PLAN exactly)
@@ -256,7 +256,9 @@ GOOD (same scene, same location — fully re-described from scratch):
 
 ## CONTINUATION guide
 
-**When `Continuation: false` (default — I2V):** Veo receives the still image generated from the Setting field as its starting frame. Scene 1 is always false.
+**Decision rule — location-based:** Same location as the previous scene → `Continuation: true`. Different location → `Continuation: false`. That is the entire decision. Prop changes, body state changes, emotional transitions, time passing — these are not reasons to use I2V. They happen inside the continuation video via the animation hint. The only trigger for I2V is a location change.
+
+**When `Continuation: false` (I2V):** Veo receives the still image generated from the Setting field as its starting frame. Scene 1 is always false.
 
 **Critical — false after true:** If Scene N is `Continuation: false` and Scene N-1 was `Continuation: true`, Scene N's Setting must be fully self-contained more carefully than ever. Scene N-1 produced no still image — there is nothing for the image model to inherit. The image model for Scene N sees only its Setting prompt and the JT reference image. It has zero knowledge of Scene N-1's visual state. Write the full scene from scratch: location, lighting, camera framing, JT's physical state, everything. "Same X" is not allowed here.
 

@@ -1,11 +1,11 @@
 {
   "last_run": "2026-05-28",
-  "last_slot3": "trader_psychology",
+  "last_slot3": "hot_take",
   "last_concepts": [
-    "market_reaction: NVIDIA 'largely conceded' China's AI chip market to Huawei while NVDA trades near all-time highs — the market's indifference to the concession is the story",
-    "educational: Active traders underperform the SPY — the gap is not strategy quality but behavioral friction (early exits, revenge trades, FOMO entries) — the index has no behaviors, that's its edge",
-    "trader_psychology: Sunday night fear — 9pm, charts closed, nothing in the news, and JT's wick is already flickering — the anxiety is conditioned and arrives before the trader decides to worry"
+    "market_reaction: Taiwan overtakes India as world's 5th-largest stock market — TSMC is ~60% of the entire Taiwan index, meaning one semiconductor company effectively holds up a nation's equity market and just became visible to global macro investors",
+    "educational: Win rate is the wrong metric — risk/reward ratio determines profitability. You can win 60% and lose money if losses outpace wins; win 40% with 2% risk and 6% target and you're still growing",
+    "hot_take: The trading mentor and course industry is the most consistently profitable 'trading strategy' in existence — not for students, for the mentors. Revenue is tuition, not alpha"
   ],
-  "last_levers": ["curiosity", "empathy", "relatability"],
-  "last_tones": ["smug", "warm", "wistful"]
+  "last_levers": ["humor", "education", "controversy"],
+  "last_tones": ["deadpan", "confidential", "indignant"]
 }
