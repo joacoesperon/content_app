@@ -14,6 +14,7 @@ class SceneBrief(BaseModel):
     tone_id: str
     dialogue: str
     animation_hint: str
+    continuation: bool = False
 
 
 class ReelBrief(BaseModel):
@@ -54,6 +55,8 @@ class SceneVersion(BaseModel):
     refs_used: list[str] = []
     aspect_ratio: str = ""
     generated_at: str = ""
+    fal_video_url: Optional[str] = None
+    continuation: bool = False
 
 
 class SceneInfo(BaseModel):
@@ -79,7 +82,7 @@ class AnimateSceneRequest(BaseModel):
     filename: str
     reel_number: int
     scene_number: int
-    version: int
+    version: Optional[int] = None  # None = continuation mode (no pre-existing image version)
     dialogue: str
     animation_hint: str
     tone_id: str
@@ -87,6 +90,7 @@ class AnimateSceneRequest(BaseModel):
     prompt_override: Optional[str] = None  # if set, replaces the auto-built video prompt entirely
     auto_fix: bool = True
     no_subtitles: bool = True  # adds "no captions/subtitles" instruction to Veo prompt
+    source_video_url: Optional[str] = None  # if set, extend this FAL video URL instead of doing I2V
 
 
 class PreviewImagePromptRequest(BaseModel):

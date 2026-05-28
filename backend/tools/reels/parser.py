@@ -35,6 +35,7 @@ class Scene:
     tone_id: str
     dialogue: str
     animation_hint: str
+    continuation: bool = False
 
 
 @dataclass
@@ -125,6 +126,7 @@ def _extract_scenes(body: str) -> list[Scene]:
             tone_id=_extract_field(scene_body, r"Tone"),
             dialogue=_extract_field(scene_body, "Dialogue"),
             animation_hint=_extract_field(scene_body, r"Animation"),
+            continuation=_extract_field(scene_body, "Continuation").strip().lower() in ("true", "yes"),
         ))
     scenes.sort(key=lambda s: s.number)
     return scenes

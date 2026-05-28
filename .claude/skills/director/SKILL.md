@@ -186,9 +186,9 @@ PLAN:
 - Research insight 1: [thread title, subreddit, upvotes, the specific quote/pattern]
 - Research insight 2: [optional second insight, same format]
 - Reel assignments:
-  Reel 1: Type: market_reaction — Lever: [lever] — POV: [1st / 2nd / 3rd, or "Xst→Ynd shift at Scene N"] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [the specific event] — Hook: [what Scene 1 looks like visually + first 5-6 words of JT's dialogue] — Scenes: [N]
-  Reel 2: Type: educational — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [the concept to explain] — Hook: [visual + first words] — Scenes: [N]
-  Reel 3: Type: [slot 3 type] — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [concept / situation / take] — Hook: [visual + first words] — Scenes: [N]
+  Reel 1: Type: market_reaction — Lever: [lever] — POV: [1st / 2nd / 3rd, or "Xst→Ynd shift at Scene N"] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [the specific event] — Hook: [what Scene 1 looks like visually + first 5-6 words of JT's dialogue] — Scenes: [N] — Continuation: [none / S2: yes / S2: yes, S3: yes]
+  Reel 2: Type: educational — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [the concept to explain] — Hook: [visual + first words] — Scenes: [N] — Continuation: [none / S2: yes / S2: yes, S3: yes]
+  Reel 3: Type: [slot 3 type] — Lever: [lever] — POV: [1st / 2nd / 3rd, or shift] — Emotion: [dominant emotion] + Tone: [delivery tone] — Topic: [concept / situation / take] — Hook: [visual + first words] — Scenes: [N] — Continuation: [none / S2: yes / S2: yes, S3: yes]
 - CTA carrier: [Reel N or "none this batch"] — at most ONE of the three reels may carry a soft CTA, in its FINAL scene. Pick the reel where the CTA fits naturally (educational / storytime cierre). Hot-takes, opinions, observations: NO CTA. If nothing fits, choose "none this batch".
 - Lever check: are all reels using DIFFERENT levers? [yes/no — if no, replan]
 - Lever history check: do any levers in this batch repeat from `director-state.json → last_levers`? [list repeats — if any, replace unless no other option]
@@ -196,14 +196,16 @@ PLAN:
 - Angle check: for each reel, what's the non-obvious entry point on this topic? Most trading accounts would lead with [X] — JT's version leads with [what instead]? [answer per reel — if still generic, find a different angle before writing]
 - Emotion+Tone check: are all 3 reels using DIFFERENT emotion+tone combinations? Are any tones repeating from `director-state.json → last_tones`? [yes/no — replace repeats if possible]
 - Emotional arc check: does each reel have a clear expression progression across scenes (e.g. confused → panicked → resigned, smug → shocked → contemplative, excited → exhausted → determined) rather than the same expression repeated? [describe the arc per reel using mascot.json expression names]
+- Continuation check: for each reel with 2+ scenes, decide per transition whether Scene N uses continuation (Veo extend-video — video picks up from the last frame of Scene N-1) or fresh I2V. Ask per transition: (1) does Scene N pick up from the exact moment Scene N-1 ended, not a new beat? (2) would a visual cut reset an emotional build that should stay unbroken? (3) is JT in the middle of a physical state — gesture, wick position, body weight — that Scene N inherits directly? A "yes" to any of these is a signal for continuation. A new setting, a new emotional beat, or a deliberate visual reset is a signal for I2V. Scene 1 is always I2V. No default — each transition earns its own decision. Record per reel with one-line reason per transition.
 - POV check: any declared shifts are intentional and at a single scene boundary? [yes/no]
 
 ## Step 4 — Generate the reels (follow the PLAN exactly)
 
 **Each scene is an integrated unit — the fields are connected layers, not independent descriptions.**
 
-- **Setting** generates the image sent to nano-banana. Everything visible in the scene lives there.
-- **Animation** is an I2V prompt — Veo receives that image. Direct what **changes** across 8 seconds. Don't redescribe what the image already shows.
+- **Continuation** sets the scene mode — `false` (default): standard I2V, Veo starts from a new still image. `true`: Veo extend-video, starts from the last frame of the previous scene's video. Declared per scene, decided in the PLAN. See CONTINUATION guide — it changes how Setting and Animation are written.
+- **Setting** generates the image sent to nano-banana. Everything visible in the scene lives there. *(Exception: when Continuation: true, see CONTINUATION guide.)*
+- **Animation** is an I2V prompt — Veo receives that image. Direct what **changes** across 8 seconds. Don't redescribe what the image already shows. *(Exception: when Continuation: true, see CONTINUATION guide.)*
 - **Expression** establishes the emotional state — Animation shows how it manifests in motion, doesn't restate it.
 - **Tone** sets the voice character — Animation voice delivery inherits it, doesn't re-establish it.
 - **Dialogue** carries the exact words — Animation closes with them verbatim.
@@ -222,6 +224,7 @@ Write each field knowing what the others already contribute. Add your layer — 
 **Total length:** [N×8s, e.g. 24s (3 scenes × 8s)]
 
 #### Scene 1 (0:00–0:08)
+**Continuation:** false
 **Before writing this scene:** the first frame is the scroll-stopper — before audio, before motion, before JT speaks. Ask: if a viewer sees only this still image with no context, do they stop? The dialogue hook lives in the first 5-6 words; the visual hook lives at 0:00. The Setting and Animation of Scene 1 carry both — write them with that weight.
 **Setting:** [Complete visual description sent to nano-banana-2/edit. Use the SETTING guide below.]
 **Mascot expression:** [pick from mascot.json → expressions — see EXPRESSION guide below]
@@ -230,10 +233,12 @@ Write each field knowing what the others already contribute. Add your layer — 
 **Animation:** [Complete Veo prompt — see the ANIMATION guide. Cover all five layers: camera, JT body, candle physics, world motion, audio. Close with the voice delivery line: `JT says in a [tone] voice, "[exact dialogue text]"`]
 
 #### Scene 2 (0:08–0:16)
-[same fields. For each transition, actively ask: does this scene need a different setting or framing to serve the reel? A location shift that marks a new emotional beat or adds contrast — use it. If the story works in one place — stay. An unmotivated change is noise, not craft. Expression evolves as the arc demands — tone stays consistent. See SETTING, ANIMATION, EXPRESSION, and TONE guides for inter-scene guidance.]
+**Continuation:** [true / false — from your PLAN continuation decision. If true: Setting and Animation follow the CONTINUATION guide, not the standard rules.]
+[same remaining fields. For each transition, actively ask: does this scene need a different setting or framing to serve the reel? A location shift that marks a new emotional beat or adds contrast — use it. If the story works in one place — stay. An unmotivated change is noise, not craft. Expression evolves as the arc demands — tone stays consistent. See SETTING, ANIMATION, EXPRESSION, TONE, and CONTINUATION guides for inter-scene guidance.]
 
 #### Scene N — final (last 8s)
-[same fields. This scene must earn the viewer's completion — they watched this far, deliver the arrival. The emotional arc lands here. Don't trail off, don't repeat what was already said, don't give a generic close. The reel has been building to something — this is where it arrives. If this reel is the CTA carrier per the PLAN, the soft CTA may live here — after the payoff, never instead of it. No "follow for more X". No "smash that like button".
+**Continuation:** [true / false — from your PLAN continuation decision.]
+[same remaining fields. This scene must earn the viewer's completion — they watched this far, deliver the arrival. The emotional arc lands here. Don't trail off, don't repeat what was already said, don't give a generic close. The reel has been building to something — this is where it arrives. If this reel is the CTA carrier per the PLAN, the soft CTA may live here — after the payoff, never instead of it. No "follow for more X". No "smash that like button".
 
 Before writing Setting and Animation: verify that JT's physical position, scale, and body state reinforce the landing tone. A smug or indignant landing needs JT physically large and positioned with authority — on a high surface, filling the frame, standing upright. A philosophical or resigned landing can afford JT smaller, more contained. If JT's physical state contradicts the tone of the landing, fix the Setting first.]
 
@@ -245,7 +250,7 @@ The setting is not decoration — it is the emotional state made physical. Befor
 
 **This is an edit prompt sent to nano-banana with a JT reference image.** The model already knows what JT looks like — the reference handles his visual character. The setting prompt directs two things: the environment JT is placed in, and how JT exists within it (physical state, posture, candle physics, interaction with the space). Don't describe JT's base appearance — it's in the reference. Describe where he is and what state he's in.
 
-**Each setting prompt is fully self-contained.** The image model has no memory of previous scenes — it receives only the JT reference image and this prompt. Never write "same setting as Scene 1", "back at the desk", "same home office", or any reference to what came before. If JT stays in the same location across scenes, redescribe the full environment each time — every element that should persist (lighting, props, camera angle, JT's physical state) must be re-stated explicitly. Continuity comes from consistent description, not from references to prior scenes.
+**Each setting prompt is fully self-contained** (when `Continuation: false`). The image model has no memory of previous scenes — it receives only the JT reference image and this prompt. **The word "same" is prohibited in any Continuation: false Setting** — for any element, in any form: "same room", "same desk", "same lighting", "same office". If the location hasn't changed narratively, re-describe the full environment as if writing it for the first time. Every element that should persist — lighting, props, camera angle, JT's physical state — must be re-stated explicitly. Continuity comes from consistent re-description, not from the word "same".
 
 Start every scene's Setting prompt with the image's purpose — "Instagram Reel about trader exhaustion after a losing week" — before describing the scene. This applies to every scene in the reel, not just Scene 1. This single line shifts how nano-banana interprets everything that follows: the emotional register, the weight of the composition, the kind of detail it selects.
 
@@ -290,12 +295,52 @@ BAD setting (adjectives without a scene):
 BAD setting (environment exists, JT doesn't):
 "A trading floor at night with monitors showing financial data. JT stands in the center." → The environment is there but JT has no physicality. What is his body doing? What is his wick doing? What are his arms doing? How does the expression manifest in his posture? He is a label on a scene, not a character who lives in it.
 
+BAD setting ("same" shorthand — the most common Scene 2/3 failure):
+"Same financial research office, same midday cool light. JT has rotated toward the pie chart, right arm extended pointing at the TSMC segment." → The image model has no memory of Scene 1's financial research office. "Same" describes nothing — the model receives only the JT reference image, not any prior scene. Everything about the room must be guessed, producing an inconsistent render.
+
+GOOD (same scene, same location — fully re-described from scratch):
+"Instagram Reel about TSMC's dominance of Taiwan's equity market. Financial research office, midday, cool overhead LED light, clean white walls. A large wall-mounted widescreen monitor shows a TSMC market-cap pie chart — one enormous segment labeled 'TSMC (68%)' dominating the display, small labeled slivers crowding the edge. JT stands at a low standing desk, body angled toward the chart, right arm raised with index finger extended toward the TSMC segment. His expression is contemplative. His wick burns at a straight, deliberate height. Camera: medium-tight, eye level, JT right-of-center with the pie chart taking up the left two-thirds of the frame." → The room, the light, the monitor content, JT's position — all re-stated. The image model has everything it needs without having seen Scene 1.
+
+
+## CONTINUATION guide
+
+**When `Continuation: false` (default — I2V):** Veo receives the still image generated from the Setting field as its starting frame. Scene 1 is always false.
+
+**Critical — false after true:** If Scene N is `Continuation: false` and Scene N-1 was `Continuation: true`, Scene N's Setting must be fully self-contained more carefully than ever. Scene N-1 produced no still image — there is nothing for the image model to inherit. The image model for Scene N sees only its Setting prompt and the JT reference image. It has zero knowledge of Scene N-1's visual state. Write the full scene from scratch: location, lighting, camera framing, JT's physical state, everything. "Same X" is not allowed here.
+
+**When `Continuation: true` (extend-video):** Veo receives the last frame of Scene N-1's video as its starting frame — no new image is used for the video. Visual continuity is preserved exactly from where the previous scene ended. This changes two fields:
+
+**Setting in continuation mode:** The Setting is not used for video generation. It may be used to generate an optional reference image, but it will not affect the video. Write a brief descriptor of what continues or changes — not a full self-contained scene setup:
+
+*"JT remains at the desk from Scene 1, same 3am session — a beat later. His left arm is still raised as Scene 1 ended it."*
+
+The self-contained description rule does NOT apply here. The point is continuity, not independence. If nothing meaningfully changes visually, write: `"Continuation from Scene N-1 — no new image needed."` and move on.
+
+**Animation in continuation mode:** This is NOT an I2V prompt. Do not re-establish camera position, JT's location, the environment, or JT's starting body state — all of that is inherited from the last frame of Scene N-1. Write what CONTINUES or CHANGES from that frame:
+
+- **Camera:** start from where Scene N-1 ended. Reference it: *"Continuing from Scene 1's slow push-in, which ended at medium-tight — hold, then very slow pull-back."*
+- **JT's body:** what does JT do NEXT? The gesture that was forming in Scene N-1 — does it complete, reverse, land?
+- **Candle physics:** what new events occur? Scene N-1's wax drop has already happened — write what comes next.
+- **World:** what changes from Scene N-1's final frame?
+- **Audio:** the soundscape is continuous — describe how it evolves, not what it is from scratch.
+
+All five animation layers still apply — you're describing continuation, not initiation.
+
+GOOD continuation animation:
+*"Continuing from Scene 1's close-up hold: JT's left arm — raised at Scene 1's end — drops decisively, palm flat on the desk. The wick, which was bending left, snaps upright. A second wax drop forms immediately below where Scene 1's drop solidified and begins sliding. The monitor ticks down one more bar. Camera holds — no movement. Ambient noise: same computer fan hum, unbroken. SFX: JT's palm hits the desk surface mid-scene, a dry flat sound. JT says in a deadpan voice, '[dialogue]'"*
+
+BAD continuation animation (re-establishes scene as if I2V):
+*"Camera at medium-tight framing. JT stands at his desk, body pitched slightly forward, wick bending left."* → Everything here was already set at Scene 1's end. A continuation prompt writes what changes from that state, not what that state is.
+
+---
 
 ## ANIMATION guide
 
 Veo 3.1 Fast is a motion engine. Every frame after the first is animation — what happens across those 8 seconds is the reel. Stillness is a rare, earned choice, never the default. If JT doesn't move, the world does. If neither moves, the reel is dead and the viewer scrolls past in three seconds. Before writing animation, ask: what is happening in this scene that demands these 8 seconds of motion exist? If the answer is "nothing," the scene is wrong.
 
-**This is an I2V prompt.** Veo receives the image generated from the Setting field — the environment, JT's position, lighting, and composition are already there. The animation prompt directs what **changes** across 8 seconds, not what **is**. If the Setting established a red chart on the monitor, don't write "a red chart on the monitor" in the animation — write what it does: "the red chart ticks down one new bar mid-sentence." Every line of the animation block should describe motion, not existence.
+**This is an I2V prompt** (when `Continuation: false`). Veo receives the image generated from the Setting field — the environment, JT's position, lighting, and composition are already there. The animation prompt directs what **changes** across 8 seconds, not what **is**. If the Setting established a red chart on the monitor, don't write "a red chart on the monitor" in the animation — write what it does: "the red chart ticks down one new bar mid-sentence." Every line of the animation block should describe motion, not existence.
+
+**When `Continuation: true`:** this is a video extension prompt — see CONTINUATION guide above. The rules flip: don't re-establish what already exists, write what continues or changes from Scene N-1's last frame.
 
 The animation is built from five layers. Cover all five — they work together. A scene with strong camera motion but a dead JT, or a strong JT but a frozen world, or a complete visual scene with no audio direction, lands incomplete.
 

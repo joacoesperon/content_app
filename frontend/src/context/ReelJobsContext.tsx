@@ -25,7 +25,7 @@ export interface AnimateArgs {
   filename: string;
   reel_number: number;
   scene_number: number;
-  version: number;
+  version: number | null;  // null = continuation mode
   dialogue: string;
   animation_hint: string;
   tone_id: string;
@@ -33,6 +33,7 @@ export interface AnimateArgs {
   prompt_override?: string | null;
   auto_fix?: boolean;
   no_subtitles?: boolean;
+  source_video_url?: string | null;
   reel_slug: string;  // for keying
 }
 
@@ -142,6 +143,7 @@ export function ReelJobsProvider({ children }: { children: ReactNode }) {
         prompt_override: args.prompt_override ?? null,
         auto_fix: args.auto_fix ?? true,
         no_subtitles: args.no_subtitles ?? true,
+        source_video_url: args.source_video_url ?? null,
       }), onDone);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

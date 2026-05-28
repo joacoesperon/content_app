@@ -54,6 +54,7 @@ DIRECTOR_DIR = OUTPUTS_DIR / "director"
 
 IMAGE_EDIT_MODEL = "fal-ai/nano-banana-2/edit"
 VIDEO_MODEL = "fal-ai/veo3.1/fast/image-to-video"
+VIDEO_EXTEND_MODEL = "fal-ai/veo3.1/fast/extend-video"
 VEO_VALID_ASPECTS = {"auto", "16:9", "9:16"}
 
 # ─── Pricing (approximate, kept in sync with FAL docs) ───────────────────────
@@ -235,8 +236,9 @@ def generate_scene_video(
     aspect_ratio: str = "9:16",
     auto_fix: bool = True,
     no_subtitles: bool = True,
-) -> bytes:
-    """Call veo3.1 fast image-to-video with the generated scene image as start frame."""
+) -> tuple[bytes, str]:
+    """Call veo3.1 fast image-to-video with the generated scene image as start frame.
+    Returns (mp4_bytes, fal_video_url)."""
     image_url = fal_client.upload_file(str(scene_image_path))
     # Veo 3.1 Fast only accepts auto / 16:9 / 9:16. Default odd values to 9:16 (reel format).
     veo_aspect = aspect_ratio if aspect_ratio in VEO_VALID_ASPECTS else "9:16"
@@ -254,8 +256,38 @@ def generate_scene_video(
     video = result.get("video") or (result.get("videos", [{}])[0] if result.get("videos") else None)
     if not video or not video.get("url"):
         raise RuntimeError(f"FAL Veo returned no video. Result keys: {list(result.keys())}")
-    mp4 = requests.get(video["url"], timeout=300).content
-    return mp4
+    fal_url = video["url"]
+    mp4 = requests.get(fal_url, timeout=300).content
+    return mp4, fal_url
+
+
+def extend_scene_video(
+    source_video_url: str,
+    video_prompt: str,
+    aspect_ratio: str = "9:16",
+    auto_fix: bool = True,
+    no_subtitles: bool = True,
+) -> tuple[bytes, str]:
+    """Call veo3.1 fast extend-video with the previous scene's FAL URL as the source.
+    Returns (mp4_bytes, fal_video_url)."""
+    veo_aspect = aspect_ratio if aspect_ratio in VEO_VALID_ASPECTS else "9:16"
+    arguments = {
+        "video_url": source_video_url,
+        "prompt": video_prompt,
+        "negative_prompt": VEO_NEGATIVE_PROMPT if no_subtitles else "",
+        "duration": "8s",
+        "aspect_ratio": veo_aspect,
+        "resolution": "720p",
+        "generate_audio": True,
+        "auto_fix": auto_fix,
+    }
+    result = fal_client.subscribe(VIDEO_EXTEND_MODEL, arguments=arguments, with_logs=False)
+    video = result.get("video") or (result.get("videos", [{}])[0] if result.get("videos") else None)
+    if not video or not video.get("url"):
+        raise RuntimeError(f"FAL Veo extend-video returned no video. Result keys: {list(result.keys())}")
+    fal_url = video["url"]
+    mp4 = requests.get(fal_url, timeout=300).content
+    return mp4, fal_url
 
 
 # ─── Output folder + meta ────────────────────────────────────────────────────
@@ -380,6 +412,7 @@ def add_video_to_version(
     tone_id: str,
     dialogue: str,
     animation_hint: str,
+    fal_video_url: str = "",
 ) -> dict:
     """Attach (or replace) a video on an existing image-only version."""
     reel_dir = _target_dir(date, reel_slug)
@@ -406,10 +439,65 @@ def add_video_to_version(
     target_version["dialogue"] = dialogue
     target_version["animation_hint"] = animation_hint
     target_version["video_generated_at"] = datetime.utcnow().isoformat() + "Z"
+    if fal_video_url:
+        target_version["fal_video_url"] = fal_video_url
     _save_meta(reel_dir, meta)
     return {
         "scene_number": scene_number,
         "new_version": target_version,
+        "all_versions": scene_entry["versions"],
+        "favorite_version": scene_entry.get("favorite_version"),
+    }
+
+
+def save_video_only_version(
+    date: str,
+    reel_slug: str,
+    scene_number: int,
+    video_bytes: bytes,
+    video_prompt_used: str,
+    tone_id: str,
+    dialogue: str,
+    animation_hint: str,
+    fal_video_url: str = "",
+) -> dict:
+    """Create a NEW version with video only (no image) — used for continuation-mode videos."""
+    reel_dir = _target_dir(date, reel_slug)
+    if not reel_dir.exists():
+        raise FileNotFoundError(f"Reel folder not found: {date}/{reel_slug}")
+    meta = _load_or_init_meta(reel_dir)
+    key = str(scene_number)
+    scene_entry = meta["scenes"].get(key) or {"favorite_version": None, "versions": []}
+
+    ver = _next_version(scene_entry)
+    vid_name = f"scene_{scene_number:02d}_v{ver}.mp4"
+    (reel_dir / vid_name).write_bytes(video_bytes)
+
+    new_version = {
+        "version": ver,
+        "image_filename": None,
+        "image_url": None,
+        "video_filename": vid_name,
+        "video_url": _scene_url(date, reel_slug, vid_name),
+        "setting": "",
+        "expression": "",
+        "tone_id": tone_id,
+        "dialogue": dialogue,
+        "animation_hint": animation_hint,
+        "image_prompt_used": "",
+        "video_prompt_used": video_prompt_used,
+        "refs_used": [],
+        "aspect_ratio": "9:16",
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "fal_video_url": fal_video_url,
+        "continuation": True,
+    }
+    scene_entry["versions"].append(new_version)
+    meta["scenes"][key] = scene_entry
+    _save_meta(reel_dir, meta)
+    return {
+        "scene_number": scene_number,
+        "new_version": new_version,
         "all_versions": scene_entry["versions"],
         "favorite_version": scene_entry.get("favorite_version"),
     }
@@ -614,7 +702,7 @@ def animate_scene_version_step(
     date: str,
     reel_slug: str,
     scene_number: int,
-    version: int,
+    version: Optional[int],
     dialogue: str,
     animation_hint: str,
     tone_id: str,
@@ -622,9 +710,28 @@ def animate_scene_version_step(
     prompt_override: Optional[str] = None,
     auto_fix: bool = True,
     no_subtitles: bool = True,
+    source_video_url: Optional[str] = None,
 ) -> dict:
-    """Step 2: animate an existing image version. Reads scene_NN_vM.png from disk and calls Veo i2v.
-    If prompt_override is provided, it bypasses the auto-built prompt entirely."""
+    """Step 2: animate a scene.
+    - Standard mode: version must refer to an existing image version; calls Veo i2v.
+    - Continuation mode: source_video_url provided; calls Veo extend-video and creates a new video-only version.
+    """
+    _, tones = get_mascot_context()
+    video_prompt = (prompt_override or "").strip() or _build_video_prompt(
+        dialogue, animation_hint, tone_id, tones, no_subtitles
+    )
+
+    if source_video_url:
+        vid_bytes, fal_url = extend_scene_video(
+            source_video_url, video_prompt, aspect_ratio, auto_fix=auto_fix, no_subtitles=no_subtitles
+        )
+        return save_video_only_version(
+            date, reel_slug, scene_number,
+            vid_bytes, video_prompt, tone_id, dialogue, animation_hint,
+            fal_video_url=fal_url,
+        )
+
+    # Standard I2V mode
     reel_dir = _target_dir(date, reel_slug)
     meta = _load_or_init_meta(reel_dir)
     key = str(scene_number)
@@ -641,15 +748,12 @@ def animate_scene_version_step(
     if not img_path.exists():
         raise FileNotFoundError(f"Image file missing: {img_path.name}")
 
-    _, tones = get_mascot_context()
-    video_prompt = (prompt_override or "").strip() or _build_video_prompt(
-        dialogue, animation_hint, tone_id, tones, no_subtitles
-    )
-    vid_bytes = generate_scene_video(img_path, video_prompt, aspect_ratio, auto_fix=auto_fix, no_subtitles=no_subtitles)
+    vid_bytes, fal_url = generate_scene_video(img_path, video_prompt, aspect_ratio, auto_fix=auto_fix, no_subtitles=no_subtitles)
 
     return add_video_to_version(
         date, reel_slug, scene_number, version,
         vid_bytes, video_prompt, tone_id, dialogue, animation_hint,
+        fal_video_url=fal_url,
     )
 
 

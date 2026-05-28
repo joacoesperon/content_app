@@ -48,6 +48,7 @@ def _reel_to_brief(reel: Reel) -> ReelBrief:
                 tone_id=s.tone_id,
                 dialogue=s.dialogue,
                 animation_hint=s.animation_hint,
+                continuation=s.continuation,
             )
             for s in reel.scenes
         ],
@@ -148,7 +149,7 @@ async def animate_scene_endpoint(body: AnimateSceneRequest):
             date, reel.slug, body.scene_number, body.version,
             body.dialogue, body.animation_hint, body.tone_id,
             body.aspect_ratio, body.prompt_override, body.auto_fix,
-            body.no_subtitles,
+            body.no_subtitles, body.source_video_url,
         )
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

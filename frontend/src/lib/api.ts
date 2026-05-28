@@ -668,6 +668,7 @@ export interface SceneBriefData {
   tone_id: string;
   dialogue: string;
   animation_hint: string;
+  continuation?: boolean;
 }
 
 export interface ReelBrief {
@@ -701,6 +702,8 @@ export interface SceneVersion {
   refs_used: string[];
   aspect_ratio: string;
   generated_at: string;
+  fal_video_url?: string | null;
+  continuation?: boolean;
 }
 
 export interface SceneInfo {
@@ -784,7 +787,7 @@ export async function animateReelScene(payload: {
   filename: string;
   reel_number: number;
   scene_number: number;
-  version: number;
+  version: number | null;
   dialogue: string;
   animation_hint: string;
   tone_id: string;
@@ -792,6 +795,7 @@ export async function animateReelScene(payload: {
   prompt_override?: string | null;
   auto_fix?: boolean;
   no_subtitles?: boolean;
+  source_video_url?: string | null;
 }): Promise<ReelSceneResult> {
   const res = await fetch(`${REELS}/animate-scene`, {
     method: 'POST',

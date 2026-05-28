@@ -100,6 +100,7 @@ interface SceneFormState {
   // toggle for the auto_fix Veo flag (E2)
   autoFix: boolean;
   noSubtitles: boolean;
+  continuationMode: boolean;  // scenes 2+: extend-video from previous scene instead of I2V
   // originals (so we can reset)
   originalSetting: string;
   originalExpression: string;
@@ -129,6 +130,7 @@ function initialSceneState(s: ReelBrief['scenes'][number]): SceneFormState {
     videoPromptOverride: '',
     autoFix: true,
     noSubtitles: true,
+    continuationMode: s.continuation ?? false,
     originalSetting: s.setting,
     originalExpression: s.expression,
     originalToneId: s.tone_id,
@@ -232,7 +234,7 @@ function SceneCard({
   defaultRefFilename: string;
   onChange: (patch: Partial<SceneFormState>) => void;
   onGenerateImage: () => void;
-  onAnimate: (version: number) => void;
+  onAnimate: (version: number | null) => void;
   onToggleFavorite: (v: number | null) => void;
 }) {
   const currentIdx = scene.versions.findIndex((v) => v.version === scene.currentVersion);
@@ -466,6 +468,20 @@ function SceneCard({
         <span>No subtitles/captions in video (prevents Veo from generating text overlays)</span>
       </label>
 
+      {scene.number > 1 && (
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={scene.continuationMode}
+            onChange={(e) => onChange({ continuationMode: e.target.checked })}
+            className="h-3 w-3"
+          />
+          <span className={scene.continuationMode ? 'text-blue-400' : 'text-muted-foreground'}>
+            Continuation mode — extend video from Scene {scene.number - 1} (no image needed)
+          </span>
+        </label>
+      )}
+
       <div className="grid grid-cols-2 gap-2">
         <Button onClick={onGenerateImage} disabled={imageJobInFlight} size="sm" variant={hasImage ? 'outline' : 'default'}>
           {imageJobInFlight ? (
@@ -483,28 +499,53 @@ function SceneCard({
             </>
           )}
         </Button>
-        <Button
-          onClick={() => currentVersion && onAnimate(currentVersion.version)}
-          disabled={videoJobInFlight || !hasImage}
-          size="sm"
-          variant={!hasVideo && hasImage ? 'default' : 'outline'}
-          title={!hasImage ? 'Generate an image first' : hasVideo ? 'Re-animate this version (replaces the video)' : 'Animate the current image (Veo i2v)'}
-        >
-          {videoJobInFlight ? (
-            <>
-              <Loader2 size={14} className="animate-spin mr-2" />
-              Animating…
-            </>
-          ) : hasVideo ? (
-            <>
-              <RefreshCw size={14} className="mr-2" /> Re-animate (~$1.20)
-            </>
-          ) : (
-            <>
-              <Video size={14} className="mr-2" /> Animate (~$1.20)
-            </>
-          )}
-        </Button>
+        {scene.continuationMode ? (
+          <Button
+            onClick={() => onAnimate(null)}
+            disabled={videoJobInFlight}
+            size="sm"
+            variant={!hasVideo ? 'default' : 'outline'}
+            title={`Extend video from Scene ${scene.number - 1} using Veo extend-video`}
+          >
+            {videoJobInFlight ? (
+              <>
+                <Loader2 size={14} className="animate-spin mr-2" />
+                Continuing…
+              </>
+            ) : hasVideo ? (
+              <>
+                <RefreshCw size={14} className="mr-2" /> Re-continue (~$1.20)
+              </>
+            ) : (
+              <>
+                <Film size={14} className="mr-2" /> Continue video (~$1.20)
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button
+            onClick={() => currentVersion && onAnimate(currentVersion.version)}
+            disabled={videoJobInFlight || !hasImage}
+            size="sm"
+            variant={!hasVideo && hasImage ? 'default' : 'outline'}
+            title={!hasImage ? 'Generate an image first' : hasVideo ? 'Re-animate this version (replaces the video)' : 'Animate the current image (Veo i2v)'}
+          >
+            {videoJobInFlight ? (
+              <>
+                <Loader2 size={14} className="animate-spin mr-2" />
+                Animating…
+              </>
+            ) : hasVideo ? (
+              <>
+                <RefreshCw size={14} className="mr-2" /> Re-animate (~$1.20)
+              </>
+            ) : (
+              <>
+                <Video size={14} className="mr-2" /> Animate (~$1.20)
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {scene.error && <p className="text-xs text-red-500">{scene.error}</p>}
@@ -754,17 +795,33 @@ function ReelEditor({
     );
   };
 
-  const animateScene = async (number: number, version: number) => {
+  const animateScene = async (number: number, version: number | null) => {
     const scene = scenes.find((s) => s.number === number);
     if (!scene) return;
     updateScene(number, { error: null });
+
+    let sourceVideoUrl: string | null = null;
+    if (scene.continuationMode) {
+      const prevScene = scenes.find((s) => s.number === number - 1);
+      if (prevScene && prevScene.versions.length > 0) {
+        const favVer = prevScene.favoriteVersion;
+        const prevVer = favVer != null
+          ? prevScene.versions.find((v) => v.version === favVer)
+          : prevScene.versions[prevScene.versions.length - 1];
+        sourceVideoUrl = prevVer?.fal_video_url ?? null;
+      }
+      if (!sourceVideoUrl) {
+        updateScene(number, { error: `Scene ${number - 1} has no FAL video URL — animate Scene ${number - 1} first` });
+        return;
+      }
+    }
 
     await jobs.startAnimate(
       {
         filename,
         reel_number: reel.number,
         scene_number: number,
-        version,
+        version: scene.continuationMode ? null : version,
         dialogue: scene.dialogue,
         animation_hint: scene.animationHint,
         tone_id: scene.toneId,
@@ -773,6 +830,7 @@ function ReelEditor({
         auto_fix: scene.autoFix,
         no_subtitles: scene.noSubtitles,
         reel_slug: reel.slug,
+        source_video_url: sourceVideoUrl,
       },
       (res) => {
         setScenes((prev) =>
