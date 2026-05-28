@@ -189,4 +189,3 @@ No sobreescribir output del mismo día (sufija -1, -2) · Endpoints `/brand/cont
 1. crear la primer campaña de meta
 2. revisar si puedo seleccionar la campaña en la meta ads tool (ya con eso quedaria lista, quedaria ver si funciona toda completa)
 3. descargar devuelta el nano banana + claude code SKILL.md y reescribirlo para que se entienda lo que se tiene que hacer en static ads
-4. hacer scout + carrousel tool + para hacer reels
