@@ -1,11 +1,11 @@
 {
-  "last_run": "2026-05-28",
-  "last_slot3": "hot_take",
+  "last_run": "2026-05-29",
+  "last_slot3": "algo_automation",
   "last_concepts": [
-    "market_reaction: Taiwan overtakes India as world's 5th-largest stock market — TSMC is ~60% of the entire Taiwan index, meaning one semiconductor company effectively holds up a nation's equity market and just became visible to global macro investors",
-    "educational: Win rate is the wrong metric — risk/reward ratio determines profitability. You can win 60% and lose money if losses outpace wins; win 40% with 2% risk and 6% target and you're still growing",
-    "hot_take: The trading mentor and course industry is the most consistently profitable 'trading strategy' in existence — not for students, for the mentors. Revenue is tuition, not alpha"
+    "market_reaction: Oil's largest monthly drop since 2020 — a $14/barrel geopolitical fear premium removed in one week by a US-Iran 60-day ceasefire MOU; every price contains embedded risk you don't see until it leaves",
+    "educational: The sunk cost trap — holding a losing position not because of analysis but because closing it makes the loss real; the position lost the money on day one, what remains is a prayer",
+    "algo_automation: Revenge trading vs. algo consistency — after a bad Monday, the human sizes up 40% to get it back; the algo runs the same position size because it has never heard of Monday; structural amnesia is the entire advantage"
   ],
-  "last_levers": ["humor", "education", "controversy"],
-  "last_tones": ["deadpan", "confidential", "indignant"]
+  "last_levers": ["curiosity", "empathy", "relatability"],
+  "last_tones": ["philosophical", "warm", "smug"]
 }
