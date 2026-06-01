@@ -275,7 +275,7 @@ def extend_scene_video(
         "video_url": source_video_url,
         "prompt": video_prompt,
         "negative_prompt": VEO_NEGATIVE_PROMPT if no_subtitles else "",
-        "duration": "8s",
+        "duration": "7s",
         "aspect_ratio": veo_aspect,
         "resolution": "720p",
         "generate_audio": True,

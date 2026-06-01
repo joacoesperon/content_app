@@ -63,7 +63,7 @@ class Reel:
 
 
 REEL_HEADER_RE = re.compile(
-    r"^##\s+Reel\s+(\d+)\s+[—-]\s+(.+?)\s+[—-]\s+(.+?)\s*$",
+    r"^#{2,3}\s+Reel\s+(\d+)\s+[—-]\s+(.+?)\s+[—-]\s+(.+?)(?:\s+[—-]\s+(.+?))?\s*$",
     re.MULTILINE,
 )
 
@@ -86,11 +86,20 @@ def parse_director_file(path: Path) -> list[Reel]:
         end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
         body = text[start:end]
 
+        # Header can be 3-part (Reel N — category — lever, new format)
+        # or 4-part (Reel N — category — avatar — lever, old format).
+        if m.group(4):
+            avatar = m.group(3).strip()
+            lever = m.group(4).strip()
+        else:
+            avatar = ""
+            lever = m.group(3).strip()
+
         reel = Reel(
             number=int(m.group(1)),
             category=m.group(2).strip(),
-            avatar="",
-            lever=m.group(3).strip(),
+            avatar=avatar,
+            lever=lever,
             concept=_extract_field(body, "Concept"),
             total_length=_extract_field(body, "Total length"),
             voice_direction=_extract_field(body, r"Voice direction(?:\s*\(overall\))?"),

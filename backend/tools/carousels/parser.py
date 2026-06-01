@@ -97,18 +97,18 @@ def _extract_caption(body: str) -> str:
 
 
 def _extract_slides(body: str) -> list[Slide]:
-    """Find every **Slide N — Label:** followed by a quoted prompt."""
+    """Find every **Slide N — Label:** followed by a prompt (with or without quotes)."""
     slides: list[Slide] = []
-    # Match: **Slide 1 — Hook:** \n "prompt..."
-    # Prompt can span multiple lines, terminated by the closing quote on its own.
+    # Match: **Slide N — Label:** \n [optional "] prompt... [optional "]
+    # Prompt can span multiple lines, terminated by next ** field, ---, or end of body.
     pattern = re.compile(
-        r"\*\*Slide\s+(\d+)\s+[—-]\s+([^:*]+?):\*\*\s*\n\"(.+?)\"(?=\s*\n\s*(?:\*\*|$))",
+        r"\*\*Slide\s+(\d+)\s+[—-]\s+([^:*]+?):\*\*\s*\n\"?(.+?)\"?(?=\s*\n\s*\*\*|\s*\n\s*---|\Z)",
         re.DOTALL,
     )
     for m in pattern.finditer(body):
         num = int(m.group(1))
         label = m.group(2).strip()
-        prompt = m.group(3).strip()
+        prompt = m.group(3).strip().strip('"')
         # normalize any internal whitespace
         prompt = re.sub(r"\s+", " ", prompt)
         slides.append(Slide(number=num, label=label, prompt=prompt))
