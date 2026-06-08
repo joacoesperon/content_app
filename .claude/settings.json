@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X PATCH https://api.whop.com/api/v1/products/prod_OcKZIkwD3p9PT -H 'Authorization: Bearer apik_nSGF7EJn2faQ4_C3399092_C_7763c6150c571b9c3b06baa51fbaf0b9b8b72e9eef99916f52c2cc79741434' -H 'Content-Type: application/json' -d '{\"global_affiliate_percentage\": 40.0}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'affiliate: {d[\\\\\"global_affiliate_percentage\\\\\"]}%'\\)\")"
+    ]
+  }
+}
