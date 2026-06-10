@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { buttonVariants, type ButtonProps } from '@/components/ui/button';
 import { trackEvent, generateEventId } from '@/lib/pixel';
 
-const WHOP_URL = 'https://whop.com/joined/jesstrading/';
+const WHOP_URL = 'https://whop.com/checkout/plan_lSLF1eoJcTPEY';
 const PRODUCT_ID = 'jess-trading-bot';
 const PRODUCT_NAME = 'Jess Trading XAUUSD Bot';
 const PRODUCT_PRICE = 147;
