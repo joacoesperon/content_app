@@ -1,11 +1,11 @@
 {
-  "last_run": "2026-05-29",
-  "last_slot3": "algo_automation",
+  "last_run": "2026-06-08",
+  "last_slot3": "trader_psychology",
   "last_concepts": [
-    "market_reaction: Oil's largest monthly drop since 2020 — a $14/barrel geopolitical fear premium removed in one week by a US-Iran 60-day ceasefire MOU; every price contains embedded risk you don't see until it leaves",
-    "educational: The sunk cost trap — holding a losing position not because of analysis but because closing it makes the loss real; the position lost the money on day one, what remains is a prayer",
-    "algo_automation: Revenge trading vs. algo consistency — after a bad Monday, the human sizes up 40% to get it back; the algo runs the same position size because it has never heard of Monday; structural amnesia is the entire advantage"
+    "market_reaction: Broadcom Q2 FY2026 miss — $22.19B reported vs $22.27B expected ($80M gap), ~$1T in semiconductor market cap erased in one session; markets price the distance between reality and expectation, not reality itself",
+    "educational: The first 15 minutes after market open trap — spreads widest, institutions executing pre-planned orders, price discovery still running; retail traders mistake the chaos for signal and walk into a machine feeding frenzy",
+    "trader_psychology: The winning streak creates certainty, certainty doubles position size and removes stops, and one trade resets everything; JT carries the wax from that session as permanent evidence"
   ],
-  "last_levers": ["curiosity", "empathy", "relatability"],
-  "last_tones": ["philosophical", "warm", "smug"]
+  "last_levers": ["humor", "education", "controversy"],
+  "last_tones": ["deadpan", "confidential", "indignant"]
 }

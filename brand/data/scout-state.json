@@ -1,13 +1,13 @@
 {
-  "last_avatar": "trader_intermedio",
+  "last_avatar": "trader_agotado",
   "last_angles": [
-    "Identity — you already have the strategy; the gap is execution, not knowledge",
-    "Fear — 'control' over every trade is the illusion that keeps costing you money",
-    "Educational — execution variance is the real reason intermediate traders underperform their backtests",
-    "Curiosity — in a news-heavy week (NFP, JOLTS, Beige Book, Powell), manual traders lose because they hesitate, not because their analysis is wrong",
-    "Social proof — Marcos: solid backtest, 6 months of underperformance, then consistent gains after automating the same strategy",
-    "Brand narrative — JessTrading was built for traders who already know what to do but can't execute consistently",
-    "Contrast — your strategy manually executed vs. bot-executed: same edge, completely different outcomes"
+    "Identity — el hábito de 8h frente a pantalla no es una ventaja, es un patrón que te cuesta tiempo de vida y resultados inconsistentes",
+    "Fear — 'ya probé bots y perdí' es válido, la distinción real es transparencia y estrategia verificable vs. caja negra",
+    "Educational — semanas de alto impacto macro (CPI, FOMC) no son oportunidades para el trader manual, son trampas de hesitación",
+    "Curiosity — el oro cayó 12% desde su ATH: ¿qué hiciste durante esa corrección? El bot ejecutó el plan",
+    "Social proof — Carlos dejó de despertarse a las 2:30 AM cuando el bot tomó el turno de la sesión asiática",
+    "Brand narrative — Jess Trading nació de observar traders con buenas estrategias destruirse por fatiga, no falta talento falta sistema",
+    "Scarcity — bot opera XAUUSD 24/7 con estrategia backtested en MT5, $197 pago único, spots limitados"
   ],
-  "last_run": "2026-06-01"
+  "last_run": "2026-06-08"
 }
