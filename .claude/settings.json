@@ -15,7 +15,11 @@
       "Bash(awk '/^## \\\\*\\\\*40\\\\./,0' backend/tools/static_ads/templates.md)",
       "Bash(python3)",
       "Bash(python3 -c \"import json; d=json.load\\(open\\('brand/data/static-ads-prompts.json'\\)\\); print\\(list\\(d['prompts'][0].keys\\(\\)\\)\\)\")",
-      "Bash(python3 -m py_compile backend/tools/static_ads/router.py)"
+      "Bash(python3 -m py_compile backend/tools/static_ads/router.py)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" -L \"https://jesstrading.xyz\")",
+      "Bash(curl -s -L \"https://jesstrading.xyz\" -A \"Mozilla/5.0\")",
+      "Bash(curl -s -L \"https://jesstrading.xyz\" -A \"Mozilla/5.0\" > /tmp/lp.html *)",
+      "Read(//tmp/**)"
     ]
   }
 }

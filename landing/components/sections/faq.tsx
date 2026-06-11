@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 const FAQS = [
   {
     q: 'Will the bot work if the market changes?',
-    a: 'The strategy was backtested across 2020 (Covid crash), 2022 (rate hikes), and 2024-2026 (XAUUSD record highs). It uses adaptive position sizing, not fixed levels. The 5-year backtest is downloadable above.',
+    a: 'It runs a range breakout strategy — it defines the daily range during set hours and trades the breakout, the same logic in any regime. It was backtested through 2020 (Covid crash), 2022 (rate hikes), and 2024-2026. It risks a fixed 1% of your balance per trade by default, adjustable via the RiskPercent setting.',
   },
   {
     q: 'Do I need coding knowledge?',
@@ -15,11 +15,11 @@ const FAQS = [
   },
   {
     q: 'What is the minimum capital?',
-    a: '$500 minimum. Optimal is $2,000+. The Risk Calibration Sheet bonus shows you exactly which parameter set to use for your account size.',
+    a: '$300 minimum. The bot risks 1% of your balance per trade by default — you can adjust that via the RiskPercent setting to match your account size and risk tolerance.',
   },
   {
     q: "What's the drawdown?",
-    a: 'Max historical drawdown over 5 years of backtest is 14.2%. Live performance is published on MyFXBook (linked above) — verify it yourself before you buy.',
+    a: 'Risk is capped at 1% of your balance per trade by default, so drawdown depends on your settings and market conditions. Full backtest figures are in the product description. I\'d rather you not trust a number — that\'s what the 14-day refund is for: try it on a small account and judge for yourself.',
   },
   {
     q: 'Can I get a refund?',
@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: 'How is this different from other bots out there?',
-    a: 'Built specifically for XAUUSD (most bots are forex-generic). Lifetime payment vs subscription. Live MyFXBook tracker (vs cherry-picked screenshots). 40% affiliate commission means real users are incentivized to share real results.',
+    a: 'It works on XAUUSD plus 4 major forex pairs (EURUSD, GBPUSD, USDJPY, EURJPY), each with pre-configured settings. One-time payment vs subscription. Transparent rule-based logic — you can see exactly what it does, no black box. And a 14-day refund if it\'s not for you.',
   },
   {
     q: 'Will Jess Trading still be around in 5 years?',

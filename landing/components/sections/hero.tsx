@@ -39,10 +39,10 @@ export function Hero() {
             Get the bot — $147
           </CheckoutButton>
           <Link
-            href="#performance"
+            href="#how-it-works"
             className="inline-flex h-14 w-full items-center justify-center rounded-xl border border-white/10 bg-white/5 px-8 text-base font-semibold text-ink-primary transition hover:border-white/20 hover:bg-white/10 sm:w-auto"
           >
-            See live performance
+            See how it works
           </Link>
         </div>
 
