@@ -17,12 +17,12 @@ export const metadata: Metadata = {
     template: '%s · Jess Trading',
   },
   description:
-    'Plug-and-play trading bot for XAUUSD. Lifetime access, one-time payment, 24/7 automated execution. Built on 5 years of verified data.',
+    'Plug-and-play range breakout bot for XAUUSD + 4 major forex pairs. Lifetime access, one-time payment, 24/7 automated execution. Built on 5 years of backtested data.',
   keywords: ['XAUUSD bot', 'gold trading bot', 'algorithmic trading', 'MT5 EA', 'forex automation'],
   openGraph: {
     title: 'Jess Trading — Algorithmic XAUUSD Bot',
     description:
-      'The bot that trades XAUUSD while you sleep. Lifetime access for $147 — built on 5 years of verified data.',
+      'The bot that trades XAUUSD while you sleep. Lifetime access for $147 — built on 5 years of backtested data.',
     type: 'website',
     locale: 'en_US',
     siteName: 'Jess Trading',

@@ -13,7 +13,7 @@ export function FinalCTA() {
       <div className="relative mx-auto max-w-3xl text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-electric/30 bg-electric/5 px-3 py-1 text-xs font-medium text-electric">
           <Clock className="h-3.5 w-3.5" />
-          Launch price ends soon
+          Launch price ends July 1
         </div>
 
         <h2 className="text-balance text-4xl font-bold leading-[1.1] text-ink-primary md:text-6xl">

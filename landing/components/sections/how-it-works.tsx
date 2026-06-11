@@ -6,21 +6,21 @@ const STEPS = [
     icon: Download,
     title: 'Buy & receive',
     description:
-      'You get the .ex5 bot file, an 8-min setup video, and the parameter sheets for $1k / $5k / $10k accounts. All in your Whop dashboard, instantly.',
+      'You get the .ex5 bot file, an 8-min setup video, and the pre-configured settings for all 5 pairs. All in your Whop dashboard, instantly.',
   },
   {
     number: '02',
     icon: PlugZap,
     title: 'Connect to MT5',
     description:
-      'Drop the file in your MT5 EA folder. Attach to a XAUUSD chart. Set your account size profile. The video walks you through each click.',
+      'Drop the file in your MT5 EA folder. Attach to a chart and load the settings for your pair. The video walks you through each click.',
   },
   {
     number: '03',
     icon: Activity,
     title: 'Bot runs 24/5',
     description:
-      'Trades execute automatically while the gold market is open. Telegram channel pings you on entries. Your job is just to fund the account.',
+      'It defines the daily range, places the breakout orders, and manages the exit automatically while the market is open. Your job is just to fund the account and let it run.',
   },
 ];
 

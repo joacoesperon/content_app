@@ -5,13 +5,13 @@ const FOR = [
   'You have a strategy but break your own rules under pressure',
   'You have capital but no time to chart',
   'You want a system that runs while you sleep',
-  'You can verify backtests and live tracking before you trust',
+  'You want to understand exactly what the bot does before you trust it',
 ];
 
 const NOT_FOR = [
   "You're looking for get-rich-quick — this isn't it",
   "You won't read the setup guide",
-  'Your trading account is under $500',
+  'Your trading account is under $300',
   "You expect 0% drawdown — that doesn't exist",
   "You're not willing to test on demo first",
 ];

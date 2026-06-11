@@ -2,19 +2,17 @@ import { Check } from 'lucide-react';
 import { CheckoutButton } from '@/components/checkout-button';
 
 const INCLUDED = [
-  { item: 'Lifetime license — pay once, run forever', value: '$197' },
-  { item: 'XAUUSD strategy with 5-year verified backtest', value: 'Included' },
+  { item: 'Range breakout bot (.ex5) — lifetime license, 2 MT5 accounts', value: '$197' },
+  { item: 'Pre-configured settings for 5 pairs (XAUUSD, EURUSD, GBPUSD, USDJPY, EURJPY)', value: '$79' },
   { item: 'Step-by-step setup guide (PDF + 8-min video)', value: '$49' },
-  { item: 'Optimized parameter sets for $1k / $5k / $10k accounts', value: '$79' },
-  { item: 'Private Telegram support channel', value: '$120/yr' },
-  { item: 'Monthly market update video', value: '$60/yr' },
+  { item: 'VPS setup instructions for 24/7 uptime', value: '$29' },
+  { item: 'Private Telegram community', value: 'Included' },
   { item: '14-day refund window — no questions asked', value: '—' },
 ];
 
 const BONUSES = [
-  { item: 'Bonus 1 — Risk Calibration Sheet (Excel)', value: '$29' },
-  { item: 'Bonus 2 — 3-part video course on broker + VPS setup', value: '$49' },
-  { item: 'Bonus 3 — Affiliate program (earn $58.80 per referral)', value: 'Recurring' },
+  { item: 'Free guide — "5 Reasons Manual Traders Lose Money on Gold"', value: '$19' },
+  { item: '40% affiliate program — earn $58.80 per referral', value: 'Recurring' },
 ];
 
 export function OfferStack() {
@@ -27,7 +25,7 @@ export function OfferStack() {
             <span className="text-neon-bright">$147</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-ink-secondary">
-            Launch price. Goes to $197 when the early-access window closes.
+            Launch price. Goes to $197 on July 1.
           </p>
         </div>
 
@@ -99,7 +97,7 @@ export function OfferStack() {
                 <div className="text-xs uppercase tracking-wide text-ink-muted">
                   Declared value
                 </div>
-                <div className="text-lg font-semibold text-ink-secondary line-through">$497</div>
+                <div className="text-lg font-semibold text-ink-secondary line-through">$373</div>
               </div>
               <div className="text-right">
                 <div className="text-xs uppercase tracking-wide text-ink-muted">Today</div>
