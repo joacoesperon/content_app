@@ -1,9 +1,11 @@
 import { Hero } from '@/components/sections/hero';
-import { LivePerformance } from '@/components/sections/live-performance';
+// Hidden until the real MyFXBook account has public history. Do NOT re-enable with placeholder/demo numbers.
+// import { LivePerformance } from '@/components/sections/live-performance';
 import { WhoFor } from '@/components/sections/who-for';
 import { HowItWorks } from '@/components/sections/how-it-works';
 import { OfferStack } from '@/components/sections/offer-stack';
-import { BacktestProof } from '@/components/sections/backtest-proof';
+// Hidden until real backtest numbers from the MT5 Strategy Tester reports replace the placeholders.
+// import { BacktestProof } from '@/components/sections/backtest-proof';
 import { Testimonials } from '@/components/sections/testimonials';
 import { LeadMagnet } from '@/components/sections/lead-magnet';
 import { FAQ } from '@/components/sections/faq';
@@ -15,11 +17,11 @@ export default function HomePage() {
     <>
       <main className="relative">
         <Hero />
-        <LivePerformance />
+        {/* <LivePerformance /> — hidden until real MyFXBook data is public */}
         <WhoFor />
         <HowItWorks />
         <OfferStack />
-        <BacktestProof />
+        {/* <BacktestProof /> — hidden until real backtest numbers are plugged in */}
         <Testimonials />
         <LeadMagnet />
         <FAQ />

@@ -6,7 +6,16 @@
       "Bash(python3 -c \"import json; d=json.load\\(open\\('brand/data/static-ads-prompts.json'\\)\\); print\\('JSON valido,', len\\(d['prompts']\\), 'prompts'\\)\")",
       "Bash(rm /tmp/apply_ads_plan.py)",
       "Bash(sed -n '1,40p' lib/meta-capi.ts)",
-      "Bash(sed -n '1,50p' app/api/whop-webhook/route.ts)"
+      "Bash(sed -n '1,50p' app/api/whop-webhook/route.ts)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -L \"https://www.myfxbook.com/portfolio/jess-trading/12071942\")",
+      "Bash(curl -s -L \"https://www.myfxbook.com/portfolio/jess-trading/12071942\" -A \"Mozilla/5.0\")",
+      "Bash(grep -oiE \"\\(gain|drawdown|profit|balance|equity|abs\\\\. gain|monthly\\)[^<]{0,60}\")",
+      "Bash(curl -s -o /dev/null -w 'status=%{http_code} final=%{url_effective}\\\\n' -L -H 'User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0 Safari/537.36' -H 'Accept: text/html,application/xhtml+xml' https://www.myfxbook.com/portfolio/jess-trading/12071942)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); imgs=d.get\\('gallery_images',[]\\); print\\('Galeria ahora:', len\\(imgs\\), 'imagenes'\\); [print\\(' -', i['id']\\) for i in imgs]\")",
+      "Bash(awk '/^## \\\\*\\\\*40\\\\./,0' backend/tools/static_ads/templates.md)",
+      "Bash(python3)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('brand/data/static-ads-prompts.json'\\)\\); print\\(list\\(d['prompts'][0].keys\\(\\)\\)\\)\")",
+      "Bash(python3 -m py_compile backend/tools/static_ads/router.py)"
     ]
   }
 }

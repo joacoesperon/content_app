@@ -1,6 +1,72 @@
-# TODO
+# Jess Trading — Camino a $10k/mes
 
-- [ ] terminar 10ksteps.md
+> **Producto:** Range Breakout Bot (XAUUSD + 4 pares) — $147 lifetime, sube a $197 el 1 julio
+> **Objetivo:** lanzar campañas Meta el viernes 12/6 y empezar a vender. Probar de verdad, sin frenar al final.
+> **Hoy:** jueves 11/6/2026
+
+> **Ángulo de venta (honesto + agresivo, todo alineado a esto):**
+> *"Trades your breakout strategy while you sleep. Your rules, executed 24/7, zero emotion. $147 once — not $97/month. 14-day refund. No hype, no guarantees."*
+> Vendemos el deseo (que es real: el bot corre solo). No fabricamos pruebas.
+
+---
+
+## Estado actual
+
+| Item | Estado |
+|------|--------|
+| Bot corriendo 24/7 en VPS | ✅ (desde 10/6) |
+| Copy Whop + afiliados 40% + Telegram | ✅ |
+| +439% falso fuera del Whop | ✅ |
+| LP: checkout directo cableado | ✅ — falta redeploy |
+| LP: hero honesto, secciones con data falsa escondidas | ✅ — falta redeploy |
+| Pixel + CAPI + webhook Whop (código) | ✅ sin testear en vivo |
+| Prompts de ads limpios (46) | ✅ |
+| Static ads generadas (8 templates) | ✅ versiones elegidas |
+| Redeploy LP en Vercel | 🔴 |
+| Compra de prueba (Purchase en Meta) | 🔴 |
+| Backtest real → reactivar sección LP | 🔴 hoy |
+| Campaña Meta lanzada | 🔴 viernes |
+| MyFXBook público + historial | 🔴 paralelo |
+| Videos (hero loop + pitch) | 🔴 paralelo |
+| Reviews reales | 🔴 paralelo |
+
+**Creatives listas (versión a usar):** 46-anti-hype v1 · 44-how-it-works v1 · 42-multi-pair v1 · 27-benefit-checklist v1 · 04-features-benefits v1 · 37-promo-discount **v2** · 21-bold-statement **v2** · 07-us-vs-them **v2**
+
+---
+
+## Tareas — de más urgente a menos
+
+**Camino crítico para lanzar el viernes:**
+
+- [ ] **Redeploy de la LP en Vercel** (`git push` / deploy) → checkout + versión honesta en vivo.
+- [ ] **Compra de prueba real** en Whop → confirmar que dispara `Purchase` en Meta (Events Manager). Si no, avisar a Claude para corregir el webhook.
+- [ ] **Sacar los números reales del backtest** (reportes MT5 Strategy Tester de los 5 pares) y pasárselos a Claude → reactivo la sección de backtest en la LP con data real.
+- [ ] **Armar y lanzar la campaña Meta:** 1 campaña Cold Sales (objetivo Purchase), 1 adset, $30/día, 5-6 ads, link a la LP. Special Ad Category = None. Disclaimer de riesgo en cada ad.
+
+**En paralelo (suben conversión, NO bloquean el lanzamiento):**
+
+- [ ] **Hacer público el MyFXBook** + verificar en incógnito. Cuando tenga ~2 semanas, pasárselo a Claude → reactivo la sección de performance.
+- [ ] **Grabar la sesión de MT5** (`video.md`): sale el hero loop de la LP + el pitch del founder. Subir el pitch al Whop store.
+- [ ] **Conseguir 3-5 beta testers reales** (Telegram/conocidos que tradeen) → reviews genuinas en Whop.
+- [ ] **Armar ads 41 (MyFXBook real) y 43 (founder)** en Canva con tus imágenes reales — NO se generan con la tool. Para cuando tengas MyFXBook público + foto tuya.
+
+**Hito de éxito semana 1:** ≥3 ventas. Si no llega, el problema es la LP/oferta, no el spend.
+
+---
+
+## Lo que NO hacer
+
+- No frenar en el momento de vender. Lanzar, medir, iterar con datos reales — no con suposiciones.
+- No fabricar pruebas (resultados ajenos, reviews/prensa falsas, números inventados). Templates 10 y 33 = "DO NOT USE".
+- No publicar el código del bot en ningún lado.
+- No correr discounts. La urgencia es "$147 → $197 el 1 julio".
+- No escalar el presupuesto antes de tener ≥3 ventas que confirmen que la LP convierte.
+- No agregar productos nuevos hasta validar $10k/mes.
+
+---
+
+# Backlog técnico (app / tooling)
+
 - [ ] Cron semanal de Scout (lunes 6am)
 - [ ] Hacer visible el historial de tool calls cuando termina Scout
 - [ ] Agregar JobContext a Scout (sobrevivir cambio de pestaña)

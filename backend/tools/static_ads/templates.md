@@ -317,3 +317,51 @@ Do NOT include any product, logo, or branding. Create: a scroll-stopping curiosi
 **Template Prompt:**
 
 Create: a lifestyle photo set in a home office or desk setup. Soft natural daylight from a nearby window, slightly warm, naturally blurred background showing a monitor with trading charts. Frame is slightly off-center — feels found rather than composed. Slight natural sensor grain consistent with a phone camera. Center of frame: a laptop or monitor screen displaying a candlestick chart with green candles trending up. Stuck on the screen: a yellow square post-it note, slightly crooked. Realistic paper texture with a horizontal crease. Subtle curl at bottom-right corner. Held with a small piece of clear tape, slightly wrinkled. Handwritten in thick black marker, imperfect lowercase: "[LINE 1 like set up the bot]" line break "[LINE 2 like went to sleep]" line break "[LINE 3 like woke up to profits]" line break "[LINE 4 like 🤯]". No brand logo anywhere. No attribution. Bottom center on a plain off-white strip: small plain lowercase sans-serif caption: "jesstrading.com — the future of trading is automated". Casual, authentic, intriguing. 4:5 aspect ratio.
+
+## 41. Verified Results (Real)
+
+🏷️ REAL PROOF AD. Composite the founder's actual MyFXBook screenshot into the frame manually (or via image-edit) — never let the model invent the numbers. Strongest, fully-honest ad.
+
+**Template Prompt:**
+
+Create: a clean results-showcase ad LAYOUT built to frame a REAL verified-performance screenshot (the founder's actual MyFXBook account). Carbon Black (#101010) background. Top: bold white sans-serif headline "Live, verified results — check them yourself." with "verified" in Neon Green (#A5F28C). Center: a large rounded browser/device frame placeholder where the real MyFXBook screenshot will be composited in — do NOT generate, invent, or draw any numbers, charts, percentages, or equity curves; leave a clean empty framed placeholder area for the real screenshot. Below the frame: an Electric Blue #2979FF text-link element reading "Verify on MyFXBook". Bottom: Light Gray disclaimer "Trading involves risk. Past performance does not guarantee future results." Jess Trading logo bottom right in white. 4:5 aspect ratio.
+
+## 42. Multi-Pair (Not Just Gold)
+
+🏷️ Multi-pair differentiator — 100% true, sets it apart from gold-only bots.
+
+**Template Prompt:**
+
+Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography. Neon Green #A5F28C for highlights, Electric Blue #2979FF for CTAs. Minimalist, premium, no hype. Create: a static ad on Carbon Black (#101010) background. Top: large bold white sans-serif headline "Not just gold." with a second line in Neon Green (#A5F28C): "5 markets. One breakout system.". Center: five clean horizontal rows, each with a small Neon Green ticker label and a thin rising candlestick motif: "XAUUSD", "EURUSD", "GBPUSD", "USDJPY", "EURJPY". Each row shows a small range-to-breakout mini-diagram in Neon Green wireframe. Bottom: Light Gray subtext "Pre-configured settings for every pair, included in the guide." and a small dark badge "Lifetime Access | $147" with Neon Green border. Jess Trading logo bottom right in white. 4:5 aspect ratio.
+
+## 43. Founder / Human
+
+🏷️ Founder/human ad — the brand gets a face. Use a real photo of Jess if possible. Highest trust-builder for skeptical traders.
+
+**Template Prompt:**
+
+This should feel human and credible, NOT a polished ad. Create: a portrait-style ad of the founder. A real-feeling photo of a man at a clean desk with a monitor showing MetaTrader 5 charts behind him, natural lighting, smart-casual, direct confident eye contact with the camera — approachable, not flashy. Carbon Black (#101010) negative space on one side for text. Overlaid in bold white sans-serif with key words in Neon Green (#A5F28C): "I built this bot because I kept breaking my own rules.". Below in Light Gray: "— Jess, founder. Range breakout automation for MT5.". Small Jess Trading logo. Premium but human. 4:5 aspect ratio.
+
+## 44. How It Works (Breakout Explainer)
+
+🏷️ Educational — explains the real mechanic. Builds trust with intermediate traders; positions the bot as transparent, not a black box.
+
+**Template Prompt:**
+
+Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography. Neon Green #A5F28C for highlights. Minimalist, premium, no hype. Create: an educational diagram ad on Carbon Black (#101010) background explaining the strategy in 3 clean steps. Top: white sans-serif headline "How the breakout system works". Center: a horizontal 3-step flow connected by thin Neon Green (#A5F28C) arrows. Step 1: a small candlestick chart with a highlighted box labeled "1. It records the daily range". Step 2: two pending-order lines above and below the box, labeled "2. Places Buy Stop + Sell Stop". Step 3: one line triggering with a green breakout candle and the other cancelling, labeled "3. Breakout triggers, the other cancels". Below the flow: Light Gray text "All positions close at the session end. No black box — you see exactly what it does.". Jess Trading logo bottom right in white. 1:1 aspect ratio.
+
+## 45. Deadline Urgency ($147 to $197)
+
+🏷️ Clean deadline ad — the core pricing lever ($147 to $197 on July 1).
+
+**Template Prompt:**
+
+Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography. Neon Green #A5F28C for the price, Electric Blue #2979FF for the CTA. Minimalist, high-contrast, premium. Create: a clean urgency ad on Carbon Black (#101010) radial gradient background. Headline at top in white: "Launch price ends July 1.". Center: oversized bold pricing — "$147" in large Neon Green (#A5F28C) with a smaller "then $197" beside it in Light Gray to show the increase. Below the price: Light Gray subtext "Lifetime license. One-time payment. No subscription.". A subtle thin Neon Green horizontal divider. Bottom: Electric Blue #2979FF CTA button "LOCK IN $147 NOW". Jess Trading logo bottom right in white. Minimal, urgent but premium. 1:1 aspect ratio.
+
+## 46. Anti-Hype Honest
+
+🏷️ Anti-hype honesty ad — leans into the transparency moat. Stands out in a niche full of get-rich claims; the most on-brand positioning.
+
+**Template Prompt:**
+
+Premium fintech aesthetic on Carbon Black radial gradient background (#101010 center fading to #010101). Bold Inter-style sans-serif typography. Neon Green #A5F28C for the key line. Minimalist, premium, anti-hype. Create: a contrarian, confident typography ad on Carbon Black (#101010) background. No imagery — text does the work. Top: oversized bold white sans-serif headline reading "This won't make you rich.". Below, in Neon Green (#A5F28C), a second heavy line: "It removes your worst trades.". Below in Light Gray regular weight: "No hype. No guaranteed returns. Just a backtested breakout system that follows the rules you can't always follow yourself — 24/7, with zero emotion.". Bottom: a small dark badge "Lifetime Access | $147" with Neon Green border, and the Jess Trading logo. Bottom edge: Light Gray disclaimer "Trading involves risk. Past performance does not guarantee future results.". 1:1 aspect ratio.

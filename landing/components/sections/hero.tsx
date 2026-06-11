@@ -18,7 +18,7 @@ export function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-neon-bright opacity-60" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-neon" />
           </span>
-          Live on real account · Verified on MyFXBook
+          Range breakout automation · MetaTrader 5
         </div>
 
         {/* Headline */}
@@ -29,7 +29,7 @@ export function Hero() {
 
         {/* Subheadline */}
         <p className="mt-6 max-w-2xl text-balance text-lg text-ink-secondary md:text-xl">
-          Built on 5 years of verified data.{' '}
+          Built on 5 years of backtested data.{' '}
           <span className="text-ink-primary">$147 lifetime.</span> Setup in 8 minutes. No coding.
         </p>
 

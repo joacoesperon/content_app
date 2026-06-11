@@ -1,13 +1,12 @@
 import asyncio
 import json
-import re
 import uuid
 from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from backend.config import BRAND_DIR, OUTPUTS_DIR, TEMPLATES_FILE
+from backend.config import BRAND_DIR, OUTPUTS_DIR
 from backend.tools.static_ads.schemas import (
     GenerateRequest,
     GenerateJobStatus,
@@ -26,36 +25,23 @@ job_queues: dict[str, asyncio.Queue] = {}
 
 
 def _parse_templates() -> list[TemplateInfo]:
-    """Parse template-prompts.md to extract template names and descriptions."""
-    if not TEMPLATES_FILE.exists():
+    """Build the template list from the single source of truth: static-ads-prompts.json."""
+    prompts_file = BRAND_DIR / "data" / "static-ads-prompts.json"
+    if not prompts_file.exists():
         return []
 
-    content = TEMPLATES_FILE.read_text(encoding="utf-8")
+    data = json.loads(prompts_file.read_text(encoding="utf-8"))
     templates = []
-    # Match headers like "## **1. Headline**" or "## 13. Stat Surround"
-    pattern = r"##\s+\**(\d+)\.\s*(.+?)\**\s*\n\n(.+?)(?:\n\n\*\*Template Prompt)"
-    for match in re.finditer(pattern, content, re.DOTALL):
-        num = int(match.group(1))
-        name = match.group(2).strip().rstrip("*").strip()
-        desc_line = match.group(3).strip()
-        # Extract description from the tag line
-        desc = re.sub(r"^🏷️\s*", "", desc_line).strip()
-
-        # Determine aspect ratio from the template prompt that follows
-        # Find the prompt text after this header
-        start = match.end()
-        next_header = content.find("\n## ", start)
-        prompt_block = content[start:next_header] if next_header > 0 else content[start:]
-        ar_match = re.search(r"(\d+:\d+)\s+aspect ratio", prompt_block)
-        aspect_ratio = ar_match.group(1) if ar_match else "1:1"
-
+    for p in data.get("prompts", []):
+        name = (p.get("template_name", "") or "").replace("-", " ").strip().title()
         templates.append(TemplateInfo(
-            number=num,
-            name=name,
-            description=desc,
-            aspect_ratio=aspect_ratio,
+            number=p["template_number"],
+            name=name or f"Template {p['template_number']}",
+            description=p.get("notes", ""),
+            aspect_ratio=p.get("aspect_ratio", "1:1"),
         ))
 
+    templates.sort(key=lambda t: t.number)
     return templates
 
 
