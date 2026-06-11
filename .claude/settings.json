@@ -19,7 +19,12 @@
       "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" -L \"https://jesstrading.xyz\")",
       "Bash(curl -s -L \"https://jesstrading.xyz\" -A \"Mozilla/5.0\")",
       "Bash(curl -s -L \"https://jesstrading.xyz\" -A \"Mozilla/5.0\" > /tmp/lp.html *)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(pdflatex -interaction=nonstopmode -halt-on-error guide.tex)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(pdfinfo guide.pdf)",
+      "Bash(cp lead-magnet/guide.pdf landing/public/guide.pdf)",
+      "Bash(rm -f lead-magnet/guide.aux lead-magnet/guide.log lead-magnet/guide.out lead-magnet/compile.log)"
     ]
   }
 }

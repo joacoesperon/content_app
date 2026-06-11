@@ -39,8 +39,15 @@ export function LeadMagnetForm({ className }: { className?: string }) {
     return (
       <div className={cn('rounded-2xl border border-neon/30 bg-neon/5 px-6 py-8 text-center', className)}>
         <div className="text-2xl">✓</div>
-        <p className="mt-2 font-medium text-neon-bright">Check your inbox</p>
-        <p className="mt-1 text-sm text-ink-muted">The guide is on its way.</p>
+        <p className="mt-2 font-medium text-neon-bright">Your guide is ready</p>
+        <a
+          href="/guide.pdf"
+          target="_blank"
+          rel="noopener"
+          className="mt-4 inline-flex items-center justify-center rounded-xl bg-neon px-6 py-3 text-sm font-semibold text-carbon transition hover:bg-neon-bright"
+        >
+          Download the guide
+        </a>
       </div>
     );
   }

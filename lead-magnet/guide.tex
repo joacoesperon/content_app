@@ -1,0 +1,221 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,top=2.3cm,bottom=2.2cm,left=2.3cm,right=2.3cm]{geometry}
+\usepackage{xcolor}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{fontawesome5}
+\usepackage[hidelinks]{hyperref}
+
+% ---- Brand palette ----
+\definecolor{carbon}{HTML}{101010}
+\definecolor{carbonsoft}{HTML}{1A1A1A}
+\definecolor{neon}{HTML}{A5F28C}
+\definecolor{ink}{HTML}{FFFFFF}
+\definecolor{inksec}{HTML}{D7D7D7}
+\definecolor{inkmuted}{HTML}{8A8A8A}
+\definecolor{electric}{HTML}{2979FF}
+
+\pagecolor{carbon}
+\color{inksec}
+
+\hypersetup{colorlinks=true,urlcolor=neon}
+
+% ---- Section styling ----
+\titleformat{\section}
+  {\color{ink}\Large\bfseries}{}{0pt}{}
+\titleformat{\subsection}
+  {\color{neon}\large\bfseries}{}{0pt}{}
+\titlespacing{\section}{0pt}{2.2ex}{1.2ex}
+\titlespacing{\subsection}{0pt}{1.8ex}{0.8ex}
+
+% ---- Header / footer ----
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\color{inkmuted}\footnotesize Jess Trading}
+\fancyfoot[R]{\color{inkmuted}\footnotesize\thepage}
+
+\setlist[itemize]{leftmargin=1.4em,itemsep=0.3ex}
+
+% ---- Callout box: the fix ----
+\newtcolorbox{fixbox}{
+  colback=carbonsoft, colframe=neon, boxrule=0pt, leftrule=3pt,
+  arc=1.5mm, left=5mm, right=5mm, top=3.5mm, bottom=3.5mm,
+  coltext=inksec
+}
+\newtcolorbox{leakbox}{
+  colback=carbonsoft, colframe=inkmuted, boxrule=0pt, leftrule=3pt,
+  arc=1.5mm, left=5mm, right=5mm, top=3.5mm, bottom=3.5mm,
+  coltext=inksec
+}
+
+\newcommand{\fixlabel}{{\color{neon}\bfseries\faArrowRight\ The fix }}
+\newcommand{\leaklabel}{{\color{inkmuted}\bfseries\faExclamationTriangle\ The leak }}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.7ex}
+\linespread{1.12}
+
+\begin{document}
+
+% ============================ COVER ============================
+\thispagestyle{empty}
+\vspace*{2.2cm}
+
+{\color{neon}\bfseries\large FREE GUIDE}\\[0.3cm]
+{\color{neon}\rule{2.2cm}{2pt}}\\[1.0cm]
+
+{\color{ink}\fontsize{30}{34}\selectfont\bfseries 5 Reasons Manual\\[2pt] Traders Lose Money\\[2pt] on Gold}\\[0.8cm]
+
+{\color{inksec}\Large And the mathematical fix that has\\ nothing to do with your strategy.}\\[2.2cm]
+
+{\color{inkmuted}\normalsize No fluff. Read it in 10 minutes.\\ If by page 3 you don't see yourself in here, delete it.}\\[3cm]
+
+{\color{ink}\bfseries\large Jess Trading}\\
+{\color{inkmuted}Range breakout automation for MetaTrader 5 \quad\textbar\quad jesstrading.xyz}
+
+\vfill
+{\color{inkmuted}\footnotesize This guide is educational. It is not financial advice. Trading involves substantial risk of loss.}
+
+\newpage
+
+% ============================ INTRO ============================
+\section{Read this first}
+
+If you trade XAUUSD by hand and your equity curve looks like a heartbeat --- a good month, then a month that gives it all back --- this is going to be uncomfortable. Because the problem is almost never the thing you think it is.
+
+You keep looking for a better strategy. A cleaner indicator. The right combination of settings. But here is what nobody in the courses tells you:
+
+\vspace{0.5ex}
+\begin{center}
+{\color{ink}\Large\bfseries Your strategy is probably fine.\\[2pt] {\color{neon}Your execution is the leak.}}
+\end{center}
+\vspace{0.5ex}
+
+Two traders can run the exact same strategy and end the year in completely different places. One follows the rules. The other follows the rules \emph{most of the time} --- and the exceptions are where the account goes to die.
+
+The good news: execution errors are not random. They are systematic, repeatable, and \textbf{measurable}. Which means they are fixable. The five that follow are the ones that quietly drain gold traders the most. For each one, you will see the mechanism, the math, and the fix.
+
+\vspace{1ex}
+\begin{leakbox}
+A 60\%-win-rate strategy can still lose money if your average loss creeps above your average win. Execution errors don't change \emph{whether} you win --- they change the \emph{size} of your wins and losses. That's the whole game.
+\end{leakbox}
+
+\newpage
+
+% ============================ REASON 1 ============================
+\section{Reason 1 --- Your accuracy decays the longer you watch}
+
+Gold doesn't move on your schedule. The meaningful action clusters around the London and New York sessions, and if you are trading manually you are often staring at a screen for hours waiting for it.
+
+That waiting is the problem. Decision quality degrades with time-on-task --- it is one of the most replicated findings in cognitive research. By hour four, you are not the same trader you were at hour one. You take setups you would have skipped when fresh. You talk yourself into the marginal one because you've been waiting all day and you \emph{want} something to happen.
+
+\begin{fixbox}
+\fixlabel\\[0.4ex]
+The trade you take out of boredom at hour four is statistically your worst trade of the day. A rule that only fires inside a defined window --- and then stops --- removes the fatigue trade entirely. The machine doesn't get bored.
+\end{fixbox}
+
+% ============================ REASON 2 ============================
+\section{Reason 2 --- The ``just this once'' stop}
+
+You set your stop loss with a clear head. Then price moves against you, approaches the stop, and a voice says: \emph{it's about to turn, just give it a little more room.} You widen it. Sometimes it works. And that's the trap --- because the times it works teach you to do it again.
+
+This is the single most expensive habit in retail trading. One widened stop can erase the gains of ten disciplined trades. You are converting a small, planned loss into an unplanned, unbounded one, exactly when you are least objective.
+
+\begin{fixbox}
+\fixlabel\\[0.4ex]
+The stop has to be untouchable once the trade is live. Not ``hard to move'' --- impossible to move. When the exit is defined before entry and executed mechanically, the ``just this once'' moment never gets a vote.
+\end{fixbox}
+
+\newpage
+
+% ============================ REASON 3 ============================
+\section{Reason 3 --- You size by feeling, not by formula}
+
+Ask most manual traders how big their last position was and why, and the honest answer is ``it felt right.'' Bigger after a winning streak (confidence). Smaller after losses (fear) --- which means you under-size exactly when the math says your edge hasn't changed.
+
+Inconsistent position sizing destroys returns even with a winning strategy, because your biggest size lands on your worst trades and your smallest size on your best. You are inversely correlating bet size with outcome --- the opposite of what compounding requires.
+
+\begin{fixbox}
+\fixlabel\\[0.4ex]
+Risk a fixed, small percentage of the account on every trade --- the same on trade 1 and trade 100, after a win or after a loss. Consistency of size is worth more than accuracy of entry. A formula doesn't have a winning streak to defend.
+\end{fixbox}
+
+% ============================ REASON 4 ============================
+\section{Reason 4 --- You're not there when the setup is}
+
+Gold's cleanest moves are tied to specific session hours. The breakout you needed to catch happened at 06:00 while you were asleep, in a meeting, or making coffee. So you either miss it, or worse --- you chase it late, entering after the move has already paid out and right before the pullback.
+
+Manual trading silently caps your strategy at the trades you happened to be awake and present for. That is not a strategy with an edge. That is a strategy with attendance problems.
+
+\begin{leakbox}
+\leaklabel\\[0.4ex]
+A strategy that wins on paper but only takes half its signals (the ones you were around for) is a different, worse strategy in practice --- and you will blame the strategy for an attendance problem.
+\end{leakbox}
+
+\newpage
+
+% ============================ REASON 5 ============================
+\section{Reason 5 --- Hesitation, and the cost of discretion}
+
+Here is the cruel symmetry of manual trading: you hesitate on the clean setup (``let me wait for confirmation'') and you act on the messy one (``this one feels different''). You add discretion in exactly the wrong places. The valid trade you skip and the invalid trade you take are often the same week.
+
+Every point of discretion you add is a point where emotion gets to overrule the plan. And emotion, at the moment of a live trade, is not your friend --- it is the accumulated weight of your last few wins and losses pushing you to do something the rules never asked for.
+
+\begin{fixbox}
+\fixlabel\\[0.4ex]
+The edge of a system is not that it predicts better than you. It's that it does the \emph{same thing every single time}. No hesitation on the good setup, no improvisation on the bad one. Remove the discretion and you remove the leak.
+\end{fixbox}
+
+% ============================ THE FIX ============================
+\section{The mathematical fix}
+
+Notice what every fix above has in common. None of them is ``find a better strategy.'' Every one is the same move: \textbf{take the execution out of human hands and hand it to a rule.}
+
+That's the whole insight. The edge you're missing isn't a secret indicator. It's \emph{consistency} --- doing the boring, correct thing on every trade, including the trades you're tired for, the ones you're tempted to widen the stop on, the ones at 6am, and the ones that ``feel different.''
+
+A human can know the right rule and still not follow it. That gap --- between knowing the rule and following it under pressure --- is where the money leaks. A machine doesn't have that gap. It isn't smarter than you. It's just incapable of breaking its own rules.
+
+\begin{center}
+{\color{ink}\Large\bfseries This won't make you rich.\\[2pt] {\color{neon}It removes your worst trades.}}
+\end{center}
+
+That is the honest promise. Not a money printer --- a way to stop being the weakest link in your own strategy.
+
+\newpage
+
+% ============================ ECONOMICS + CTA ============================
+\section{The part where I tell you what I built}
+
+I'm Jess. I traded gold and major forex pairs by hand for years, and every leak in this guide is one I lived. I knew my breakout strategy worked --- I just couldn't stop sabotaging it. So I automated it.
+
+The result is a range breakout bot for MetaTrader 5. It defines the daily range during set session hours, places the breakout orders, manages the exit mechanically, and risks a fixed 1\% per trade by default. It does on every trade what you and I can only do on our disciplined days. It works on XAUUSD plus EURUSD, GBPUSD, USDJPY and EURJPY, with pre-configured settings for each.
+
+\begin{fixbox}
+\textbf{\color{ink}The economics are simple.}\\[0.6ex]
+One emotional trade --- one widened stop, one oversized revenge entry --- can cost more than the bot does. The bot is \textbf{\$147 once}, lifetime license, not a \$97/month subscription. If it's not for you, there's a 14-day refund. I'd rather lose a sale than create a bad customer.
+\end{fixbox}
+
+\vspace{0.8ex}
+No hype, no guaranteed returns. I run it on a live account and I'm putting the results on a public tracker so you can verify rather than trust. If the math in this guide made sense to you, that's the moment to look:
+
+\vspace{1ex}
+\begin{center}
+{\large\faArrowRight\ \ \href{https://jesstrading.xyz}{\textbf{\color{neon}jesstrading.xyz}}}
+\end{center}
+
+\vfill
+
+% ============================ DISCLOSURE ============================
+\begin{leakbox}
+{\color{inkmuted}\footnotesize \textbf{Risk disclosure.} Trading foreign exchange and CFDs, including XAUUSD (gold), carries a high level of risk and may not be suitable for all investors. Past performance and backtested results are not indicative of future results. You can lose some or all of your capital. Only trade with money you can afford to lose. This guide is educational and is not financial advice. \copyright\ Jess Trading.}
+\end{leakbox}
+
+\end{document}
