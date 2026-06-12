@@ -18,7 +18,7 @@ const STEPS = [
   {
     number: '03',
     icon: Activity,
-    title: 'Bot runs 24/5',
+    title: 'Bot runs 24/7',
     description:
       'It defines the daily range, places the breakout orders, and manages the exit automatically while the market is open. Your job is just to fund the account and let it run.',
   },

@@ -5,7 +5,7 @@ const LINKS = [
   { href: '/privacy', label: 'Privacy' },
   { href: '/refund-policy', label: 'Refund policy' },
   { href: '/risk-disclosure', label: 'Risk disclosure' },
-  { href: 'https://www.instagram.com/jesstrading/', label: 'Instagram', external: true },
+  { href: 'https://www.instagram.com/jesstradingbots/', label: 'Instagram', external: true },
 ];
 
 export function Footer() {

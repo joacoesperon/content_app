@@ -24,3 +24,35 @@ body {
   background: rgba(41, 121, 255, 0.4);
   color: #ffffff;
 }
+
+.legal-prose h2 {
+  margin-top: 2.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.legal-prose p {
+  line-height: 1.7;
+}
+
+.legal-prose ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  line-height: 1.7;
+}
+
+.legal-prose ul li {
+  margin-top: 0.5rem;
+}
+
+.legal-prose a {
+  color: #a5f28c;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-prose strong {
+  color: #ffffff;
+  font-weight: 600;
+}
