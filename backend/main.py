@@ -55,9 +55,8 @@ async def test_instagram(body: dict):
     Test endpoint: publishes prueba.png as a carousel (image duplicated) via Make.com webhook
     or directly to Instagram. Pass {"mode": "direct"} for instant, {"mode": "make"} for webhook.
     """
-    import asyncio
     from pathlib import Path
-    from backend.config import TOKEN_SYSTEM_USER, MAKE_WEBHOOK_URL
+    from backend.config import TOKEN_SYSTEM_USER
     from backend.tools.carousels import instagram
     from fastapi import HTTPException
 
@@ -78,28 +77,4 @@ async def test_instagram(body: dict):
             raise HTTPException(status_code=502, detail=str(e))
         return {"ok": True, "post_id": post_id, "mode": "direct"}
 
-    elif mode == "make":
-        # Scheduled via Make.com webhook with scheduled_at = now (fires immediately in scenario B)
-        import time, requests as _req
-        if not MAKE_WEBHOOK_URL:
-            raise HTTPException(status_code=500, detail="MAKE_WEBHOOK_URL not configured")
-        # Upload image × 2 to FAL, create item containers
-        public_urls = await asyncio.gather(*[instagram._upload_image(prueba), instagram._upload_image(prueba)])
-        container_ids = []
-        for url in public_urls:
-            cid = await instagram._create_item_container(url, TOKEN_SYSTEM_USER)
-            container_ids.append(cid)
-        payload = {
-            "post_slug": f"test_{int(time.time())}",
-            "post_type": "carousel",
-            "caption": caption,
-            "image_urls": ",".join(container_ids),
-            "video_url": "",
-            "scheduled_at": str(int(time.time()) - 10),  # 10s ago → fires instantly in scenario B
-        }
-        def _send():
-            _req.post(MAKE_WEBHOOK_URL, json=payload, timeout=10).raise_for_status()
-        await asyncio.to_thread(_send)
-        return {"ok": True, "post_id": "sent_to_make", "mode": "make", "payload": payload}
-
-    raise HTTPException(status_code=400, detail="mode must be 'direct' or 'make'")
+    raise HTTPException(status_code=400, detail="mode must be 'direct'")

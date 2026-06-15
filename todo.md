@@ -17,13 +17,12 @@
 | Bot corriendo 24/7 en VPS | ✅ (desde 10/6) |
 | Copy Whop + afiliados 40% + Telegram | ✅ |
 | +439% falso fuera del Whop | ✅ |
-| LP: checkout directo cableado | ✅ — falta redeploy |
-| LP: hero honesto, secciones con data falsa escondidas | ✅ — falta redeploy |
-| Pixel + CAPI + webhook Whop (código) | ✅ sin testear en vivo |
+| LP: checkout directo cableado | ✅ |
+| LP: hero honesto, secciones con data falsa escondidas | ✅ |
+| Pixel + CAPI + webhook Whop | ✅ testeado en vivo — Purchase server llega a Meta |
 | Prompts de ads limpios (46) | ✅ |
 | Static ads generadas (8 templates) | ✅ versiones elegidas |
-| Redeploy LP en Vercel | 🔴 |
-| Compra de prueba (Purchase en Meta) | 🔴 |
+| Compra de prueba (Purchase en Meta) | ✅ verificado (CAPI server-side) |
 | Backtest real → reactivar sección LP | 🔴 hoy |
 | Campaña Meta lanzada | 🔴 viernes |
 | MyFXBook público + historial | 🔴 paralelo |
@@ -38,8 +37,6 @@
 
 **Camino crítico para lanzar el viernes:**
 
-- [ ] **Redeploy de la LP en Vercel** (`git push` / deploy) → checkout + versión honesta en vivo.
-- [ ] **Compra de prueba real** en Whop → confirmar que dispara `Purchase` en Meta (Events Manager). Si no, avisar a Claude para corregir el webhook.
 - [ ] **Sacar los números reales del backtest** (reportes MT5 Strategy Tester de los 5 pares) y pasárselos a Claude → reactivo la sección de backtest en la LP con data real.
 - [ ] **Armar y lanzar la campaña Meta:** 1 campaña Cold Sales (objetivo Purchase), 1 adset, $30/día, 5-6 ads, link a la LP. Special Ad Category = None. Disclaimer de riesgo en cada ad.
 
@@ -67,10 +64,10 @@
 
 # Backlog técnico (app / tooling)
 
-- [ ] Cron semanal de Scout (lunes 6am)
+- [ ] Cron semanal de Scout y Director (lunes 6am)
 - [ ] Hacer visible el historial de tool calls cuando termina Scout
 - [ ] Agregar JobContext a Scout (sobrevivir cambio de pestaña)
 - [ ] Limpiar `ddgs` de backend/requirements.txt
 - [ ] Crear primera campaña de Meta
 - [ ] Verificar que la Meta Ads Tool deja seleccionar la campaña y subir ads
-- [ ] Reescribir SKILL.md de nano-banana + claude code para Static Ads
+- [ ] Dashboard que sea un dashboard de metricas de ads y metricas de engagement de contenido, osea todo lo relacionado a ads, cuanto rinden, etc, todo lo relacionado a contenido, cuanto rinden, vistas, etc, y todo lo relacionado al negocio, ventas, graficas, etc 

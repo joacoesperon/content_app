@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
 import {
-  CalendarDays,
   Check,
   ChevronLeft,
   ChevronLeft as ArrowLeft,
@@ -19,8 +17,6 @@ import {
   Trash2,
   Video,
 } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import {
   deleteReelOutput,
@@ -667,7 +663,6 @@ function ReelEditor({
   const [publishing, setPublishing] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishCaption, setPublishCaption] = useState('');
-  const [publishScheduled, setPublishScheduled] = useState('');
 
   const date = dateFromFilename(filename);
 
@@ -908,7 +903,6 @@ function ReelEditor({
   const openPublish = () => {
     const defaultCaption = (caption + (hashtags ? `\n\n${hashtags}` : '')).trim();
     setPublishCaption(defaultCaption);
-    setPublishScheduled('');
     setPublishOpen(true);
   };
 
@@ -920,9 +914,8 @@ function ReelEditor({
         date,
         reel.slug,
         publishCaption || undefined,
-        publishScheduled || undefined,
       );
-      toast.success(publishScheduled ? `Reel programado (ID: ${res.post_id})` : `Reel publicado (ID: ${res.post_id})`);
+      toast.success(`Reel publicado (ID: ${res.post_id})`);
       setPublishOpen(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error publicando');
@@ -1053,20 +1046,6 @@ function ReelEditor({
                   className="text-sm"
                 />
               </div>
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1">
-                  Programar publicación (opcional)
-                </label>
-                <Input
-                  type="datetime-local"
-                  value={publishScheduled}
-                  onChange={(e) => setPublishScheduled(e.target.value)}
-                  className="text-sm"
-                />
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Dejá vacío para publicar ahora. Instagram puede tardar ~2-5 min en procesar el video.
-                </p>
-              </div>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" size="sm" onClick={() => setPublishOpen(false)} disabled={publishing}>
                   Cancelar
@@ -1079,8 +1058,6 @@ function ReelEditor({
                 >
                   {publishing ? (
                     <><Loader2 size={14} className="animate-spin mr-2" />Publicando…</>
-                  ) : publishScheduled ? (
-                    <><Send size={14} className="mr-2" />Programar</>
                   ) : (
                     <><Send size={14} className="mr-2" />Publicar ahora</>
                   )}
@@ -1179,13 +1156,6 @@ function PublishTab() {
   const [loading, setLoading] = useState(true);
   const [selectedOutput, setSelectedOutput] = useState<ReelOutput | null>(null);
   const [publishCaption, setPublishCaption] = useState('');
-  const [useSchedule, setUseSchedule] = useState(true);
-  const [scheduledDate, setScheduledDate] = useState<Date>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d;
-  });
-  const [scheduledTime, setScheduledTime] = useState('21:00');
   const [publishLoading, setPublishLoading] = useState(false);
 
   useEffect(() => {
@@ -1197,11 +1167,6 @@ function PublishTab() {
   const openReel = (o: ReelOutput) => {
     const caption = (o.concept + (o.hashtags ? `\n\n${o.hashtags}` : '')).trim();
     setPublishCaption(caption);
-    setUseSchedule(true);
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    setScheduledDate(tomorrow);
-    setScheduledTime('21:00');
     setSelectedOutput(o);
   };
 
@@ -1209,30 +1174,12 @@ function PublishTab() {
     if (!selectedOutput) return;
     setPublishLoading(true);
     try {
-      let scheduledIso: string | undefined;
-      if (useSchedule) {
-        const [h, m] = scheduledTime.split(':').map(Number);
-        const utcGuess = new Date(Date.UTC(
-          scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate(), h, m
-        ));
-        const offsetStr = new Intl.DateTimeFormat('en', {
-          timeZone: 'Europe/Madrid', timeZoneName: 'shortOffset',
-        }).formatToParts(utcGuess).find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1';
-        const match = offsetStr.match(/GMT([+-])(\d+)/);
-        const sign = match?.[1] === '+' ? 1 : -1;
-        const offsetH = parseInt(match?.[2] ?? '1');
-        scheduledIso = new Date(Date.UTC(
-          scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate(),
-          h - sign * offsetH, m
-        )).toISOString();
-      }
       await publishReelToInstagram(
         selectedOutput.date,
         selectedOutput.reel_slug,
         publishCaption || undefined,
-        scheduledIso,
       );
-      toast.success(useSchedule ? 'Programado en Instagram' : 'Publicado en Instagram');
+      toast.success('Publicado en Instagram');
       setSelectedOutput(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error publicando');
@@ -1289,51 +1236,6 @@ function PublishTab() {
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="use-schedule-reel"
-                checked={useSchedule}
-                onChange={(e) => setUseSchedule(e.target.checked)}
-                className="rounded border-border"
-              />
-              <Label htmlFor="use-schedule-reel" className="text-xs text-muted-foreground cursor-pointer">
-                Programar publicación
-              </Label>
-            </div>
-
-            {useSchedule && (
-              <div className="flex items-center gap-3 flex-wrap">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="justify-start font-normal text-sm min-w-44">
-                      <CalendarDays size={14} className="mr-2 shrink-0" />
-                      {format(scheduledDate, 'EEE, d MMM yyyy')}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start">
-                    <Calendar
-                      mode="single"
-                      selected={scheduledDate}
-                      onSelect={(d) => d && setScheduledDate(d)}
-                      disabled={(d) => { const today = new Date(); today.setHours(0,0,0,0); return d < today; }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                <input
-                  type="time"
-                  value={scheduledTime}
-                  onChange={(e) => setScheduledTime(e.target.value)}
-                  className="border border-border rounded px-2 py-1 text-sm bg-background"
-                />
-                <span className="text-xs text-muted-foreground">Madrid</span>
-              </div>
-            )}
-          </div>
-
           <div className="flex justify-end">
             <Button
               onClick={handlePublish}
@@ -1345,9 +1247,7 @@ function PublishTab() {
               ) : (
                 <Send size={14} className="mr-2" />
               )}
-              {publishLoading
-                ? useSchedule ? 'Programando…' : 'Publicando…'
-                : useSchedule ? 'Programar' : 'Publicar ahora'}
+              {publishLoading ? 'Publicando…' : 'Publicar ahora'}
             </Button>
           </div>
         </Card>
@@ -1411,7 +1311,6 @@ function HistoryTab() {
   const [publishingSlug, setPublishingSlug] = useState<string | null>(null);
   const [publishOpen, setPublishOpen] = useState<ReelOutput | null>(null);
   const [publishCaption, setPublishCaption] = useState('');
-  const [publishScheduled, setPublishScheduled] = useState('');
 
   const load = () => {
     setLoading(true);
@@ -1430,7 +1329,6 @@ function HistoryTab() {
   const openPublish = (o: ReelOutput) => {
     const defaultCaption = (o.concept + (o.hashtags ? `\n\n${o.hashtags}` : '')).trim();
     setPublishCaption(defaultCaption);
-    setPublishScheduled('');
     setPublishOpen(o);
   };
 
@@ -1442,9 +1340,8 @@ function HistoryTab() {
         publishOpen.date,
         publishOpen.reel_slug,
         publishCaption || undefined,
-        publishScheduled || undefined,
       );
-      toast.success(publishScheduled ? `Reel programado (ID: ${res.post_id})` : `Reel publicado (ID: ${res.post_id})`);
+      toast.success(`Reel publicado (ID: ${res.post_id})`);
       setPublishOpen(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error publicando');
@@ -1561,20 +1458,6 @@ function HistoryTab() {
                 className="text-sm"
               />
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground block mb-1">
-                Programar publicación (opcional)
-              </label>
-              <Input
-                type="datetime-local"
-                value={publishScheduled}
-                onChange={(e) => setPublishScheduled(e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">
-                Dejá vacío para publicar ahora. Instagram puede tardar ~2-5 min en procesar el video.
-              </p>
-            </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setPublishOpen(null)} disabled={!!publishingSlug}>
                 Cancelar
@@ -1587,8 +1470,6 @@ function HistoryTab() {
               >
                 {publishingSlug ? (
                   <><Loader2 size={14} className="animate-spin mr-2" />Publicando…</>
-                ) : publishScheduled ? (
-                  <><Send size={14} className="mr-2" />Programar</>
                 ) : (
                   <><Send size={14} className="mr-2" />Publicar ahora</>
                 )}
