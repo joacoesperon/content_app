@@ -1,11 +1,11 @@
 {
-  "last_run": "2026-06-08",
-  "last_slot3": "trader_psychology",
+  "last_run": "2026-06-14",
+  "last_slot3": "hot_take",
   "last_concepts": [
-    "market_reaction: Broadcom Q2 FY2026 miss — $22.19B reported vs $22.27B expected ($80M gap), ~$1T in semiconductor market cap erased in one session; markets price the distance between reality and expectation, not reality itself",
-    "educational: The first 15 minutes after market open trap — spreads widest, institutions executing pre-planned orders, price discovery still running; retail traders mistake the chaos for signal and walk into a machine feeding frenzy",
-    "trader_psychology: The winning streak creates certainty, certainty doubles position size and removes stops, and one trade resets everything; JT carries the wax from that session as permanent evidence"
+    "market_reaction: Alphabet's $80B equity raise (upsized to $84.75B) to fund AI compute, GOOGL ~-4%, Berkshire anchoring $10B, ~1.8% dilution on a ~$4.5T cap; the richest company on earth issued fresh stock to chase AI and diluted every holder while the market dropped it the same day",
+    "educational: A company and its stock are two different things — you can buy the best business (record earnings, real product) and still lose, because you bought the price and the price already knew; you're buying the crowd's opinion, not the business",
+    "hot_take: The trader, not the strategy, is the broken variable — the edge isn't a better setup, it's removing the one variable that hopes, panics, and moves the stop; a system runs the same plan a thousand times without a bad morning, and the hardest trade is the one without you in it"
   ],
-  "last_levers": ["humor", "education", "controversy"],
-  "last_tones": ["deadpan", "confidential", "indignant"]
+  "last_levers": ["curiosity", "relatability", "controversy"],
+  "last_tones": ["smug", "warm", "philosophical"]
 }

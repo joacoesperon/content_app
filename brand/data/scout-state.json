@@ -1,13 +1,13 @@
 {
-  "last_avatar": "trader_agotado",
+  "last_avatar": "trader_intermedio",
   "last_angles": [
-    "Identity — el hábito de 8h frente a pantalla no es una ventaja, es un patrón que te cuesta tiempo de vida y resultados inconsistentes",
-    "Fear — 'ya probé bots y perdí' es válido, la distinción real es transparencia y estrategia verificable vs. caja negra",
-    "Educational — semanas de alto impacto macro (CPI, FOMC) no son oportunidades para el trader manual, son trampas de hesitación",
-    "Curiosity — el oro cayó 12% desde su ATH: ¿qué hiciste durante esa corrección? El bot ejecutó el plan",
-    "Social proof — Carlos dejó de despertarse a las 2:30 AM cuando el bot tomó el turno de la sesión asiática",
-    "Brand narrative — Jess Trading nació de observar traders con buenas estrategias destruirse por fatiga, no falta talento falta sistema",
-    "Scarcity — bot opera XAUUSD 24/7 con estrategia backtested en MT5, $197 pago único, spots limitados"
+    "Identity — under pressure, the person executing the strategy changes; consistency requires removing human execution from the equation",
+    "Fear — 'the bot doesn't understand context' objection flipped using the real June 2026 NFP shock that dropped XAUUSD 11%",
+    "Educational — how cortisol / prefrontal cortex shutdown during NFP/FOMC destroys manual execution; bot doesn't have a nervous system",
+    "Curiosity — XAUUSD dropped 11% in one month (June 2026): traders with pre-defined rules survived; those who improvised didn't",
+    "Social proof — Marco R., 2 years XAUUSD trader, had the strategy but kept moving stop losses; bot enforced the rules for him",
+    "Brand narrative — Jess Trading built to protect the trader's edge from themselves, born from watching great traders lose due to execution failure",
+    "Scarcity — XAUUSD MT5 bot, backtested strategy, $197 one-time payment, onboarding closes June 30"
   ],
-  "last_run": "2026-06-08"
+  "last_run": "2026-06-14"
 }
