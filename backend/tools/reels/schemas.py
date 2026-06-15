@@ -160,7 +160,6 @@ class PublishReelRequest(BaseModel):
     date: str
     reel_slug: str
     caption_override: Optional[str] = None
-    scheduled_time: Optional[str] = None  # ISO 8601
 
 
 class PublishReelResult(BaseModel):

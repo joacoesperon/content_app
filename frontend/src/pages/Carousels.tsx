@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { format } from 'date-fns';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  CalendarDays,
   Check,
   ChevronLeft,
   ChevronLeft as ArrowLeft,
@@ -18,8 +16,6 @@ import {
   Star,
   Trash2,
 } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import {
   deleteCarouselOutput,
@@ -1003,13 +999,6 @@ function PublishTab() {
   const [selectedEntry, setSelectedEntry] = useState<{ brief: PostBrief; output: CarouselOutput } | null>(null);
   const [loading, setLoading] = useState(false);
   const [publishCaption, setPublishCaption] = useState('');
-  const [useSchedule, setUseSchedule] = useState(true);
-  const [scheduledDate, setScheduledDate] = useState<Date>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d;
-  });
-  const [scheduledTime, setScheduledTime] = useState('21:00');
   const [publishLoading, setPublishLoading] = useState(false);
 
   useEffect(() => {
@@ -1044,11 +1033,6 @@ function PublishTab() {
   const openPost = (entry: { brief: PostBrief; output: CarouselOutput }) => {
     const caption = [entry.output.caption, entry.output.hashtags].filter(Boolean).join('\n\n');
     setPublishCaption(caption);
-    setUseSchedule(true);
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    setScheduledDate(tomorrow);
-    setScheduledTime('21:00');
     setSelectedEntry(entry);
   };
 
@@ -1056,30 +1040,12 @@ function PublishTab() {
     if (!selectedEntry) return;
     setPublishLoading(true);
     try {
-      let scheduledIso: string | undefined;
-      if (useSchedule) {
-        const [h, m] = scheduledTime.split(':').map(Number);
-        const utcGuess = new Date(Date.UTC(
-          scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate(), h, m
-        ));
-        const offsetStr = new Intl.DateTimeFormat('en', {
-          timeZone: 'Europe/Madrid', timeZoneName: 'shortOffset',
-        }).formatToParts(utcGuess).find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1';
-        const match = offsetStr.match(/GMT([+-])(\d+)/);
-        const sign = match?.[1] === '+' ? 1 : -1;
-        const offsetH = parseInt(match?.[2] ?? '1');
-        scheduledIso = new Date(Date.UTC(
-          scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate(),
-          h - sign * offsetH, m
-        )).toISOString();
-      }
       await publishCarouselToInstagram(
         selectedEntry.output.date,
         selectedEntry.output.post_slug,
         publishCaption || undefined,
-        scheduledIso,
       );
-      toast.success(useSchedule ? 'Programado en Instagram' : 'Publicado en Instagram');
+      toast.success('Publicado en Instagram');
       setSelectedEntry(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error publicando');
@@ -1156,51 +1122,6 @@ function PublishTab() {
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="use-schedule"
-                checked={useSchedule}
-                onChange={(e) => setUseSchedule(e.target.checked)}
-                className="rounded border-border"
-              />
-              <Label htmlFor="use-schedule" className="text-xs text-muted-foreground cursor-pointer">
-                Programar publicación
-              </Label>
-            </div>
-
-            {useSchedule && (
-              <div className="flex items-center gap-3 flex-wrap">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="justify-start font-normal text-sm min-w-44">
-                      <CalendarDays size={14} className="mr-2 shrink-0" />
-                      {format(scheduledDate, 'EEE, d MMM yyyy')}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start">
-                    <Calendar
-                      mode="single"
-                      selected={scheduledDate}
-                      onSelect={(d) => d && setScheduledDate(d)}
-                      disabled={(d) => { const today = new Date(); today.setHours(0,0,0,0); return d < today; }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                <input
-                  type="time"
-                  value={scheduledTime}
-                  onChange={(e) => setScheduledTime(e.target.value)}
-                  className="border border-border rounded px-2 py-1 text-sm bg-background"
-                />
-                <span className="text-xs text-muted-foreground">Madrid</span>
-              </div>
-            )}
-          </div>
-
           <div className="flex justify-end">
             <Button
               onClick={handlePublish}
@@ -1212,9 +1133,7 @@ function PublishTab() {
               ) : (
                 <Send size={14} className="mr-2" />
               )}
-              {publishLoading
-                ? useSchedule ? 'Programando…' : 'Publicando…'
-                : useSchedule ? 'Programar' : 'Publicar ahora'}
+              {publishLoading ? 'Publicando…' : 'Publicar ahora'}
             </Button>
           </div>
         </Card>
@@ -1295,6 +1214,173 @@ function PublishTab() {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Bulk generate (all posts of a Scout file, one config) ────────────────────
+
+function BulkGenerate({
+  filename,
+  posts,
+  pricing,
+  onDone,
+}: {
+  filename: string;
+  posts: PostBrief[];
+  pricing: PricingInfo | null;
+  onDone: () => void;
+}) {
+  const jobs = useCarouselJobs();
+  const date = dateFromFilename(filename);
+  const [resolution, setResolution] = useState('2K');
+  const [aspectRatio, setAspectRatio] = useState('4:5');
+  const [thinking, setThinking] = useState('off');
+  const [applyModifier, setApplyModifier] = useState(true);
+  const [generatedBySlug, setGeneratedBySlug] = useState<Record<string, Set<number>>>({});
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState({ done: 0, total: 0, errors: 0 });
+
+  const loadGenerated = useCallback(() => {
+    fetchCarouselOutputs().then((all) => {
+      const map: Record<string, Set<number>> = {};
+      all
+        .filter((o) => o.date === date)
+        .forEach((o) => {
+          map[o.post_slug] = new Set(
+            o.slides.filter((s) => s.versions.length > 0).map((s) => s.slide_number),
+          );
+        });
+      setGeneratedBySlug(map);
+    });
+  }, [date]);
+
+  useEffect(() => {
+    loadGenerated();
+  }, [loadGenerated]);
+
+  const missing = useMemo(() => {
+    const list: { post: PostBrief; slide: PostBrief['slides'][number] }[] = [];
+    for (const post of posts) {
+      const gen = generatedBySlug[post.slug] ?? new Set<number>();
+      for (const slide of post.slides) {
+        if (!gen.has(slide.number)) list.push({ post, slide });
+      }
+    }
+    return list;
+  }, [posts, generatedBySlug]);
+
+  const totalCost = missing.length * costPerImage(pricing, resolution, thinking);
+
+  const run = async () => {
+    if (missing.length === 0) {
+      toast.info('Ya está todo generado en este archivo.');
+      return;
+    }
+    if (!confirm(`Generar ${missing.length} imágenes de ${posts.length} posts por ${fmtMoney(totalCost)}?`)) return;
+    setRunning(true);
+    setProgress({ done: 0, total: missing.length, errors: 0 });
+    for (const { post, slide } of missing) {
+      const res = await jobs.startGenerate({
+        filename,
+        post_number: post.number,
+        slide_number: slide.number,
+        prompt: slide.prompt,
+        apply_modifier: applyModifier,
+        resolution,
+        aspect_ratio: aspectRatio,
+        seed: null,
+        thinking_level: thinking === 'off' ? null : (thinking as 'minimal' | 'high'),
+        post_slug: post.slug,
+      });
+      setProgress((p) => ({ ...p, done: p.done + 1, errors: p.errors + (res ? 0 : 1) }));
+    }
+    setRunning(false);
+    loadGenerated();
+    onDone();
+    toast.success('Generación masiva terminada.');
+  };
+
+  if (posts.length === 0) return null;
+
+  const pct = progress.total ? (progress.done / progress.total) * 100 : 0;
+
+  return (
+    <Card className="p-4 space-y-3 border-accent/30">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <span className="text-sm font-medium">Generar todo el archivo de una</span>
+          <p className="text-xs text-muted-foreground">
+            {missing.length > 0
+              ? `Faltan ${missing.length} imágenes en ${posts.length} posts · misma config para todas`
+              : `Todo generado (${posts.length} posts)`}
+          </p>
+        </div>
+        <Button onClick={run} disabled={running || missing.length === 0}>
+          {running ? (
+            <>
+              <Loader2 size={14} className="mr-2 animate-spin" />
+              Generando {progress.done}/{progress.total}…
+            </>
+          ) : (
+            <>
+              <Sparkles size={14} className="mr-2" />
+              Generar todo lo que falta — {missing.length} ({fmtMoney(totalCost)})
+            </>
+          )}
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Checkbox id="bulk-mod" checked={applyModifier} onCheckedChange={(v) => setApplyModifier(!!v)} />
+          <Label htmlFor="bulk-mod" className="text-xs cursor-pointer">Modifier</Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Resolution:</Label>
+          <Select value={resolution} onValueChange={setResolution}>
+            <SelectTrigger className="h-7 text-xs w-24"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {RESOLUTION_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Aspect:</Label>
+          <Select value={aspectRatio} onValueChange={setAspectRatio}>
+            <SelectTrigger className="h-7 text-xs w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ASPECT_RATIO_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Thinking:</Label>
+          <Select value={thinking} onValueChange={setThinking}>
+            <SelectTrigger className="h-7 text-xs w-24"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {THINKING_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {running && (
+        <div className="space-y-1">
+          <div className="h-1.5 w-full rounded bg-muted overflow-hidden">
+            <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {progress.done}/{progress.total} generadas{progress.errors > 0 ? ` · ${progress.errors} con error` : ''} · no cierres esta pestaña
+          </p>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -1431,11 +1517,20 @@ export default function Carousels() {
                   }}
                 />
               ) : (
-                <PostsList
-                  posts={posts}
-                  onSelect={setSelectedPost}
-                  generatedMap={generatedMap}
-                />
+                <div className="space-y-4">
+                  <BulkGenerate
+                    key={selectedFile}
+                    filename={selectedFile!}
+                    posts={posts}
+                    pricing={pricing}
+                    onDone={() => refreshGeneratedMap(selectedFile)}
+                  />
+                  <PostsList
+                    posts={posts}
+                    onSelect={setSelectedPost}
+                    generatedMap={generatedMap}
+                  />
+                </div>
               )}
             </div>
           )}

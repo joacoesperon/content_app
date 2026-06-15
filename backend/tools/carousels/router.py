@@ -200,43 +200,12 @@ async def publish_to_instagram(body: PublishRequest):
 
     caption = body.caption_override or f"{carousel['caption']}\n\n{carousel['hashtags']}".strip()
 
-    scheduled_unix: int | None = None
-    if body.scheduled_time:
-        from datetime import datetime, timezone
-        try:
-            dt = datetime.fromisoformat(body.scheduled_time)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            scheduled_unix = int(dt.timestamp())
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid scheduled_time format, use ISO 8601")
-
-    if scheduled_unix is not None:
-        try:
-            from backend.tools.carousels import gdrive
-            folder_id = await asyncio.to_thread(gdrive.get_post_folder, body.date, body.post_slug, "carousels")
-            public_urls = await asyncio.gather(*[
-                asyncio.to_thread(gdrive.upload_image, p, folder_id) for p in image_paths
-            ])
-            await asyncio.to_thread(
-                gdrive.append_scheduled_post,
-                f"{body.date}_{body.post_slug}",
-                "carousel",
-                caption,
-                scheduled_unix,
-                [str(u) for u in public_urls],
-            )
-        except Exception as e:
-            raise HTTPException(status_code=502, detail=f"Schedule failed: {e}")
-        service.record_publish(body.date, body.post_slug, "scheduled", body.scheduled_time)
-        return PublishResult(ok=True, post_id="scheduled")
-
     try:
         post_id = await instagram.publish_carousel(image_paths, caption, TOKEN_SYSTEM_USER)
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
 
-    service.record_publish(body.date, body.post_slug, post_id, body.scheduled_time)
+    service.record_publish(body.date, body.post_slug, post_id)
     return PublishResult(ok=True, post_id=post_id)
 
 

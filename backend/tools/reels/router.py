@@ -238,42 +238,12 @@ async def publish_to_instagram(body: PublishReelRequest):
         except Exception:
             caption = ""
 
-    scheduled_unix: int | None = None
-    if body.scheduled_time:
-        from datetime import datetime, timezone
-        try:
-            dt = datetime.fromisoformat(body.scheduled_time)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            scheduled_unix = int(dt.timestamp())
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid scheduled_time format, use ISO 8601")
-
-    if scheduled_unix is not None:
-        try:
-            from backend.tools.carousels import gdrive
-            folder_id = await asyncio.to_thread(gdrive.get_post_folder, body.date, body.reel_slug, "reels")
-            video_gdrive_url = await asyncio.to_thread(gdrive.upload_image, final_path, folder_id)
-            await asyncio.to_thread(
-                gdrive.append_scheduled_post,
-                f"{body.date}_{body.reel_slug}",
-                "reel",
-                caption,
-                scheduled_unix,
-                [],
-                str(video_gdrive_url),
-            )
-        except Exception as e:
-            raise HTTPException(status_code=502, detail=f"Schedule failed: {e}")
-        service.record_publish(body.date, body.reel_slug, "scheduled", body.scheduled_time)
-        return PublishReelResult(ok=True, post_id="scheduled")
-
     try:
-        post_id = await instagram.publish_reel(final_path, caption, TOKEN_SYSTEM_USER, scheduled_unix)
+        post_id = await instagram.publish_reel(final_path, caption, TOKEN_SYSTEM_USER)
     except ValueError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
-    service.record_publish(body.date, body.reel_slug, post_id, body.scheduled_time)
+    service.record_publish(body.date, body.reel_slug, post_id)
     return PublishReelResult(ok=True, post_id=post_id)
 
 

@@ -24,7 +24,11 @@
       "Bash(echo \"exit: $?\")",
       "Bash(pdfinfo guide.pdf)",
       "Bash(cp lead-magnet/guide.pdf landing/public/guide.pdf)",
-      "Bash(rm -f lead-magnet/guide.aux lead-magnet/guide.log lead-magnet/guide.out lead-magnet/compile.log)"
+      "Bash(rm -f lead-magnet/guide.aux lead-magnet/guide.log lead-magnet/guide.out lead-magnet/compile.log)",
+      "Bash(python3 -)",
+      "WebFetch(domain:dev.whop.com)",
+      "WebFetch(domain:docs.whop.com)",
+      "Bash(.venv/bin/python -c \"import backend.main; print\\('backend OK — importa sin errores'\\)\")"
     ]
   }
 }
