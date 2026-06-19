@@ -47,34 +47,3 @@ async def list_tools():
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
-
-
-@app.post("/api/test-instagram")
-async def test_instagram(body: dict):
-    """
-    Test endpoint: publishes prueba.png as a carousel (image duplicated) via Make.com webhook
-    or directly to Instagram. Pass {"mode": "direct"} for instant, {"mode": "make"} for webhook.
-    """
-    from pathlib import Path
-    from backend.config import TOKEN_SYSTEM_USER
-    from backend.tools.carousels import instagram
-    from fastapi import HTTPException
-
-    mode = body.get("mode", "direct")
-    caption = body.get("caption", "prueba")
-    prueba = Path("/home/jesperon/content_app/prueba.png")
-
-    if not prueba.exists():
-        raise HTTPException(status_code=404, detail="prueba.png not found")
-    if not TOKEN_SYSTEM_USER:
-        raise HTTPException(status_code=500, detail="TOKEN_SYSTEM_USER not configured")
-
-    if mode == "direct":
-        # Instant publish: prueba.png × 2 as carousel
-        try:
-            post_id = await instagram.publish_carousel([prueba, prueba], caption, TOKEN_SYSTEM_USER)
-        except Exception as e:
-            raise HTTPException(status_code=502, detail=str(e))
-        return {"ok": True, "post_id": post_id, "mode": "direct"}
-
-    raise HTTPException(status_code=400, detail="mode must be 'direct'")

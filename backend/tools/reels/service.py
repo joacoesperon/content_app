@@ -248,7 +248,7 @@ def generate_scene_video(
         "negative_prompt": VEO_NEGATIVE_PROMPT if no_subtitles else "",
         "duration": "8s",
         "aspect_ratio": veo_aspect,
-        "resolution": "720p",
+        "resolution": "1080p",
         "generate_audio": True,
         "auto_fix": auto_fix,
     }
@@ -277,7 +277,7 @@ def extend_scene_video(
         "negative_prompt": VEO_NEGATIVE_PROMPT if no_subtitles else "",
         "duration": "7s",
         "aspect_ratio": veo_aspect,
-        "resolution": "720p",
+        "resolution": "1080p",
         "generate_audio": True,
         "auto_fix": auto_fix,
     }

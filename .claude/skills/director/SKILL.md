@@ -229,7 +229,7 @@ Write each field knowing what the others already contribute. Add your layer — 
 **Setting:** [Complete visual description sent to nano-banana-2/edit. Use the SETTING guide below.]
 **Mascot expression:** [pick from mascot.json → expressions — see EXPRESSION guide below]
 **Tone:** [pick from mascot.json → tones — see TONE guide below]
-**Dialogue:** "[18-25 words. The HOOK lives in the first 5-6 words — set the stakes / contrast / promise immediately. Expression, tone, and dialogue MUST agree (a 'panicked' expression with a 'deadpan' tone reading a calm philosophical line is incoherent — fix the trio).]"
+**Dialogue:** "[18-22 words. The HOOK lives in the first 5-6 words — set the stakes / contrast / promise immediately. Expression, tone, and dialogue MUST agree (a 'panicked' expression with a 'deadpan' tone reading a calm philosophical line is incoherent — fix the trio).]"
 **Animation:** [Complete Veo prompt — see the ANIMATION guide. Cover all five layers: camera, JT body, candle physics, world motion, audio. Close with the voice delivery line: `JT says in a [tone] voice, "[exact dialogue text]"`]
 
 #### Scene 2 (0:08–0:16)
@@ -549,7 +549,7 @@ For each reel, ask: what POV makes the hook hit hardest? What POV makes the land
 
 ## DIALOGUE — word count, hook, coherence
 
-- **18-25 words per scene.** Target ~22. HARD MAX 25 (8s of speech at conversational pace).
+- **18-22 words per scene.** Target ~20. HARD MAX 22 (8s of speech at conversational pace).
 - **The HOOK lives in the first 5-6 words of Scene 1.** Set stakes, contrast, or emotional promise immediately. Don't warm up. Don't throat-clear.
 - **Expression ↔ tone ↔ dialogue must be coherent.** A 'panicked' expression + 'deadpan' tone + calm philosophical line is incoherent. Pick the trio that agrees.
 

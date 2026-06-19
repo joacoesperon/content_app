@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Check,
   ChevronLeft,
@@ -58,16 +58,7 @@ type Tab = 'new' | 'publish' | 'history';
 
 const ASPECT_OPTIONS = [
   { value: '9:16', label: '9:16 (reel)' },
-  { value: '1:1', label: '1:1' },
-  { value: '4:5', label: '4:5' },
-  { value: '16:9', label: '16:9' },
-];
-
-const RESOLUTION_OPTIONS = [
-  { value: '0.5K', label: '0.5K ($0.06)' },
-  { value: '1K',   label: '1K ($0.08)' },
-  { value: '2K',   label: '2K ($0.12)' },
-  { value: '4K',   label: '4K ($0.16)' },
+  { value: '16:9', label: '16:9 (landscape)' },
 ];
 
 function dateFromFilename(filename: string): string {
@@ -87,7 +78,6 @@ interface SceneFormState {
   dialogue: string;
   animationHint: string;
   aspectRatio: string;
-  imageResolution: string;
   extraImagePrompt: string;
   refFilename: string;  // which mascot ref to use as the edit base (empty = auto-resolve)
   // prompt overrides (E1)
@@ -119,7 +109,6 @@ function initialSceneState(s: ReelBrief['scenes'][number]): SceneFormState {
     dialogue: s.dialogue,
     animationHint: s.animation_hint,
     aspectRatio: '9:16',
-    imageResolution: '1K',
     extraImagePrompt: '',
     refFilename: '',
     imagePromptOverride: '',
@@ -320,21 +309,6 @@ function SceneCard({
             </SelectTrigger>
             <SelectContent>
               {ASPECT_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">Resolution</Label>
-          <Select value={scene.imageResolution} onValueChange={(v) => onChange({ imageResolution: v })}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RESOLUTION_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value} className="text-xs">
                   {o.label}
                 </SelectItem>
@@ -766,7 +740,6 @@ function ReelEditor({
         setting: scene.setting,
         expression: scene.expression,
         aspect_ratio: scene.aspectRatio,
-        resolution: scene.imageResolution,
         extra_image_prompt: scene.extraImagePrompt || undefined,
         ref_filename: scene.refFilename || null,
         prompt_override: scene.imagePromptOverride || null,
@@ -1482,6 +1455,161 @@ function HistoryTab() {
   );
 }
 
+// ─── Bulk generate images (all reels of a Director file) ──────────────────────
+
+function BulkGenerateImages({
+  filename,
+  reels,
+  pricing,
+  onDone,
+}: {
+  filename: string;
+  reels: ReelBrief[];
+  pricing: ReelsPricing | null;
+  onDone: () => void;
+}) {
+  const jobs = useReelJobs();
+  const date = dateFromFilename(filename);
+  const [aspectRatio, setAspectRatio] = useState('9:16');
+  const [generatedBySlug, setGeneratedBySlug] = useState<Record<string, Set<number>>>({});
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState({ done: 0, total: 0, errors: 0 });
+
+  const loadGenerated = useCallback(() => {
+    fetchReelOutputs().then((all) => {
+      const map: Record<string, Set<number>> = {};
+      all
+        .filter((o) => o.date === date)
+        .forEach((o) => {
+          map[o.reel_slug] = new Set(
+            o.scenes.filter((s) => s.versions.length > 0).map((s) => s.scene_number),
+          );
+        });
+      setGeneratedBySlug(map);
+    });
+  }, [date]);
+
+  useEffect(() => {
+    loadGenerated();
+  }, [loadGenerated]);
+
+  // Scenes that need an image: NOT continuation (those extend the previous video),
+  // and not already generated.
+  const missing = useMemo(() => {
+    const list: { reel: ReelBrief; scene: ReelBrief['scenes'][number] }[] = [];
+    for (const reel of reels) {
+      const gen = generatedBySlug[reel.slug] ?? new Set<number>();
+      for (const scene of reel.scenes) {
+        if (scene.continuation) continue;
+        if (gen.has(scene.number)) continue;
+        list.push({ reel, scene });
+      }
+    }
+    return list;
+  }, [reels, generatedBySlug]);
+
+  const continuationCount = useMemo(
+    () => reels.reduce((n, r) => n + r.scenes.filter((s) => s.continuation).length, 0),
+    [reels],
+  );
+
+  const cost = missing.length * (pricing?.image_per_scene ?? 0.1);
+
+  const run = async () => {
+    if (missing.length === 0) {
+      toast.info('No hay imágenes pendientes (o todas las escenas son continuation).');
+      return;
+    }
+    if (
+      !confirm(
+        `Generar ${missing.length} imágenes de ${reels.length} reels por ~${fmtMoney(cost)}? (las escenas continuation se saltean)`,
+      )
+    )
+      return;
+    setRunning(true);
+    setProgress({ done: 0, total: missing.length, errors: 0 });
+    for (const { reel, scene } of missing) {
+      const res = await jobs.startGenerateImage({
+        filename,
+        reel_number: reel.number,
+        scene_number: scene.number,
+        setting: scene.setting,
+        expression: scene.expression,
+        aspect_ratio: aspectRatio,
+        reel_slug: reel.slug,
+      });
+      setProgress((p) => ({ ...p, done: p.done + 1, errors: p.errors + (res ? 0 : 1) }));
+    }
+    setRunning(false);
+    loadGenerated();
+    onDone();
+    toast.success('Imágenes generadas.');
+  };
+
+  if (reels.length === 0) return null;
+
+  const pct = progress.total ? (progress.done / progress.total) * 100 : 0;
+
+  return (
+    <Card className="p-4 space-y-3 border-accent/30">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <span className="text-sm font-medium">Generar todas las imágenes del archivo</span>
+          <p className="text-xs text-muted-foreground">
+            {missing.length > 0
+              ? `Faltan ${missing.length} imágenes en ${reels.length} reels`
+              : `Sin imágenes pendientes en ${reels.length} reels`}
+            {continuationCount > 0
+              ? ` · ${continuationCount} escenas continuation salteadas (no usan imagen)`
+              : ''}
+          </p>
+        </div>
+        <Button onClick={run} disabled={running || missing.length === 0}>
+          {running ? (
+            <>
+              <Loader2 size={14} className="mr-2 animate-spin" />
+              Generando {progress.done}/{progress.total}…
+            </>
+          ) : (
+            <>
+              <Sparkles size={14} className="mr-2" />
+              Generar imágenes faltantes — {missing.length} (~{fmtMoney(cost)})
+            </>
+          )}
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Label className="text-xs text-muted-foreground">Aspect:</Label>
+        <Select value={aspectRatio} onValueChange={setAspectRatio}>
+          <SelectTrigger className="h-7 text-xs w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ASPECT_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value} className="text-xs">
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {running && (
+        <div className="space-y-1">
+          <div className="h-1.5 w-full rounded bg-muted overflow-hidden">
+            <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {progress.done}/{progress.total} generadas
+            {progress.errors > 0 ? ` · ${progress.errors} con error` : ''} · no cierres esta pestaña
+          </p>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ─── Main page ───────────────────────────────────────────────────────────────
 
 export default function Reels() {
@@ -1595,11 +1723,20 @@ export default function Reels() {
                   }}
                 />
               ) : (
-                <ReelsList
-                  reels={reels}
-                  generatedMap={generatedMap}
-                  onSelect={setSelectedReel}
-                />
+                <div className="space-y-4">
+                  <BulkGenerateImages
+                    key={selectedFile}
+                    filename={selectedFile!}
+                    reels={reels}
+                    pricing={pricing}
+                    onDone={() => refreshGeneratedMap(selectedFile)}
+                  />
+                  <ReelsList
+                    reels={reels}
+                    generatedMap={generatedMap}
+                    onSelect={setSelectedReel}
+                  />
+                </div>
               )}
             </div>
           )}

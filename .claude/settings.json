@@ -28,7 +28,11 @@
       "Bash(python3 -)",
       "WebFetch(domain:dev.whop.com)",
       "WebFetch(domain:docs.whop.com)",
-      "Bash(.venv/bin/python -c \"import backend.main; print\\('backend OK — importa sin errores'\\)\")"
+      "Bash(.venv/bin/python -c \"import backend.main; print\\('backend OK — importa sin errores'\\)\")",
+      "Bash(.venv/bin/python -c \"import backend.main; print\\('backend OK'\\)\")",
+      "WebFetch(domain:fal.ai)",
+      "Edit(/.claude/skills/director/**)",
+      "Bash(python3 scripts/meta_insights.py)"
     ]
   }
 }
