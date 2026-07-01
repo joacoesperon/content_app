@@ -1,0 +1,121 @@
+//@version=6
+// =============================================================
+//  Range Breakout — Jess Trading  (para el video)
+//
+//  Adaptación del EA RangeBreakout.mq5 a TradingView, para
+//  backtestear/grabar sin plan premium. Corre en el timeframe
+//  del chart; recomendado 1H (el free deja backtest hasta 1H).
+//
+//  Idea: el "rango" es el máximo/mínimo de las últimas N velas
+//  (consolidación tipo Donchian). Cuando una vela rompe el box
+//  por arriba -> LONG; por abajo -> SHORT. SL en el lado
+//  opuesto del rango, TP como múltiplo del tamaño del rango.
+//
+//  >>> Poné el chart en 1H. Modo "un solo trade" para el video. <<<
+// =============================================================
+strategy("Range Breakout — Jess Trading",
+     overlay              = true,
+     initial_capital      = 10000,
+     default_qty_type     = strategy.fixed,
+     default_qty_value    = 1,
+     pyramiding           = 0,
+     max_boxes_count      = 500,
+     max_lines_count      = 500,
+     calc_on_every_tick   = false)
+
+// ---------------- Inputs ----------------
+lookback    = input.int(10, "Velas del rango (lookback)", minval=2)
+rrMult      = input.float(2.0, "Take Profit (x tamaño del rango)", minval=0.5, step=0.5)
+riskPercent = input.float(1.0, "Riesgo por trade (%)", minval=0.0, step=0.1)
+
+grpVid      = "Video / Demo"
+oneTrade    = input.bool(true, "Solo un trade en pantalla", group=grpVid, tooltip="Toma únicamente el primer breakout desde 'Empezar desde'. Ideal para grabar como en el video.")
+startDate   = input.time(timestamp("01 Jan 2026 00:00 +0000"), "Empezar desde (elegí el trade)", group=grpVid)
+
+grpV        = "Visual"
+boxCol      = input.color(color.new(color.teal, 82), "Relleno del rango", group=grpV)
+boxBorder   = input.color(color.new(color.teal, 30), "Borde del rango",   group=grpV)
+showZones   = input.bool(true, "Mostrar zonas TP/SL (verde/rojo)", group=grpV)
+tpZoneCol   = input.color(color.new(#26a69a, 75), "Zona TP (verde)", group=grpV)
+slZoneCol   = input.color(color.new(#ef5350, 75), "Zona SL (rojo)",  group=grpV)
+
+// ---------------- Rango (últimas N velas, sin la vela actual) ----------------
+rangeHigh = ta.highest(high, lookback)[1]
+rangeLow  = ta.lowest(low,  lookback)[1]
+rangeSize = rangeHigh - rangeLow
+ready     = not na(rangeHigh) and not na(rangeLow) and rangeSize > 0
+
+// sizing por riesgo: riesgo$ / (tamaño del rango * valor del punto)
+riskMoney  = strategy.equity * riskPercent / 100.0
+riskPerQty = rangeSize * syminfo.pointvalue
+qty        = riskPerQty > 0 ? riskMoney / riskPerQty : 1.0
+
+// ---------------- Entradas (buy-stop / sell-stop, solo si estamos flat) ----------------
+// allowNew: respeta la fecha de inicio y, en modo video, corta después del 1er trade
+allowNew = ready and time >= startDate and (not oneTrade or strategy.closedtrades == 0)
+flat = strategy.position_size == 0
+if flat and allowNew
+    strategy.entry("Long",  strategy.long,  qty=qty, stop=rangeHigh)
+    strategy.entry("Short", strategy.short, qty=qty, stop=rangeLow)
+
+// ---------------- Congelar niveles al abrir la posición ----------------
+var float slLevel = na
+var float tpLevel = na
+justLong  = strategy.position_size > 0 and strategy.position_size[1] <= 0
+justShort = strategy.position_size < 0 and strategy.position_size[1] >= 0
+if justLong
+    slLevel := rangeLow
+    tpLevel := rangeHigh + rrMult * rangeSize
+if justShort
+    slLevel := rangeHigh
+    tpLevel := rangeLow - rrMult * rangeSize
+
+// ---------------- Gestión: OCO + SL/TP ----------------
+if strategy.position_size > 0
+    strategy.cancel("Short")
+    strategy.exit("Exit L", from_entry="Long",  stop=slLevel, limit=tpLevel)
+if strategy.position_size < 0
+    strategy.cancel("Long")
+    strategy.exit("Exit S", from_entry="Short", stop=slLevel, limit=tpLevel)
+
+// ---------------- Dibujo del box de consolidación ----------------
+var box rBox = na
+if flat and allowNew
+    if na(rBox)
+        rBox := box.new(time[lookback], rangeHigh, time, rangeLow, xloc=xloc.bar_time,
+             border_color=boxBorder, border_width=1, bgcolor=boxCol)
+    else
+        box.set_lefttop(rBox, time[lookback], rangeHigh)
+        box.set_rightbottom(rBox, time, rangeLow)
+// al abrir posición, dejamos el box congelado y arrancamos uno nuevo la próxima vez que estemos flat
+if justLong or justShort
+    rBox := na
+
+// ---------------- Zonas TP (verde) / SL (rojo) + label de entrada ----------------
+// Replica el look del video: bloque verde = ganancia, bloque rojo = riesgo.
+var box   tpBox   = na
+var box   slBox   = na
+var label enLbl   = na
+var float entryPx = na
+if showZones and justLong
+    entryPx := strategy.position_avg_price
+    tpBox   := box.new(time, tpLevel, time, entryPx, xloc=xloc.bar_time, bgcolor=tpZoneCol, border_color=color.new(#26a69a, 40), border_width=1)
+    slBox   := box.new(time, entryPx, time, slLevel, xloc=xloc.bar_time, bgcolor=slZoneCol, border_color=color.new(#ef5350, 40), border_width=1)
+    enLbl   := label.new(time, entryPx, "Long", xloc=xloc.bar_time, style=label.style_label_up, color=color.new(color.teal, 15), textcolor=color.white, size=size.small)
+if showZones and justShort
+    entryPx := strategy.position_avg_price
+    tpBox   := box.new(time, entryPx, time, tpLevel, xloc=xloc.bar_time, bgcolor=tpZoneCol, border_color=color.new(#26a69a, 40), border_width=1)
+    slBox   := box.new(time, slLevel, time, entryPx, xloc=xloc.bar_time, bgcolor=slZoneCol, border_color=color.new(#ef5350, 40), border_width=1)
+    enLbl   := label.new(time, entryPx, "Short", xloc=xloc.bar_time, style=label.style_label_down, color=color.new(color.red, 15), textcolor=color.white, size=size.small)
+
+// extiende las zonas hacia la derecha mientras la posición está abierta
+if strategy.position_size != 0 and not na(tpBox)
+    box.set_right(tpBox, time)
+    box.set_right(slBox, time)
+
+// al cerrar, dejamos las zonas congeladas y liberamos los ids para el próximo trade
+justFlat = strategy.position_size == 0 and strategy.position_size[1] != 0
+if justFlat
+    tpBox := na
+    slBox := na
+    enLbl := na

@@ -32,7 +32,10 @@
       "Bash(.venv/bin/python -c \"import backend.main; print\\('backend OK'\\)\")",
       "WebFetch(domain:fal.ai)",
       "Edit(/.claude/skills/director/**)",
-      "Bash(python3 scripts/meta_insights.py)"
+      "Bash(python3 scripts/meta_insights.py)",
+      "Bash(ffmpeg -version)",
+      "Bash(ffprobe -v error -select_streams v:0 -show_entries stream=width,height,duration,nb_frames,r_frame_rate -show_entries format=duration,size -of default=noprint_wrappers=1 /home/jesperon/content_app/hero.mp4)",
+      "Bash(ffmpeg -hide_banner -loglevel error -i /home/jesperon/content_app/hero.mp4 -vf fps=2 /tmp/claude-1000/-home-jesperon-content-app/5478f537-c6f8-45e8-968e-2eb052a0e342/scratchpad/hero_frames/frame_%02d.png)"
     ]
   }
 }
